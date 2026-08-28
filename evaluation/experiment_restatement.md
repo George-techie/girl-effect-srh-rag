@@ -121,6 +121,28 @@ answer.** That is why perceived control shows +0.000 while being the driver the
 mechanism most clearly fixes. It is a limitation of this evaluation, not a
 result about restatement.
 
+### A new metric, added because this experiment exposed the need for it
+
+`CTL_01` scoring 1.00 on a passage that does not answer the question showed that
+source-level gold is too coarse. So `evaluation/adequacy_v1.json` adds a floor:
+a short list of phrases per question, and a retrieved set counts as **adequate**
+if any of them appears in the retrieved text. Deliberately coarse, reproducible
+across runs, and blind to which source supplied the text.
+
+**Adequate@5: 0.880 → 1.000 (+0.120).** Three questions failed it at baseline
+and none did with restatement:
+
+| | failed adequacy at baseline | rank metrics said |
+|---|---|---|
+| `ATT_04` | Kiswahili myth question | MRR 0.00 — **visible** |
+| `SEF_01` | "scared to go to the chemist and ask for condoms" | MRR 1.00 — **invisible** |
+| `OUT_01` | "will I still be able to have children later?" | MRR 1.00 — **invisible** |
+
+**Two of the three failures were invisible to Hit@5 and MRR.** Both retrieved a
+gold source at rank 1 and neither retrieved a passage that answers the question.
+That is the gap between *"correct document retrieved"* and *"evidence that
+answers her"*, and in health retrieval it is the only one that matters.
+
 ### Where restatement actively hurts
 
 Three questions got worse, and they have something in common.

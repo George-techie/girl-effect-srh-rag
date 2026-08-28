@@ -46,9 +46,36 @@ def load_questions() -> list[dict]:
 RESTATEMENTS = Path(__file__).resolve().parents[1] / "evaluation" / "restatements_v1.json"
 
 
+ADEQUACY = Path(__file__).resolve().parents[1] / "evaluation" / "adequacy_v1.json"
+
+
 def load_restatements() -> dict[str, str]:
     data = json.loads(RESTATEMENTS.read_text(encoding="utf-8"))
     return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def load_adequacy() -> dict[str, list[str]]:
+    data = json.loads(ADEQUACY.read_text(encoding="utf-8"))
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+_ADEQUACY = load_adequacy()
+
+
+def is_adequate(qid: str, texts: list[str]) -> bool | None:
+    """Did any retrieved passage plausibly *answer* the question?
+
+    Source-level gold labels say whether the right document came back. They
+    cannot say whether the passage inside it was the one that answers her --
+    CTL_01 scored a perfect hit while retrieving "Serving Diverse Groups", which
+    does not. This is the floor under that: a phrase check, deliberately coarse,
+    reproducible across runs, and blind to which source supplied the text.
+    """
+    phrases = _ADEQUACY.get(qid)
+    if not phrases:
+        return None
+    blob = " ".join(texts).lower()
+    return any(p.lower() in blob for p in phrases)
 
 
 def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0,
@@ -67,6 +94,7 @@ def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0,
         query = rewrites.get(q["id"], q["question"]) if restate else q["question"]
         hits = retrieval.search(query, k=k, role_bonus=role_bonus)
         metas = [h.metadata for h in hits]
+        adequate = is_adequate(q["id"], [h.text for h in hits])
         dists = [1 - h.similarity for h in hits]
 
         retrieved = [h.source_id for h in hits]
@@ -86,6 +114,7 @@ def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0,
             "hit": bool(gold) and rank > 0,
             "recall": (len(gold & set(retrieved)) / len(gold)) if gold else None,
             "rr": (1 / rank) if rank else 0.0,
+            "adequate": adequate,
         })
     return rows
 
@@ -105,7 +134,9 @@ def summarise(rows: list[dict]) -> dict:
         g = by_driver.get(name, [])
         return statistics.mean(r["rr"] for r in g) if g else float("nan")
 
+    judged = [r for r in scored if r["adequate"] is not None]
     return {
+        "adequate": statistics.mean(r["adequate"] for r in judged) if judged else 0.0,
         "hit": statistics.mean(r["hit"] for r in scored),
         "recall": statistics.mean(r["recall"] for r in scored),
         "mrr": statistics.mean(r["rr"] for r in scored),
@@ -148,7 +179,7 @@ def compare(questions: list[dict], k: int) -> None:
     print(f"ORACLE RESTATEMENT · top-{k}")
     print("Hand-written retrieval queries. An upper bound, not a design.\n")
 
-    keys = [("hit", "Hit@5"), ("recall", "Recall@5"), ("mrr", "MRR"),
+    keys = [("adequate", "Adequate@5"), ("hit", "Hit@5"), ("recall", "Recall@5"), ("mrr", "MRR"),
             ("knowledge_mrr", "knowledge MRR"), ("control_mrr", "control MRR"),
             ("attitude_mrr", "attitude MRR"), ("identity_mrr", "identity MRR"),
             ("youth_top", "youth-facing top")]

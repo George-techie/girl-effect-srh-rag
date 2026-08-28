@@ -1,0 +1,37 @@
+{
+  "_note": "Evidence-adequacy phrases. Source-level gold labels cannot tell the right document from the right answer -- CTL_01 scored a perfect hit on a passage that did not answer the question. A retrieved chunk counts as ADEQUATE if its text contains any phrase listed here, matched case-insensitively. Written from each question's intent, not from retrieved output, with the CTL_01/CTL_02 contamination already declared in experiment_restatement.md. Deliberately coarse: this is a floor on relevance, not a judgement of answer quality.",
+
+  "KNW_01": ["how to use", "put the condom", "unroll", "correct use", "each time you have sex"],
+  "KNW_02": ["emergency contraceptive", "as soon as possible", "5 days", "120 hours"],
+  "KNW_03": ["protect against", "sexually transmitted", "only contraceptive method"],
+
+  "ATT_01": ["young people", "adolescent", "unmarried", "right to"],
+  "ATT_02": ["return to fertility", "infertility", "delay in the return", "does not cause infertility"],
+  "ATT_03": ["weight", "bleeding changes", "amenorrh", "no monthly bleeding", "side effect"],
+  "ATT_04": ["infertility", "return to fertility", "misunderstanding", "myth"],
+
+  "SEF_01": ["pharmac", "where to get", "access", "young people", "embarrass"],
+  "SEF_02": ["bringing up condom", "negotiat", "partner", "talk with"],
+  "SEF_03": ["confidential", "privacy", "private"],
+
+  "CTL_01": ["consent", "parental", "adolescent"],
+  "CTL_02": ["marital status", "unmarried", "discriminat", "eligib", "shall not be denied"],
+  "CTL_03": ["bringing up condom", "refus", "partner", "negotiat"],
+
+  "OUT_01": ["return to fertility", "pregnancy occurs", "fertility returns", "infertility"],
+  "OUT_02": ["school", "education", "employment", "earning"],
+  "OUT_03": ["education", "school", "work", "financial", "resources", "time"],
+
+  "SOC_01": ["adolescent", "young people", "unmet need", "prevalence"],
+  "SOC_02": ["stigma", "judge", "attitude", "young people", "confidential"],
+
+  "IDN_01": ["young people", "not yet", "before they", "sexually active"],
+  "IDN_02": ["safe for young people", "adolescent", "age", "young"],
+
+  "SUP_01": ["confidential", "counsel", "youth friendly", "trust"],
+  "SUP_02": ["confidential", "trust", "parent", "adult", "counsel"],
+  "SUP_03": ["pregnan", "tell", "support", "talk to", "help"],
+
+  "SVC_01": ["service delivery", "facilit", "clinic", "community", "outreach"],
+  "SVC_02": ["counsel", "screening", "assess", "ask", "first visit"]
+}
