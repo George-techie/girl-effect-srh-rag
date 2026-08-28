@@ -20,6 +20,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Load .env before anything reads os.getenv below.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env")
+except ImportError:  # pragma: no cover - dotenv is optional
+    pass
+
 CORPUS = ROOT / "corpus"
 RAW = CORPUS / "raw"
 REGISTRY_CSV = CORPUS / "registry" / "source_registry.csv"
@@ -118,3 +126,29 @@ def describe() -> dict[str, object]:
         "chunk_max": CHUNK_MAX_TOKENS,
         "chunk_overlap": CHUNK_OVERLAP_TOKENS,
     }
+
+
+# --- generation --------------------------------------------------------------
+#: One model, one role. The previous build ran five; its own ablation showed the
+#: simplest safe configuration scored highest, so this one generates and nothing
+#: else. Claude for the same reason it was chosen there and for one that is not
+#: ours: Girl Effect's own whitepaper reports their Kenyan content writers
+#: evaluating nine models on Sheng and finding Claude "by far the strongest".
+MODELS: dict[str, str] = {
+    "generation": os.getenv("MODEL_GENERATION", "anthropic/claude-sonnet-5"),
+}
+
+GENERATION_TEMPERATURE = float(os.getenv("GENERATION_TEMPERATURE", "0.3"))
+CLASSIFIER_TEMPERATURE = float(os.getenv("CLASSIFIER_TEMPERATURE", "0.0"))
+
+#: She is on a phone, possibly on limited data. A short answer she reads beats a
+#: complete one she abandons.
+RESPONSE_TARGET_WORDS = int(os.getenv("RESPONSE_TARGET_WORDS", "110"))
+RESPONSE_MAX_WORDS = int(os.getenv("RESPONSE_MAX_WORDS", "150"))
+RESPONSE_MIN_WORDS = int(os.getenv("RESPONSE_MIN_WORDS", "12"))
+
+#: Kiswahili measured at 2.41 tokens per word against English at 1.22 in the
+#: previous build. Budgeting in English units truncated Kiswahili answers
+#: mid-sentence while English ones were fine.
+TOKENS_PER_WORD = float(os.getenv("TOKENS_PER_WORD", "2.5"))
+GENERATION_MAX_TOKENS = int(RESPONSE_MAX_WORDS * TOKENS_PER_WORD) + 120
