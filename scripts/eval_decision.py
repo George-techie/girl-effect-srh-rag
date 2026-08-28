@@ -31,7 +31,7 @@ CRITERIA = {
 }
 
 CLASSES = [rules.SAFEGUARDING, rules.ACCESS, rules.SUPPORT,
-           rules.FACTUAL, rules.OUT_OF_SCOPE]
+           rules.FACTUAL, rules.CHAT, rules.OUT_OF_SCOPE]
 
 
 def main() -> int:

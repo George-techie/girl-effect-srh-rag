@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src import config, prompts
+from src.prompt_files import loader
 from src.decision import rules
 from src.llm.client import get_client
 from src.rag import retrieval
@@ -106,6 +107,16 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
         return Reply(responses.OUT_OF_SCOPE, decision.path, trace=trace)
 
+    # --- the conversational contract -----------------------------------------
+    # A greeting has nothing to look up and nothing to cite. Answering it under
+    # the grounded contract -- which requires a citation -- is what turned
+    # "hello aunti" into "I had trouble putting that answer together".
+    #
+    # Safe for the opposite reason to a grounded answer: that one is safe
+    # because every claim is cited, this one because it makes no claim at all.
+    if decision.path == rules.CHAT:
+        return _converse(message, decision, trace, started)
+
     # --- retrieve ------------------------------------------------------------
     hits = retrieval.search(message, k=k or config.RETRIEVAL_TOP_K)
     trace["retrieved"] = [
@@ -165,3 +176,57 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         sources=_cited_sources(draft, hits),
         trace=trace,
     )
+
+
+#: How gravely to speak, derived from the path rather than from a second model
+#: call. The previous build made this a separate axis for a measured reason: a
+#: model shown all four tone notes produces their average, the register that
+#: fits nothing. So one note is selected and only that one is sent.
+SERIOUSNESS = {
+    rules.CHAT: "casual",
+    rules.FACTUAL: "factual",
+    rules.ACCESS: "factual",
+    rules.SUPPORT: "personal",
+}
+
+#: Which situation note the conversational prompt gets. `greeting` says what the
+#: service can help with and stops; `support` acknowledges before anything else.
+SITUATION = {rules.CHAT: "greeting", rules.SUPPORT: "support"}
+
+
+def _converse(message: str, decision, trace: dict, started: float) -> Reply:
+    """A reply written with no passages, and forbidden from stating a fact."""
+    prompt = loader.load("converse")
+    seriousness = SERIOUSNESS.get(decision.path, "personal")
+    try:
+        response = get_client().complete(
+            "generation",
+            prompt.messages(
+                language_label="",
+                seriousness=seriousness,
+                context_block="",
+                history_block="",
+                message=message,
+                situation=prompt.situation(SITUATION.get(decision.path, "explore"),
+                                           prompt.situation("explore")),
+            ),
+            temperature=config.GENERATION_TEMPERATURE,
+            max_tokens=config.CONVERSE_MAX_TOKENS,
+        )
+    except Exception as exc:  # noqa: BLE001
+        trace["error"] = f"{type(exc).__name__}: {exc}"
+        trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        return Reply(responses.TECHNICAL, decision.path, trace=trace)
+
+    draft = response.text.strip()
+    trace.update({"llm_calls": 1, "model": response.model,
+                  "seriousness": seriousness, "contract": "conversational"})
+
+    issues, fatal = checks.check(draft, n_passages=0, grounded=False)
+    trace["issues"] = issues
+    trace["fatal"] = fatal
+    trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+
+    if fatal:
+        return Reply(responses.BLOCKED, decision.path, trace=trace)
+    return Reply(checks.strip_markers(draft), decision.path, trace=trace)

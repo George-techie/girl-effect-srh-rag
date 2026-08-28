@@ -152,3 +152,13 @@ RESPONSE_MIN_WORDS = int(os.getenv("RESPONSE_MIN_WORDS", "12"))
 #: mid-sentence while English ones were fine.
 TOKENS_PER_WORD = float(os.getenv("TOKENS_PER_WORD", "2.5"))
 GENERATION_MAX_TOKENS = int(RESPONSE_MAX_WORDS * TOKENS_PER_WORD) + 120
+
+PROMPTS_DIR = ROOT / "src" / "prompt_files"
+
+#: A conversational turn is a chat message, not a paragraph.
+CONVERSE_MIN_TARGET_WORDS = int(os.getenv("CONVERSE_MIN_TARGET_WORDS", "20"))
+CONVERSE_TARGET_WORDS = int(os.getenv("CONVERSE_TARGET_WORDS", "55"))
+CONVERSE_MAX_WORDS = int(os.getenv("CONVERSE_MAX_WORDS", "60"))
+CONVERSE_MIN_WORDS = int(os.getenv("CONVERSE_MIN_WORDS", "4"))
+CONVERSE_MAX_TOKENS = int(CONVERSE_MAX_WORDS * TOKENS_PER_WORD) + 80
+RESPONSE_MIN_TARGET_WORDS = RESPONSE_MIN_WORDS

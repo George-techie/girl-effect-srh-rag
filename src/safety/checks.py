@@ -46,6 +46,12 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
 
     markers = [int(m) for m in MARKER.findall(draft)]
 
+    if not grounded and markers:
+        # No passages were retrieved, so a marker is a fabricated reference --
+        # worse than an uncited claim, because it looks verified.
+        issues.append("citation markers on a turn that had no source passages")
+        fatal = True
+
     if grounded:
         if not markers:
             issues.append("no citation on a grounded health answer")

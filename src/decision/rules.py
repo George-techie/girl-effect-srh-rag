@@ -4,6 +4,7 @@ One job: given her message, decide which of five paths it takes, and whether the
 retrieval query should be restated. Experiments 1 and 2 earned exactly this much
 and no more.
 
+    chat           greeting, thanks, small talk ·  no corpus, claims nothing
     factual        answerable from the corpus  ·  restate the query
     access         where, cost, consent, rules ·  restate the query
     support        feeling, fear, shame        ·  keep her words
@@ -30,6 +31,7 @@ from dataclasses import dataclass, field
 from src.language import glossary
 
 FACTUAL = "factual"
+CHAT = "chat"
 ACCESS = "access"
 SUPPORT = "support"
 SAFEGUARDING = "safeguarding"
@@ -52,7 +54,15 @@ class Decision:
 
     @property
     def retrieves(self) -> bool:
-        return self.path != OUT_OF_SCOPE
+        """Chat has nothing to look up; out-of-scope must not look."""
+        return self.path not in (OUT_OF_SCOPE, CHAT)
+
+    @property
+    def grounded(self) -> bool:
+        """Whether the reply must cite. The contract is chosen by which path
+        produced it, never inferred from whether citations happen to be there --
+        an uncited grounded answer would otherwise validate itself."""
+        return self.path in (FACTUAL, ACCESS, SUPPORT)
 
 
 def _res(*patterns: str) -> tuple[re.Pattern[str], ...]:
@@ -189,20 +199,38 @@ _ACCESS = _res(
     r"\b(am i|are we) (old enough|allowed)\b",
 )
 
-# --- 4 · support -------------------------------------------------------------
+# --- 4 · chat ----------------------------------------------------------------
+#: Greetings, thanks, goodbyes. She has not asked anything, so there is nothing
+#: to retrieve and nothing to cite -- and the grounded contract, which requires
+#: a citation, blocks the reply for having none. "hello aunti" reaching a
+#: fallback that says "I had trouble putting that answer together" is that bug.
+_CHAT = _res(
+    r"^\s*(hi|hey|hello|hallo|niaje|sasa|mambo|habari|jambo|yo)\b",
+    r"^\s*(good (morning|afternoon|evening))\b",
+    r"\bhello aunti\b|\bhi aunti\b|\bhey aunti\b|\baunti\?*$",
+    r"^\s*(thanks|thank you|asante|nashukuru)\b|\bthank you\b\s*[.!]?\s*$",
+    r"^\s*(bye|goodbye|kwaheri|later|ok|okay|sawa)\s*[.!]?\s*$",
+    r"\bwho are you\b|\bwhat (can|do) you (do|help with)\b|\bwewe ni nani\b",
+    r"^\s*\w{1,12}\s*[?!.]?\s*$",
+)
+
+# --- 5 · support -------------------------------------------------------------
 #: Feeling rather than question. Checked before `factual` because a girl saying
 #: she is frightened has not asked for information, and Experiment 2 measured
 #: what happens when these turns are restated: her words retrieve the youth
 #: material, the restatement retrieves policy literature.
 _SUPPORT = _res(
-    r"\bi'?m (so |really |very )?(scared|afraid|frightened|worried|ashamed|"
-    r"embarrassed|nervous|anxious about|stupid|confused)\b",
+    # "i am" as well as "i'm". She types both, and only one was matched.
+    r"\bi('?m| am) (so |really |very )?(scared|afraid|frightened|worried|"
+    r"ashamed|embarrassed|nervous|anxious about|stupid|confused)\b",
     r"\bi feel\b|\bi'?m feeling\b|\bnaogopa\b|\bninaogopa\b",
     r"\bi (keep )?worry(ing)?\b|\bi don'?t know who to (talk|turn) to\b",
     r"\bwill (think|judge|say)\b.{0,30}\b(i'?m|me)\b|\bpeople will think\b",
     r"\bthey'?ll think\b|\beveryone (will|would) think\b",
     r"\b(would|will) (throw me out|kill me|be furious|be angry|disown)\b",
-    r"\bthank you\b|\bthanks\b|\bthat helped\b|\basante\b",
+    # thanks / asante deliberately absent -- they are chat, not feeling, and
+    # they were the reason "hello aunti" and "asante sana" were being answered
+    # under the grounded contract and blocked for having no citation.
     r"\bis it normal to feel\b|\bam i normal for feeling\b",
     r"\bhe'?ll leave me\b|\bwill leave me\b|\bdoesn'?t like condoms\b",
 )
@@ -257,6 +285,13 @@ def decide(message: str) -> Decision:
     matched = _hits(_ACCESS, text)
     if matched:
         return Decision(ACCESS, "access", matched)
+
+    # Chat before support. A greeting is short and warm and contains none of
+    # the feeling words support looks for, but "asante sana" was matching
+    # support's thanks pattern and being answered under the grounded contract.
+    matched = _hits(_CHAT, text)
+    if matched:
+        return Decision(CHAT, "greeting or small talk", matched)
 
     matched = _hits(_SUPPORT, text)
     if matched:
