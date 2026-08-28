@@ -34,7 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src import config
-from src.rag import indexing
+from src.rag import retrieval
 
 QUESTIONS = Path(__file__).resolve().parents[1] / "evaluation" / "questions_v1.jsonl"
 
@@ -43,20 +43,15 @@ def load_questions() -> list[dict]:
     return [json.loads(line) for line in QUESTIONS.open(encoding="utf-8") if line.strip()]
 
 
-def evaluate(questions: list[dict], k: int) -> list[dict]:
-    collection = indexing.get_collection()
+def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0) -> list[dict]:
     rows: list[dict] = []
 
     for q in questions:
-        res = collection.query(
-            query_embeddings=[indexing.embed_query(q["question"])],
-            n_results=k,
-            include=["metadatas", "distances"],
-        )
-        metas = res["metadatas"][0]
-        dists = res["distances"][0]
+        hits = retrieval.search(q["question"], k=k, role_bonus=role_bonus)
+        metas = [h.metadata for h in hits]
+        dists = [1 - h.similarity for h in hits]
 
-        retrieved = [m["source_id"] for m in metas]
+        retrieved = [h.source_id for h in hits]
         gold = set(q["gold_sources"])
 
         # Rank of the first gold source, 1-indexed; 0 when none appeared.
@@ -74,6 +69,54 @@ def evaluate(questions: list[dict], k: int) -> list[dict]:
             "rr": (1 / rank) if rank else 0.0,
         })
     return rows
+
+
+def summarise(rows: list[dict]) -> dict:
+    """The handful of numbers the role-preference experiment turns on."""
+    scored = [r for r in rows if r["gold_sources"]]
+    by_driver = collections.defaultdict(list)
+    for r in scored:
+        by_driver[r["driver"]].append(r)
+
+    tops = collections.Counter(r["roles"][0] for r in rows if r["roles"])
+    all_roles = collections.Counter(role for r in rows for role in r["roles"])
+    total = sum(all_roles.values())
+
+    def driver_mrr(name: str) -> float:
+        g = by_driver.get(name, [])
+        return statistics.mean(r["rr"] for r in g) if g else float("nan")
+
+    return {
+        "hit": statistics.mean(r["hit"] for r in scored),
+        "recall": statistics.mean(r["recall"] for r in scored),
+        "mrr": statistics.mean(r["rr"] for r in scored),
+        "knowledge_mrr": driver_mrr("knowledge"),
+        "control_mrr": driver_mrr("perceived_control"),
+        "attitude_mrr": driver_mrr("attitude"),
+        "identity_mrr": driver_mrr("self_identity"),
+        "youth_top": tops.get("youth_answer", 0) / max(len(rows), 1),
+        "youth_all": all_roles.get("youth_answer", 0) / max(total, 1),
+        "clinical_top": tops.get("clinical_boundary", 0) / max(len(rows), 1),
+    }
+
+
+def sweep(questions: list[dict], k: int, bonuses: list[float]) -> None:
+    print("\n" + "=" * 92)
+    print(f"ROLE-PREFERENCE SWEEP · top-{k}")
+    print("A soft score bonus on sources written for her. "
+          "0.000 is plain cosine search.\n")
+    cols = ("bonus", "Hit@5", "Rec@5", "MRR", "know", "control", "attitude", "identity",
+            "youth top", "clin top")
+    print("  " + "".join(f"{c:>10}" for c in cols))
+    print("  " + "-" * 100)
+    for b in bonuses:
+        m = summarise(evaluate(questions, k, role_bonus=b))
+        print(f"  {b:>10.3f}" + "".join(f"{m[key]:>10.3f}" for key in
+              ("hit", "recall", "mrr", "knowledge_mrr", "control_mrr",
+               "attitude_mrr", "identity_mrr")) +
+              f"{m['youth_top']:>10.0%}{m['clinical_top']:>10.0%}")
+    print("\n  youth top / clin top = share of questions whose FIRST result")
+    print("  came from that role. 31 questions, so one is 3 percentage points.")
 
 
 def report(rows: list[dict], k: int, show_misses: bool) -> None:
@@ -142,10 +185,18 @@ def main() -> int:
     ap.add_argument("-k", type=int, default=config.RETRIEVAL_TOP_K)
     ap.add_argument("--show-misses", action="store_true")
     ap.add_argument("--save", action="store_true", help="write results JSON")
+    ap.add_argument("--role-bonus", type=float, default=0.0)
+    ap.add_argument("--sweep", action="store_true",
+                    help="compare role-preference strengths and stop")
     args = ap.parse_args()
 
     questions = load_questions()
-    rows = evaluate(questions, args.k)
+
+    if args.sweep:
+        sweep(questions, args.k, [0.0, 0.02, 0.04, 0.06, 0.08, 0.12, 0.20])
+        return 0
+
+    rows = evaluate(questions, args.k, role_bonus=args.role_bonus)
     report(rows, args.k, args.show_misses)
 
     if args.save:

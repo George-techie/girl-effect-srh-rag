@@ -95,6 +95,16 @@ CHUNK_OVERLAP_TOKENS = int(os.getenv("CHUNK_OVERLAP_TOKENS", "0"))
 #: those are only worth adding if evaluation shows this baseline failing.
 RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "5"))
 
+#: Candidates fetched before a role preference re-ranks them. Only used when a
+#: bonus is applied -- re-ranking the top 5 alone could never promote a youth
+#: passage sitting at rank 8, which is where they mostly sit.
+RETRIEVAL_FETCH_K = int(os.getenv("RETRIEVAL_FETCH_K", "25"))
+
+#: Soft preference for sources written for her rather than for a clinician.
+#: 0.0 is plain cosine search. Set from the sweep in scripts/eval_retrieval.py;
+#: see evaluation/README.md for the trade-off it was chosen on.
+ROLE_BONUS = float(os.getenv("ROLE_BONUS", "0.0"))
+
 
 def describe() -> dict[str, object]:
     return {
