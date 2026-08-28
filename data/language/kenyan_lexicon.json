@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "lexicon_version": "2026-08-04-v1",
+  "lexicon_version": "2026-08-28-v2-srh",
   "reviewer": "George Nyatangi",
   "review_date": "2026-08-04",
   "notes": [
@@ -13,63 +13,113 @@
     "risk_tags raise scrutiny. They do not by themselves prove a disclosure -",
     "'kudedi' means to die and is almost always idiom."
   ],
-
   "terms": [
     {
       "term": "hunipiga",
-      "variants": ["ananipiga", "kunipiga", "amenipiga", "hunichapa", "ananichapa", "kuchapwa", "kukuchapa"],
+      "variants": [
+        "ananipiga",
+        "kunipiga",
+        "amenipiga",
+        "hunichapa",
+        "ananichapa",
+        "kuchapwa",
+        "kukuchapa"
+      ],
       "meaning": "hits me / beats me",
-      "risk_tags": ["physical_violence"],
+      "risk_tags": [
+        "physical_violence"
+      ],
       "confidence": "high",
       "source": "SAF_L01"
     },
     {
       "term": "huniguza",
-      "variants": ["ananiguza", "kuniguza", "kumguza", "huniguza guza", "aliniguza"],
+      "variants": [
+        "ananiguza",
+        "kuniguza",
+        "kumguza",
+        "huniguza guza",
+        "aliniguza"
+      ],
       "meaning": "touches me (inappropriately)",
-      "risk_tags": ["sexual_abuse"],
+      "risk_tags": [
+        "sexual_abuse"
+      ],
       "confidence": "high",
       "source": "SAF_L05, SAF_L06",
       "note": "In these cases the sense is unwanted sexual touching. Neutral uses exist, so the classifier still sees the raw message."
     },
     {
       "term": "kuondokea hii dunia",
-      "variants": ["kuondoka hii dunia", "kutoka hii dunia", "kuachana na hii dunia"],
+      "variants": [
+        "kuondoka hii dunia",
+        "kutoka hii dunia",
+        "kuachana na hii dunia"
+      ],
       "meaning": "to leave this world",
-      "risk_tags": ["self_harm_risk"],
+      "risk_tags": [
+        "self_harm_risk"
+      ],
       "confidence": "high",
       "source": "SAF_L02"
     },
     {
       "term": "sitaki kukuwa kwa hii dunia",
-      "variants": ["sitaki kuwa hapa", "sitaki kuwa kwa hii dunia", "sitaki kuishi"],
+      "variants": [
+        "sitaki kuwa hapa",
+        "sitaki kuwa kwa hii dunia",
+        "sitaki kuishi"
+      ],
       "meaning": "I don't want to be in this world / I don't want to be here",
-      "risk_tags": ["self_harm_risk"],
+      "risk_tags": [
+        "self_harm_risk"
+      ],
       "confidence": "high",
       "source": "SAF_L02"
     },
     {
       "term": "kuspread foto",
-      "variants": ["kusambaza picha", "kusambaza foto", "kushare foto", "kuposti picha zangu"],
+      "variants": [
+        "kusambaza picha",
+        "kusambaza foto",
+        "kushare foto",
+        "kuposti picha zangu"
+      ],
       "meaning": "to share/spread my photos",
-      "risk_tags": ["exploitation"],
+      "risk_tags": [
+        "exploitation"
+      ],
       "confidence": "high",
       "source": "SAF_L03"
     },
     {
       "term": "sidai kuenda mtaa",
-      "variants": ["sitaki kwenda nyumbani", "naogopa kurudi nyumbani", "sidai kurudi home", "naogopa kuenda home"],
+      "variants": [
+        "sitaki kwenda nyumbani",
+        "naogopa kurudi nyumbani",
+        "sidai kurudi home",
+        "naogopa kuenda home"
+      ],
       "meaning": "I don't want to / am afraid to go home",
-      "risk_tags": ["unsafe_environment"],
+      "risk_tags": [
+        "unsafe_environment"
+      ],
       "confidence": "high",
       "source": "SAF_L04",
       "note": "Carries no fear vocabulary at all. 'sidai' is 'I don't want', so an English rule matching on scared or afraid finds nothing."
     },
     {
       "term": "nisiambie msee",
-      "variants": ["nisiambie mtu", "usiambie mtu", "nisishow mtu", "usishow msee"],
+      "variants": [
+        "nisiambie mtu",
+        "usiambie mtu",
+        "nisishow mtu",
+        "usishow msee"
+      ],
       "meaning": "don't tell anyone",
-      "risk_tags": ["secrecy_instruction"],
+      "risk_tags": [
+        "secrecy_instruction"
+      ],
       "confidence": "medium",
       "source": "SAF_L06",
       "note": "Secrecy instruction. Corroborating rather than sufficient on its own."
@@ -77,19 +127,38 @@
     {
       "term": "ananiforce",
       "variants": [
-        "ananipressure", "anapressure", "ananipreshia", "anapreshia",
-        "ananilazimisha", "kunilazimisha", "ananishinikiza", "ananisukuma",
-        "ananibonyeza", "ananipush", "anapush", "kunipressure", "kupressure"
+        "ananipressure",
+        "anapressure",
+        "ananipreshia",
+        "anapreshia",
+        "ananilazimisha",
+        "kunilazimisha",
+        "ananishinikiza",
+        "ananisukuma",
+        "ananibonyeza",
+        "ananipush",
+        "anapush",
+        "kunipressure",
+        "kupressure"
       ],
       "meaning": "is pressuring me",
-      "risk_tags": ["possible_coercion"],
+      "risk_tags": [
+        "possible_coercion"
+      ],
       "confidence": "medium",
       "source": "live testing, 5 Aug",
       "note": "Only 'ananipressure' was listed, so 'chali yangu anapressure we have sex' normalised to nothing useful and retrieval missed the relationship corpus entirely. Kiswahili drops or varies the object infix freely; a lexicon that lists one conjugation will keep failing this way. Pressure alone is still not a disclosure - it raises scrutiny and the classifier decides."
     },
     {
       "term": "tulale",
-      "variants": ["tufanye mapenzi", "tuwe na sex", "we have sex", "kulala naye", "kufanya mapenzi", "tudo"],
+      "variants": [
+        "tufanye mapenzi",
+        "tuwe na sex",
+        "we have sex",
+        "kulala naye",
+        "kufanya mapenzi",
+        "tudo"
+      ],
       "meaning": "to have sex",
       "risk_tags": [],
       "domain": "consent_relationships",
@@ -99,53 +168,201 @@
     },
     {
       "term": "sitaki",
-      "variants": ["sidai", "siwezi", "nakataa"],
+      "variants": [
+        "sidai",
+        "siwezi",
+        "nakataa"
+      ],
       "meaning": "I do not want",
       "risk_tags": [],
       "domain": "consent_relationships",
       "confidence": "high",
       "note": "Refusal vocabulary. Carries no risk tag alone but is the hinge of most consent questions."
     },
-
-    { "term": "chali", "variants": ["boyi", "boy wangu", "mchumba"], "meaning": "boyfriend", "risk_tags": [], "confidence": "high", "source": "SAF_L01, REL_L01" },
-    { "term": "beste", "variants": ["msee wangu", "rafiki"], "meaning": "close friend", "risk_tags": [], "confidence": "high", "source": "SAF_L05" },
-    { "term": "muankoz", "variants": ["mjomba", "ankoz"], "meaning": "uncle", "risk_tags": [], "confidence": "high", "source": "SAF_L06" },
-    { "term": "kunichanua", "variants": ["kunishow", "kuniambia", "alinichanua"], "meaning": "to tell me / reveal to me", "risk_tags": [], "confidence": "high", "source": "SAF_L05" },
-    { "term": "msee mbigi", "variants": ["mtu mkubwa", "msee mkubwa"], "meaning": "adult / grown-up", "risk_tags": [], "confidence": "high", "source": "HLP_L01" },
-    { "term": "stude", "variants": ["mwanafunzi"], "meaning": "student", "risk_tags": [], "confidence": "high", "source": "SAF_L03" },
-    { "term": "anadai", "variants": ["anataka"], "meaning": "wants to / is demanding", "risk_tags": [], "confidence": "high", "source": "SAF_L03" },
-
-    { "term": "mashiro", "variants": ["hedhi", "periods zangu"], "meaning": "period / menstruation", "risk_tags": [], "domain": "puberty_menstruation", "confidence": "high", "source": "PUB_L01, OOS_L01" },
-    { "term": "mastress", "variants": ["msongo wa mawazo", "stress mob"], "meaning": "stress", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "STR_L01, SAF_L07" },
-    { "term": "teo", "variants": ["mtihani", "exams"], "meaning": "exams", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "SAF_L07" },
-    { "term": "kudoz", "variants": ["kulala"], "meaning": "to sleep", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "STR_L01" },
-    { "term": "ball", "variants": ["mimba", "ballgame"], "meaning": "pregnancy", "risk_tags": [], "domain": "puberty_menstruation", "confidence": "medium", "source": "OOS_L01" },
-    { "term": "husnoop", "variants": ["anacheki simu", "anaangalia simu", "anacheck simu"], "meaning": "checks my phone", "risk_tags": ["controlling_behaviour"], "domain": "consent_relationships", "confidence": "high", "source": "REL_L01",
-      "note": "Controlling behaviour is a relationships TOPIC, not a disclosure of harm. Tagged so triage can route it, deliberately not a safeguarding tag - REL_L01 must not trigger." },
-    { "term": "kupitia changamoto", "variants": ["nakapitia", "napitia shida", "niko na shida"], "meaning": "going through difficulties", "risk_tags": [], "domain": "professional_help", "confidence": "high", "source": "HLP_L01" }
+    {
+      "term": "chali",
+      "variants": [
+        "boyi",
+        "boy wangu",
+        "mchumba"
+      ],
+      "meaning": "boyfriend",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L01, REL_L01"
+    },
+    {
+      "term": "beste",
+      "variants": [
+        "msee wangu",
+        "rafiki"
+      ],
+      "meaning": "close friend",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L05"
+    },
+    {
+      "term": "muankoz",
+      "variants": [
+        "mjomba",
+        "ankoz"
+      ],
+      "meaning": "uncle",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L06"
+    },
+    {
+      "term": "kunichanua",
+      "variants": [
+        "kunishow",
+        "kuniambia",
+        "alinichanua"
+      ],
+      "meaning": "to tell me / reveal to me",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L05"
+    },
+    {
+      "term": "msee mbigi",
+      "variants": [
+        "mtu mkubwa",
+        "msee mkubwa"
+      ],
+      "meaning": "adult / grown-up",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "HLP_L01"
+    },
+    {
+      "term": "stude",
+      "variants": [
+        "mwanafunzi"
+      ],
+      "meaning": "student",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L03"
+    },
+    {
+      "term": "anadai",
+      "variants": [
+        "anataka"
+      ],
+      "meaning": "wants to / is demanding",
+      "risk_tags": [],
+      "confidence": "high",
+      "source": "SAF_L03"
+    },
+    {
+      "term": "ball",
+      "variants": [
+        "mimba",
+        "ballgame"
+      ],
+      "meaning": "pregnancy",
+      "risk_tags": [],
+      "domain": "puberty_menstruation",
+      "confidence": "medium",
+      "source": "OOS_L01"
+    },
+    {
+      "term": "husnoop",
+      "variants": [
+        "anacheki simu",
+        "anaangalia simu",
+        "anacheck simu"
+      ],
+      "meaning": "checks my phone",
+      "risk_tags": [
+        "controlling_behaviour"
+      ],
+      "domain": "consent_relationships",
+      "confidence": "high",
+      "source": "REL_L01",
+      "note": "Controlling behaviour is a relationships TOPIC, not a disclosure of harm. Tagged so triage can route it, deliberately not a safeguarding tag - REL_L01 must not trigger."
+    }
   ],
-
   "idioms": [
     {
       "phrase": "naskia kudedi",
-      "variants": ["naskia kufa", "nataka kudedi na stress", "nimededi na stress", "kudedi na mastress"],
+      "variants": [
+        "naskia kufa",
+        "nataka kudedi na stress",
+        "nimededi na stress",
+        "kudedi na mastress"
+      ],
       "meaning": "hyperbole for exhaustion or stress, not a wish to die",
-      "suppresses": ["self_harm_risk"],
+      "suppresses": [
+        "self_harm_risk"
+      ],
       "source": "SAF_L07",
       "note": "The hardest case in the set. 'kudedi' is literally 'to die' and sits directly against SAF_L02, which must trigger. Suppression applies only within these fixed phrasings."
     },
     {
       "phrase": "naweza kufa",
-      "variants": ["naskia kama naweza kufa", "nitakufa na stress", "nakufa na njaa"],
+      "variants": [
+        "naskia kama naweza kufa",
+        "nitakufa na stress",
+        "nakufa na njaa"
+      ],
       "meaning": "I could die (of embarrassment, stress, hunger) - idiom",
-      "suppresses": ["self_harm_risk"],
+      "suppresses": [
+        "self_harm_risk"
+      ],
       "source": "SAF_L07"
     },
     {
       "phrase": "imenimaliza",
-      "variants": ["imeniua", "inaniua"],
+      "variants": [
+        "imeniua",
+        "inaniua"
+      ],
       "meaning": "it has finished/killed me - exhaustion idiom",
-      "suppresses": ["self_harm_risk", "physical_violence"]
+      "suppresses": [
+        "self_harm_risk",
+        "physical_violence"
+      ]
     }
-  ]
+  ],
+  "scope_pass": {
+    "date": "2026-08-28",
+    "principle": "Risk-based safety floor, domain-scoped ordinary vocabulary. Every risk-tagged term is retained regardless of topic, because violence, coercion, exploitation and self-harm must be noticed inside any conversation. Untagged terms are scoped to the use case, and these served the previous one only.",
+    "removed": [
+      {
+        "term": "mashiro",
+        "meaning": "period / menstruation"
+      },
+      {
+        "term": "mastress",
+        "meaning": "stress"
+      },
+      {
+        "term": "teo",
+        "meaning": "exams"
+      },
+      {
+        "term": "kudoz",
+        "meaning": "to sleep"
+      },
+      {
+        "term": "kupitia changamoto",
+        "meaning": "going through difficulties"
+      }
+    ],
+    "retained_untagged_and_why": {
+      "tulale": "to have sex — core to this scope",
+      "sitaki": "I do not want — refusal and consent",
+      "chali": "boyfriend — relationships are in scope",
+      "beste": "close friend — third-party disclosures arrive this way",
+      "muankoz": "uncle — power differential in disclosures",
+      "anadai": "wants to / is demanding — pressure language",
+      "ball": "pregnancy — directly this scope",
+      "kunichanua": "to tell me / reveal — disclosure framing",
+      "msee mbigi": "adult — age and power gap",
+      "stude": "student — the empowerment track links school to pregnancy"
+    }
+  }
 }

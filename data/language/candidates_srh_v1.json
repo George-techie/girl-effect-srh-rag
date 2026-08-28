@@ -1,0 +1,49 @@
+{
+  "schema_version": "1",
+  "status": "PROPOSED — NOT REVIEWED, NOT LOADED AT RUNTIME",
+  "drafted_by": "Claude (not a Kiswahili or Sheng speaker)",
+  "reviewer": null,
+  "review_date": null,
+  "notes": [
+    "Candidate terms for the SRH scope. The live lexicon carries a named reviewer and a version; terms drafted by a non-speaker do not inherit that, so these sit here until a Kenyan reviewer promotes them.",
+    "Two kinds of entry. Most are NORMALISATION ONLY -- they carry no risk tag and exist so that a message written in Kenyan register reaches the English patterns and the corpus vocabulary. A minority carry risk tags, and those are the ones that most need a speaker's judgement, because a wrong risk tag either misses a disclosure or fires the safety path at a girl who asked an ordinary question.",
+    "Confidence is marked per term. 'standard' means ordinary Kiswahili I am reasonably confident of; 'sheng' means slang whose current usage varies by year, neighbourhood and age and which I am least able to verify.",
+    "Reviewer: please delete anything wrong rather than correcting it politely. A term that does not fire is a smaller problem than one that fires on the wrong thing."
+  ],
+
+  "terms": [
+    {"term": "mimba", "forms": ["mimba", "nina mimba", "niko na mimba", "kupata mimba", "kubeba mimba"], "meaning": "pregnancy / I am pregnant", "confidence": "standard", "risk_tags": []},
+    {"term": "mipango ya uzazi", "forms": ["mipango ya uzazi", "kupanga uzazi", "mpango wa uzazi"], "meaning": "family planning", "confidence": "standard", "risk_tags": []},
+    {"term": "kuzuia mimba", "forms": ["kuzuia mimba", "kuepuka mimba"], "meaning": "to prevent pregnancy / contraception", "confidence": "standard", "risk_tags": []},
+    {"term": "kondomu", "forms": ["kondomu", "kondom", "mpira", "CD"], "meaning": "condom", "confidence": "sheng", "risk_tags": [],
+     "note": "mpira is literally 'rubber' and is common; CD is reported slang and is the least certain entry here."},
+    {"term": "P2", "forms": ["P2", "pii tu", "morning after"], "meaning": "emergency contraceptive pill", "confidence": "sheng", "risk_tags": [],
+     "note": "P2 is a Kenyan brand name used generically. Worth confirming it is still the common term."},
+    {"term": "sindano", "forms": ["sindano", "kuchoma sindano"], "meaning": "the injection (injectable contraceptive)", "confidence": "standard", "risk_tags": []},
+    {"term": "kipandikizi", "forms": ["kipandikizi"], "meaning": "the implant", "confidence": "standard", "risk_tags": []},
+
+    {"term": "mji wa mtoto", "forms": ["mji wa mtoto", "kizazi"], "meaning": "womb / uterus", "confidence": "standard", "risk_tags": [],
+     "note": "The one term with measured evidence behind it. Experiment 2: 'inaharibu mji wa mtoto' retrieved a policy report, while its English twin -- contraception damaging the womb -- retrieved the myth-correcting passages immediately. Normalising this is what closes that gap."},
+    {"term": "kuharibu mji wa mtoto", "forms": ["inaharibu mji wa mtoto", "kuharibu kizazi", "kufunga kizazi"], "meaning": "to damage the womb / to close the womb -- a fertility myth about contraception", "confidence": "standard", "risk_tags": [],
+     "note": "A misconception, not a risk. It should raise the myth-correcting passages, not the safety path."},
+
+    {"term": "kliniki", "forms": ["kliniki", "hospitali", "dispensari"], "meaning": "clinic / hospital / dispensary", "confidence": "standard", "risk_tags": []},
+    {"term": "daktari", "forms": ["daktari", "dokta", "muuguzi", "nesi"], "meaning": "doctor / nurse", "confidence": "standard", "risk_tags": []},
+
+    {"term": "naogopa", "forms": ["naogopa", "ninaogopa", "nataharuki"], "meaning": "I am afraid", "confidence": "standard", "risk_tags": [],
+     "note": "A support cue, not a risk one. Currently handled by an inline English-side pattern; belongs here instead."},
+    {"term": "nina aibu", "forms": ["nina aibu", "naskia aibu", "nimeaibika"], "meaning": "I am ashamed / embarrassed", "confidence": "standard", "risk_tags": []},
+    {"term": "sina mtu wa kuambia", "forms": ["sina mtu wa kuambia", "sina wa kumwambia"], "meaning": "I have no one to tell", "confidence": "standard", "risk_tags": []},
+
+    {"term": "hanitaki nitumie", "forms": ["hanitaki nitumie", "hataki nitumie", "ananikataza"], "meaning": "he does not want me to use it / he forbids me", "confidence": "standard", "risk_tags": ["reproductive_coercion"],
+     "note": "Reproductive coercion: pressure not to use a method. Needs a speaker's judgement -- this is the family where a wrong tag has the highest cost in both directions."},
+    {"term": "hataki kutumia mpira", "forms": ["hataki kutumia mpira", "hataki kondomu", "anakataa kutumia mpira"], "meaning": "he refuses to use a condom", "confidence": "sheng", "risk_tags": ["possible_coercion"],
+     "note": "Refusal alone is a preference, not coercion -- the English rules deliberately route 'my boyfriend doesn't like condoms' to support. Tagged possible_coercion rather than reproductive_coercion so it raises scrutiny without deciding. Reviewer should confirm this is the right strength."},
+    {"term": "akiniacha", "forms": ["ataniacha", "akiniacha", "atanidump"], "meaning": "he will leave me / if he leaves me", "confidence": "sheng", "risk_tags": [],
+     "note": "No tag on its own -- fear of abandonment is a support turn. It becomes coercion only when attached to stopping a method, which the English rules already handle as a pair."},
+    {"term": "amenilazimisha", "forms": ["amenilazimisha", "ananilazimisha", "kunilazimisha"], "meaning": "he has forced me / is forcing me", "confidence": "standard", "risk_tags": ["sexual_abuse"],
+     "note": "Complements 'ananiforce', which is already in the live lexicon."}
+  ],
+
+  "idioms": []
+}
