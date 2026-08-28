@@ -47,7 +47,11 @@ def main() -> int:
         r["correct"] = d.path == r["decision"]
 
     print("\n" + "=" * 78)
-    print("DECISION LAYER · deterministic rules + glossary · no model")
+    from src.language import glossary as _g
+    _s = _g.stats()
+    print("DECISION LAYER · deterministic rules + Kenyan glossary · no model")
+    print(f"  lexicon {_s['lexicon_version']} · {_s['terms']} terms · "
+          f"{_s['surface_forms']} surface forms · {_s['idioms']} idioms")
     print(f"{len(rows)} messages\n")
 
     # --- safeguarding first --------------------------------------------------

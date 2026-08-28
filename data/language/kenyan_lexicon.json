@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.0",
+  "lexicon_version": "2026-08-04-v1",
+  "reviewer": "George Nyatangi",
+  "review_date": "2026-08-04",
+  "notes": [
+    "A safety-critical artefact, versioned like the corpus. A wrong risk tag",
+    "either misses a disclosure or makes the system panic at a normal question.",
+    "Seeded from authentic phrasing in evaluation/datasets language cases,",
+    "written by a Kenyan reviewer. Terms invented by a model do not belong here.",
+    "Scope is deliberately narrow: the four content domains plus the vocabulary",
+    "of harm. This is not a general Sheng dictionary and should not become one.",
+    "risk_tags raise scrutiny. They do not by themselves prove a disclosure -",
+    "'kudedi' means to die and is almost always idiom."
+  ],
+
+  "terms": [
+    {
+      "term": "hunipiga",
+      "variants": ["ananipiga", "kunipiga", "amenipiga", "hunichapa", "ananichapa", "kuchapwa", "kukuchapa"],
+      "meaning": "hits me / beats me",
+      "risk_tags": ["physical_violence"],
+      "confidence": "high",
+      "source": "SAF_L01"
+    },
+    {
+      "term": "huniguza",
+      "variants": ["ananiguza", "kuniguza", "kumguza", "huniguza guza", "aliniguza"],
+      "meaning": "touches me (inappropriately)",
+      "risk_tags": ["sexual_abuse"],
+      "confidence": "high",
+      "source": "SAF_L05, SAF_L06",
+      "note": "In these cases the sense is unwanted sexual touching. Neutral uses exist, so the classifier still sees the raw message."
+    },
+    {
+      "term": "kuondokea hii dunia",
+      "variants": ["kuondoka hii dunia", "kutoka hii dunia", "kuachana na hii dunia"],
+      "meaning": "to leave this world",
+      "risk_tags": ["self_harm_risk"],
+      "confidence": "high",
+      "source": "SAF_L02"
+    },
+    {
+      "term": "sitaki kukuwa kwa hii dunia",
+      "variants": ["sitaki kuwa hapa", "sitaki kuwa kwa hii dunia", "sitaki kuishi"],
+      "meaning": "I don't want to be in this world / I don't want to be here",
+      "risk_tags": ["self_harm_risk"],
+      "confidence": "high",
+      "source": "SAF_L02"
+    },
+    {
+      "term": "kuspread foto",
+      "variants": ["kusambaza picha", "kusambaza foto", "kushare foto", "kuposti picha zangu"],
+      "meaning": "to share/spread my photos",
+      "risk_tags": ["exploitation"],
+      "confidence": "high",
+      "source": "SAF_L03"
+    },
+    {
+      "term": "sidai kuenda mtaa",
+      "variants": ["sitaki kwenda nyumbani", "naogopa kurudi nyumbani", "sidai kurudi home", "naogopa kuenda home"],
+      "meaning": "I don't want to / am afraid to go home",
+      "risk_tags": ["unsafe_environment"],
+      "confidence": "high",
+      "source": "SAF_L04",
+      "note": "Carries no fear vocabulary at all. 'sidai' is 'I don't want', so an English rule matching on scared or afraid finds nothing."
+    },
+    {
+      "term": "nisiambie msee",
+      "variants": ["nisiambie mtu", "usiambie mtu", "nisishow mtu", "usishow msee"],
+      "meaning": "don't tell anyone",
+      "risk_tags": ["secrecy_instruction"],
+      "confidence": "medium",
+      "source": "SAF_L06",
+      "note": "Secrecy instruction. Corroborating rather than sufficient on its own."
+    },
+    {
+      "term": "ananiforce",
+      "variants": [
+        "ananipressure", "anapressure", "ananipreshia", "anapreshia",
+        "ananilazimisha", "kunilazimisha", "ananishinikiza", "ananisukuma",
+        "ananibonyeza", "ananipush", "anapush", "kunipressure", "kupressure"
+      ],
+      "meaning": "is pressuring me",
+      "risk_tags": ["possible_coercion"],
+      "confidence": "medium",
+      "source": "live testing, 5 Aug",
+      "note": "Only 'ananipressure' was listed, so 'chali yangu anapressure we have sex' normalised to nothing useful and retrieval missed the relationship corpus entirely. Kiswahili drops or varies the object infix freely; a lexicon that lists one conjugation will keep failing this way. Pressure alone is still not a disclosure - it raises scrutiny and the classifier decides."
+    },
+    {
+      "term": "tulale",
+      "variants": ["tufanye mapenzi", "tuwe na sex", "we have sex", "kulala naye", "kufanya mapenzi", "tudo"],
+      "meaning": "to have sex",
+      "risk_tags": [],
+      "domain": "consent_relationships",
+      "confidence": "high",
+      "source": "live testing, 5 Aug",
+      "note": "Not a risk term on its own. Present so retrieval can find consent and boundaries content when the question is phrased in mixed register."
+    },
+    {
+      "term": "sitaki",
+      "variants": ["sidai", "siwezi", "nakataa"],
+      "meaning": "I do not want",
+      "risk_tags": [],
+      "domain": "consent_relationships",
+      "confidence": "high",
+      "note": "Refusal vocabulary. Carries no risk tag alone but is the hinge of most consent questions."
+    },
+
+    { "term": "chali", "variants": ["boyi", "boy wangu", "mchumba"], "meaning": "boyfriend", "risk_tags": [], "confidence": "high", "source": "SAF_L01, REL_L01" },
+    { "term": "beste", "variants": ["msee wangu", "rafiki"], "meaning": "close friend", "risk_tags": [], "confidence": "high", "source": "SAF_L05" },
+    { "term": "muankoz", "variants": ["mjomba", "ankoz"], "meaning": "uncle", "risk_tags": [], "confidence": "high", "source": "SAF_L06" },
+    { "term": "kunichanua", "variants": ["kunishow", "kuniambia", "alinichanua"], "meaning": "to tell me / reveal to me", "risk_tags": [], "confidence": "high", "source": "SAF_L05" },
+    { "term": "msee mbigi", "variants": ["mtu mkubwa", "msee mkubwa"], "meaning": "adult / grown-up", "risk_tags": [], "confidence": "high", "source": "HLP_L01" },
+    { "term": "stude", "variants": ["mwanafunzi"], "meaning": "student", "risk_tags": [], "confidence": "high", "source": "SAF_L03" },
+    { "term": "anadai", "variants": ["anataka"], "meaning": "wants to / is demanding", "risk_tags": [], "confidence": "high", "source": "SAF_L03" },
+
+    { "term": "mashiro", "variants": ["hedhi", "periods zangu"], "meaning": "period / menstruation", "risk_tags": [], "domain": "puberty_menstruation", "confidence": "high", "source": "PUB_L01, OOS_L01" },
+    { "term": "mastress", "variants": ["msongo wa mawazo", "stress mob"], "meaning": "stress", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "STR_L01, SAF_L07" },
+    { "term": "teo", "variants": ["mtihani", "exams"], "meaning": "exams", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "SAF_L07" },
+    { "term": "kudoz", "variants": ["kulala"], "meaning": "to sleep", "risk_tags": [], "domain": "stress_anxiety", "confidence": "high", "source": "STR_L01" },
+    { "term": "ball", "variants": ["mimba", "ballgame"], "meaning": "pregnancy", "risk_tags": [], "domain": "puberty_menstruation", "confidence": "medium", "source": "OOS_L01" },
+    { "term": "husnoop", "variants": ["anacheki simu", "anaangalia simu", "anacheck simu"], "meaning": "checks my phone", "risk_tags": ["controlling_behaviour"], "domain": "consent_relationships", "confidence": "high", "source": "REL_L01",
+      "note": "Controlling behaviour is a relationships TOPIC, not a disclosure of harm. Tagged so triage can route it, deliberately not a safeguarding tag - REL_L01 must not trigger." },
+    { "term": "kupitia changamoto", "variants": ["nakapitia", "napitia shida", "niko na shida"], "meaning": "going through difficulties", "risk_tags": [], "domain": "professional_help", "confidence": "high", "source": "HLP_L01" }
+  ],
+
+  "idioms": [
+    {
+      "phrase": "naskia kudedi",
+      "variants": ["naskia kufa", "nataka kudedi na stress", "nimededi na stress", "kudedi na mastress"],
+      "meaning": "hyperbole for exhaustion or stress, not a wish to die",
+      "suppresses": ["self_harm_risk"],
+      "source": "SAF_L07",
+      "note": "The hardest case in the set. 'kudedi' is literally 'to die' and sits directly against SAF_L02, which must trigger. Suppression applies only within these fixed phrasings."
+    },
+    {
+      "phrase": "naweza kufa",
+      "variants": ["naskia kama naweza kufa", "nitakufa na stress", "nakufa na njaa"],
+      "meaning": "I could die (of embarrassment, stress, hunger) - idiom",
+      "suppresses": ["self_harm_risk"],
+      "source": "SAF_L07"
+    },
+    {
+      "phrase": "imenimaliza",
+      "variants": ["imeniua", "inaniua"],
+      "meaning": "it has finished/killed me - exhaustion idiom",
+      "suppresses": ["self_harm_risk", "physical_violence"]
+    }
+  ]
+}

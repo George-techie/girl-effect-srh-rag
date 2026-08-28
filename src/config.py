@@ -24,7 +24,8 @@ CORPUS = ROOT / "corpus"
 RAW = CORPUS / "raw"
 REGISTRY_CSV = CORPUS / "registry" / "source_registry.csv"
 
-PROCESSED = ROOT / "data" / "processed"
+DATA = ROOT / "data"
+PROCESSED = DATA / "processed"
 CHUNKS_FILE = PROCESSED / "chunks.jsonl"
 
 CORPUS_VERSION = os.getenv("CORPUS_VERSION", "2026-08-28-srh-v1")

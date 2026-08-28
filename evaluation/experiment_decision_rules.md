@@ -114,6 +114,53 @@ No word-boundary fix reaches that. The next pattern would have to enumerate
 *"if I really loved him"*, *"if I loved him"*, *"if I cared about him"*, *"if I
 trusted him"* — and the one after that would be the phrasing nobody listed.
 
+### A correction: the glossary was claimed before it existed
+
+Runs 1 and 2 printed "deterministic rules + glossary" and **there was no
+glossary in this repository.** The Kiswahili and Sheng handling was a handful of
+patterns written inline and labelled as something they were not. That is a false
+statement in experimental output, and it is the exact failure this project
+exists to avoid.
+
+Run 3 is the experiment as it was specified. The reviewed Kenyan lexicon is
+ported across -- **24 terms, 105 surface forms, 3 idioms, 8 risk tags**, version
+`2026-08-04-v1` with a named reviewer -- and wired as a union with the rules,
+never as an agreement: any signal is enough to flag.
+
+It contributes two things:
+
+- its **risk tags**, a deterministic finding in their own right
+- its **normalised text**, scanned by the English families alongside the
+  original, so *"chali yangu hunipiga"* reaches the pattern for *"hits me"*
+  without that pattern needing a Kiswahili variant bolted onto it
+
+The inline duplicates were then deleted, so the glossary demonstrably carries
+Sheng rather than shadowing a regex that already did. `D35` and the self-harm
+idiom now resolve via `glossary risk tag` rather than a pattern.
+
+**The numbers do not move: 0.917 recall, 1.000 precision, 0.981 accuracy.** The
+glossary changes how those cases are caught, not whether they are — on this set.
+That is worth stating plainly rather than presenting the port as an improvement.
+
+### The lexicon does not cover this scope
+
+Scanning the new question set through it shows the gap:
+
+```
+"chali yangu hunipiga…"            risk = [physical_violence]     caught
+"inaharibu mji wa mtoto"           risk = []                      nothing
+"naogopa sana kuuliza mtu"         risk = []                      nothing
+```
+
+The lexicon was built for the previous scope — violence, self-harm, coercion by
+an adult. It has no entry for the fertility metaphor that Experiment 2 measured
+failing at retrieval, and none for the ordinary Kiswahili of fear and
+embarrassment that a support turn is made of.
+
+It is a JSON file with a named reviewer and a version, so extending it is cheap
+and reviewable. What it is not is done, and no result here should be read as
+evidence that Kenyan-register coverage is adequate for this use case.
+
 ### A flaw in how the criterion was written
 
 Criterion 1 was set at **≥ 0.92 on a 12-item class**. The only passing score is

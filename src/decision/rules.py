@@ -27,6 +27,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from src.language import glossary
+
 FACTUAL = "factual"
 ACCESS = "access"
 SUPPORT = "support"
@@ -65,7 +67,10 @@ _HARM = _res(
     r"\b(rape[ds]?|raped|forced? me|force[sd]? me|made me have sex|"
     r"made me sleep with)\b",
     r"\b(hits?|beats?|hurts?|slaps?|punche[sd])\s+me\b",
-    r"\bhunipiga\b|\bakinipiga\b|\bamenipiga\b",
+    # No Kiswahili variants here on purpose. `hunipiga` and its forms live in
+    # the reviewed lexicon, which reaches this pattern two ways: as a risk tag,
+    # and by normalising the message to "hits me" before it is scanned. An
+    # inline copy would drift from the lexicon the reviewer maintains.
     r"\btouch\w*\s+me\b.{0,44}\b(not (to )?tell|don'?t tell|secret|keep it)\b",
     r"\b(uncle|teacher|stepfather|step-?dad|father|brother|cousin|neighbou?r)\b"
     r".{0,60}\b(touch\w*|come[s]? into my room|meet (me )?alone|sleep with)\b",
@@ -208,12 +213,34 @@ def _hits(patterns: tuple[re.Pattern[str], ...], text: str) -> list[str]:
 
 
 def decide(message: str) -> Decision:
-    """Classify a turn. Ordered checks; the first family to fire wins."""
+    """Classify a turn. Ordered checks; the first family to fire wins.
+
+    The Kenyan glossary contributes two things, and both are unions with the
+    rules rather than agreements with them — any signal is enough to flag,
+    because a missed disclosure and a false alarm are not comparable costs.
+
+      1. its **risk tags**, which are a deterministic finding in their own right
+      2. its **normalised text**, scanned by the English families alongside the
+         original, so that "chali yangu hunipiga" reaches the pattern for
+         "hits me" without that pattern needing a Kiswahili variant bolted on
+    """
     text = " ".join(message.split())
+
+    gloss = glossary.scan(text)
+    normalised = glossary.normalise(text)
+    # Only worth scanning twice when the glossary actually changed something.
+    variants = (text,) if normalised == text else (text, normalised)
+
+    if gloss.risk_tags:
+        return Decision(
+            SAFEGUARDING,
+            f"safeguarding · glossary risk tag",
+            sorted(gloss.risk_tags),
+        )
 
     for name, family in (("harm", _HARM), ("reproductive coercion", _REPRODUCTIVE_COERCION),
                          ("third-party", _THIRD_PARTY)):
-        matched = _hits(family, text)
+        matched = [m for v in variants for m in _hits(family, v)]
         if matched:
             return Decision(SAFEGUARDING, f"safeguarding · {name}", matched)
 
