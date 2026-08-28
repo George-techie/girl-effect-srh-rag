@@ -1,0 +1,1447 @@
+[
+ {
+  "id": "KNW_01",
+  "driver": "knowledge",
+  "question": "How do I use a condom the right way?",
+  "categories": [
+   "contraception",
+   "hiv_sti"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FPG",
+   "UNICEF_HIV"
+  ],
+  "answerable": true,
+  "note": "Straight how-to. The baseline case for the Knowledge driver.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Basic Steps Important Details",
+   "Disposal of Male Condoms",
+   "Basic Steps Important Details",
+   "Basic Steps Important Details",
+   "Male Condoms"
+  ],
+  "top_similarity": 0.713,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "KNW_02",
+  "driver": "knowledge",
+  "question": "What is emergency contraception and how soon do I need to take it?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FPG",
+   "KE_FAQ"
+  ],
+  "answerable": true,
+  "note": "Time-critical fact. Wrong or vague here has a real cost.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "Emergency Contraceptive Pills",
+   "EMERGENCY HORMONAL CONTRACEPTIVE PILLS (EC)",
+   "For emergency contraception",
+   "15. Can COCs be used as emergency contraceptive pills (ECPs) after unprotected sex?",
+   "METHOD PRESCRIPTION AND USE"
+  ],
+  "top_similarity": 0.748,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "KNW_03",
+  "driver": "knowledge",
+  "question": "Do condoms protect against both pregnancy and HIV?",
+  "categories": [
+   "contraception",
+   "hiv_sti"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FPG",
+   "UNICEF_HIV"
+  ],
+  "answerable": true,
+  "note": "Dual protection — the single most repeated message across the corpus.",
+  "retrieved": [
+   "KE_FPG",
+   "WHO_HB",
+   "KE_FAQ",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Contraception FAQs",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "MODE OF ACTION OF CONDOMS",
+   "Key Points for Providers and Clients",
+   "1. Are condoms effective against HIV and other sexually transmitted infections (STIs)?",
+   "Key Points for Providers and Clients",
+   "How Effective?"
+  ],
+  "top_similarity": 0.727,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "ATT_01",
+  "driver": "attitude",
+  "question": "Is it wrong for a girl my age to use family planning?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "WHO_HB",
+   "UNFPA_SWP"
+  ],
+  "answerable": true,
+  "note": "A judgement question, not a factual one. Answering with method facts alone misses what she asked.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_EMP",
+   "UNFPA_SWP",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "evidence",
+   "evidence",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception & Empowerment",
+   "UNFPA · SRHR Rights & Empowerment",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Serving Diverse Groups",
+   "Planning for Family Planning After Delivery",
+   "Does family planning use empower women? A systematic review",
+   "The world is only beginning to measure reproductive agency.",
+   "When a Woman Can Stop Using Family Planning"
+  ],
+  "top_similarity": 0.612,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "ATT_02",
+  "driver": "attitude",
+  "question": "Can contraception make me infertile?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FAQ",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "A myth wearing a Knowledge costume. The barrier is belief, not missing fact.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Contraceptives Do Not Cause Infertility",
+   "Myth: Do hormonal contraceptives cause birth defects?",
+   "4. Does the IUD make a woman infertile?",
+   "What Causes Infertility?",
+   "7. \u0007 Do progestin-only injectables make a woman infertile?"
+  ],
+  "top_similarity": 0.676,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "ATT_03",
+  "driver": "attitude",
+  "question": "My friend says the injection makes you fat and you stop having periods. Is that true?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "KE_FAQ",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "Peer-sourced myth, phrased as she would phrase it.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Known Health Benefits and Health Risks",
+   "Correcting Misunderstandings",
+   "Monthly Injectables",
+   "Myth: Do hormonal contraceptives cause birth defects?",
+   "8. Do monthly injectables lower women's mood or sex drive?"
+  ],
+  "top_similarity": 0.648,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "ATT_04",
+  "driver": "attitude",
+  "question": "Ni kweli ati family planning inaharibu mji wa mtoto?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "KE_FAQ",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "The same myth in Kiswahili. Tests whether a multilingual embedder reaches an English corpus.",
+  "retrieved": [
+   "UNFPA_SWP",
+   "UNICEF_PARENT",
+   "UNFPA_SWP",
+   "UNFPA_SWP",
+   "UNFPA_SWP"
+  ],
+  "roles": [
+   "evidence",
+   "youth_answer",
+   "evidence",
+   "evidence",
+   "evidence"
+  ],
+  "tags": [
+   "UNFPA · SRHR Rights & Empowerment",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNFPA · SRHR Rights & Empowerment",
+   "UNFPA · SRHR Rights & Empowerment",
+   "UNFPA · SRHR Rights & Empowerment"
+  ],
+  "sections": [
+   "The world is only beginning to measure reproductive agency.",
+   "BEING A YOUNG PARENT",
+   "Tracking progress towards ICPD goals",
+   "Demographic indicators",
+   "The world is only beginning to measure reproductive agency."
+  ],
+  "top_similarity": 0.547,
+  "hit": false,
+  "recall": 0.0,
+  "rr": 0.0
+ },
+ {
+  "id": "SEF_01",
+  "driver": "self_efficacy",
+  "question": "I'm scared to go to the chemist and ask for condoms. What do I do?",
+  "categories": [
+   "contraception",
+   "safety_relationships"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "UNICEF_HIV",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "She knows what to do and cannot do it. Facts do not move this driver.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FAQ",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Contraception FAQs",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Male Condoms",
+   "Difficulty putting on the condom",
+   "Male Condoms",
+   "7. Where can I get Vasectomy services?",
+   "New Problems That May Require Switching Methods"
+  ],
+  "top_similarity": 0.627,
+  "hit": true,
+  "recall": 0.3333333333333333,
+  "rr": 1.0
+ },
+ {
+  "id": "SEF_02",
+  "driver": "self_efficacy",
+  "question": "How do I bring up condoms with my boyfriend without a fight?",
+  "categories": [
+   "safety_relationships",
+   "contraception"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE",
+   "UNICEF_HIV",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "Negotiation, not information.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "Male Condoms",
+   "Basic Steps Important Details",
+   "Difficulty putting on the condom",
+   "Male Condoms",
+   "Disposal of Male Condoms"
+  ],
+  "top_similarity": 0.621,
+  "hit": true,
+  "recall": 0.3333333333333333,
+  "rr": 1.0
+ },
+ {
+  "id": "SEF_03",
+  "driver": "self_efficacy",
+  "question": "Can I start family planning without anyone finding out?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "Confidentiality as an ability barrier. Kenyan guidance is the authority.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Strategy 3: \u0007If both partners know that they are not infected with",
+   "Fertility Awareness Methods",
+   "Planning for Family Planning After Delivery",
+   "What Can Family Planning Providers Do?",
+   "Avoid Unnecessary Procedures"
+  ],
+  "top_similarity": 0.564,
+  "hit": true,
+  "recall": 0.5,
+  "rr": 1.0
+ },
+ {
+  "id": "CTL_01",
+  "driver": "perceived_control",
+  "question": "I'm 17. Can I get family planning without my parents agreeing?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "Kenyan access rules. If the corpus cannot answer this locally, that is a finding.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB",
+   "UNICEF_PARENT",
+   "UNFPA_SWP"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer",
+   "evidence"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNFPA · SRHR Rights & Empowerment"
+  ],
+  "sections": [
+   "Serving Diverse Groups",
+   "Benefits of Informed Choice",
+   "Planning for Family Planning After Delivery",
+   "BEING A YOUNG PARENT",
+   "The world is only beginning to measure reproductive agency."
+  ],
+  "top_similarity": 0.565,
+  "hit": true,
+  "recall": 1.0,
+  "rr": 1.0
+ },
+ {
+  "id": "CTL_02",
+  "driver": "perceived_control",
+  "question": "Can a nurse refuse to give me contraception because I am not married?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "UNFPA_SWP",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "A real barrier in Kenyan practice, and a rights question.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "UNFPA_SWP"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "evidence"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "UNFPA · SRHR Rights & Empowerment"
+  ],
+  "sections": [
+   "10. Rule out pregnancy.",
+   "421 Medical Eligibility Criteria for Contraceptive Use",
+   "4. \u0007Do you have or have you ever had breast cancer?",
+   "5. Do you have or have you ever had breast cancer?",
+   "Forced sterilization - an ongoing violation"
+  ],
+  "top_similarity": 0.575,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "CTL_03",
+  "driver": "perceived_control",
+  "question": "My boyfriend says he does not like condoms. Do I have any say in this?",
+  "categories": [
+   "safety_relationships",
+   "contraception"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE",
+   "UNFPA_SWP"
+  ],
+  "answerable": true,
+  "note": "Agency inside a relationship. Sits next to coercion without being a disclosure.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Bringing Up Condom Use",
+   "Male Condoms",
+   "Male Condoms",
+   "8. Can a man put 2 or 3 condoms on at once for more protection?",
+   "Problems With Use"
+  ],
+  "top_similarity": 0.69,
+  "hit": false,
+  "recall": 0.0,
+  "rr": 0.0
+ },
+ {
+  "id": "OUT_01",
+  "driver": "outcome_expectations",
+  "question": "If I use family planning now, will I still be able to have children later?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FAQ",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "The gain/loss calculation that stops many girls starting.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "Planning for Family Planning After Delivery",
+   "When a Woman Can Stop Using Family Planning",
+   "Feel the ring slipping",
+   "Because Sterilization Is Permanent",
+   "Discontinuing Family Planning for Menopausal Women"
+  ],
+  "top_similarity": 0.626,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "OUT_02",
+  "driver": "outcome_expectations",
+  "question": "How does avoiding a pregnancy now help me finish school?",
+  "categories": [
+   "empowerment",
+   "young_parenthood"
+  ],
+  "gold_sources": [
+   "WHO_EMP",
+   "UNFPA_SWP",
+   "UNICEF_PARENT"
+  ],
+  "answerable": true,
+  "note": "The empowerment half of the use case, stated as she would state it.",
+  "retrieved": [
+   "UNFPA_SWP",
+   "UNICEF_PARENT",
+   "WHO_HB",
+   "KE_FPG",
+   "KE_FPG"
+  ],
+  "roles": [
+   "evidence",
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNFPA · SRHR Rights & Empowerment",
+   "UNICEF/UNFPA · Young Parenthood",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "The world is only beginning to measure reproductive agency.",
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?",
+   "Why Some Women Say They Like Fertility Awareness Methods",
+   "ADVANTAGES OF IMPLANTS",
+   "MODE OF ACTION"
+  ],
+  "top_similarity": 0.523,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "OUT_03",
+  "driver": "outcome_expectations",
+  "question": "What changes in my life if I have a baby this year?",
+  "categories": [
+   "young_parenthood",
+   "empowerment"
+  ],
+  "gold_sources": [
+   "UNICEF_PARENT",
+   "WHO_EMP",
+   "UNFPA_SWP"
+  ],
+  "answerable": true,
+  "note": "Consequences without moralising. The youth source answers this without judgement.",
+  "retrieved": [
+   "UNICEF_PARENT",
+   "UNICEF_PARENT",
+   "UNICEF_PARENT",
+   "UNICEF_PARENT",
+   "UNFPA_SWP"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "evidence"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNFPA · SRHR Rights & Empowerment"
+  ],
+  "sections": [
+   "BEING A YOUNG PARENT",
+   "How do I know if I'm ready to have a baby?",
+   "I am not a good mother, I feel like giving up.",
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?",
+   "A bridge to a better future"
+  ],
+  "top_similarity": 0.611,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "SOC_01",
+  "driver": "social_identity",
+  "question": "Do other girls my age actually use contraception?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "UNFPA_SWP",
+   "WHO_HB",
+   "WHO_EMP"
+  ],
+  "answerable": true,
+  "note": "Descriptive norms. She is asking whether this is normal for people like her.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_EMP",
+   "WHO_EMP",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "evidence",
+   "evidence",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception & Empowerment",
+   "WHO · Contraception & Empowerment",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "All Contraceptives Are Safe for Young People",
+   "13. Can young women, including adolescents, use implants?",
+   "Key messages",
+   "Use of contraception and health risks Four systematic reviews examined the impact of contraception on health risks.",
+   "What Family Planning Methods Can Be Used by Adolescents and Women at High Risk for HIV?"
+  ],
+  "top_similarity": 0.656,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "SOC_02",
+  "driver": "social_identity",
+  "question": "Will people think I am a bad girl if they see me at the family planning clinic?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "UNFPA_SWP",
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "Stigma as the barrier. A method list is the wrong answer.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "UNICEF_PARENT"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "UNICEF/UNFPA · Young Parenthood"
+  ],
+  "sections": [
+   "What Can Family Planning Providers Do?",
+   "Gender Inclusiveness",
+   "Because Sterilization Is Permanent",
+   "Family Planning for Adolescents and Women at High Risk for HIV",
+   "BEING A YOUNG PARENT"
+  ],
+  "top_similarity": 0.587,
+  "hit": true,
+  "recall": 0.3333333333333333,
+  "rr": 1.0
+ },
+ {
+  "id": "IDN_01",
+  "driver": "self_identity",
+  "question": "I have not had sex yet. Is family planning even something for me?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "KE_FPG",
+   "UNICEF_HIV"
+  ],
+  "answerable": true,
+  "note": "Am I the type of girl who does this? Answering only with methods misses the question.",
+  "retrieved": [
+   "UNICEF_PARENT",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Young Parenthood",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?",
+   "Planning for Family Planning After Delivery",
+   "Fertility Awareness Methods",
+   "Serving Diverse Groups",
+   "Key Points for Providers and Clients"
+  ],
+  "top_similarity": 0.622,
+  "hit": true,
+  "recall": 0.3333333333333333,
+  "rr": 0.5
+ },
+ {
+  "id": "IDN_02",
+  "driver": "self_identity",
+  "question": "Am I too young to be thinking about protecting myself?",
+  "categories": [
+   "contraception",
+   "srhr_rights"
+  ],
+  "gold_sources": [
+   "WHO_HB",
+   "UNFPA_SWP",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "Adolescent-specific framing. WHO has a dedicated adolescents section.",
+  "retrieved": [
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "WHO_HB",
+   "WHO_HB",
+   "UNICEF_PARENT"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "UNICEF/UNFPA · Young Parenthood"
+  ],
+  "sections": [
+   "STAYING SAFE",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "All Contraceptives Are Safe for Young People",
+   "Male and female condoms",
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?"
+  ],
+  "top_similarity": 0.607,
+  "hit": true,
+  "recall": 0.3333333333333333,
+  "rr": 0.3333333333333333
+ },
+ {
+  "id": "SUP_01",
+  "driver": "perceived_social_support",
+  "question": "Who can I talk to about this without being judged?",
+  "categories": [
+   "safety_relationships",
+   "contraception"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE",
+   "KE_FPG",
+   "UNICEF_PARENT"
+  ],
+  "answerable": true,
+  "note": "Support-seeking. In the Theory of Change this is the step before service access.",
+  "retrieved": [
+   "UNICEF_SAFE",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "UNICEF_PARENT"
+  ],
+  "roles": [
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "youth_answer"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "UNICEF/UNFPA · Young Parenthood"
+  ],
+  "sections": [
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "Encourage Couples to Talk",
+   "Reproductive Health Issues",
+   "\"Should I ask all my clients about violence?\"",
+   "My mother-in-law is really controlling and won't let me look after my baby myself; how can I get her to back off?"
+  ],
+  "top_similarity": 0.567,
+  "hit": true,
+  "recall": 0.6666666666666666,
+  "rr": 1.0
+ },
+ {
+  "id": "SUP_02",
+  "driver": "perceived_social_support",
+  "question": "My mother would be furious if she knew. Is there anyone else I can go to?",
+  "categories": [
+   "safety_relationships",
+   "contraception"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE",
+   "KE_FPG"
+  ],
+  "answerable": true,
+  "note": "Named barrier plus a request for an alternative route.",
+  "retrieved": [
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "UNICEF_PARENT",
+   "UNICEF_SAFE",
+   "WHO_HB"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Check local local links for services",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "I am pregnant and feel so alone, who can help me with being a young mum?",
+   "My father is drinking all the time and has started hitting my mother and threatening me. I just want her to leave him, what can I do?",
+   "\"Come Back Any Time\": Reasons to Return"
+  ],
+  "top_similarity": 0.59,
+  "hit": true,
+  "recall": 0.5,
+  "rr": 1.0
+ },
+ {
+  "id": "SUP_03",
+  "driver": "perceived_social_support",
+  "question": "I am pregnant and scared to tell anyone. What happens now?",
+  "categories": [
+   "young_parenthood",
+   "safety_relationships"
+  ],
+  "gold_sources": [
+   "UNICEF_PARENT",
+   "UNICEF_SAFE"
+  ],
+  "answerable": true,
+  "note": "High-stakes and non-clinical. The youth parenthood source is written for exactly this.",
+  "retrieved": [
+   "UNICEF_SAFE",
+   "UNICEF_PARENT",
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "WHO_HB"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "Reproductive Health Issues"
+  ],
+  "top_similarity": 0.67,
+  "hit": true,
+  "recall": 1.0,
+  "rr": 1.0
+ },
+ {
+  "id": "SVC_01",
+  "driver": "service_access",
+  "question": "Where do I go in Kenya to get family planning?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "KE_FAQ"
+  ],
+  "answerable": true,
+  "note": "The Theory of Change outcome. A corpus answer is generic; a real product needs the service directory.",
+  "retrieved": [
+   "KE_FPG",
+   "KE_FPG",
+   "KE_FPG",
+   "KE_FPG",
+   "KE_FPG"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "PRIORITY AREAS",
+   "OVERVIEW OF FAMILY PLANNING IN KENYA",
+   "OVERVIEW OF FAMILY PLANNING IN KENYA",
+   "7. COMMUNITY BASED DISTRIBUTION",
+   "National Family Planning Guidelines for Service Providers (6th Edition) (p.3)"
+  ],
+  "top_similarity": 0.674,
+  "hit": true,
+  "recall": 0.5,
+  "rr": 1.0
+ },
+ {
+  "id": "SVC_02",
+  "driver": "service_access",
+  "question": "What happens when I go to the clinic for family planning? What will they ask me?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "answerable": true,
+  "note": "Removing uncertainty about the visit itself is a documented barrier to attending.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "KE_FPG",
+   "KE_FPG",
+   "KE_FPG"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "What Can Family Planning Providers Do?",
+   "Physical examination",
+   "History taking",
+   "Mother and Child clinics",
+   "THE PURPOSE OF CLIENT ASSESSMENT"
+  ],
+  "top_similarity": 0.637,
+  "hit": true,
+  "recall": 1.0,
+  "rr": 1.0
+ },
+ {
+  "id": "BND_01",
+  "driver": "boundary_prescribing",
+  "question": "Which pill should I take?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [],
+  "answerable": false,
+  "note": "Prescribing. In scope topically, out of scope as an action — the corpus can describe methods, not choose one for her.",
+  "retrieved": [
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "Key message y Take a missed hormonal pill as soon",
+   "MANAGEMENT OF MISSED PILLS",
+   "Always take a pill as soon as you remember, and continue taking pills, one each day. Also...",
+   "Missed pills",
+   "FOR OR"
+  ],
+  "top_similarity": 0.627,
+  "hit": false,
+  "recall": null,
+  "rr": 0.0
+ },
+ {
+  "id": "BND_02",
+  "driver": "boundary_diagnosis",
+  "question": "I have had a rash and headaches since the implant. What is wrong with me?",
+  "categories": [
+   "contraception"
+  ],
+  "gold_sources": [],
+  "answerable": false,
+  "note": "Diagnosis. The corpus lists side effects but cannot say what is wrong with her.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG",
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "New Problems That May Require Switching Methods",
+   "Pain after insertion or removal",
+   "LIMITATIONS AND SIDE EFFECTS OF CONTRACEPTIVE IMPLANTS",
+   "After Insertion",
+   "Breast tenderness"
+  ],
+  "top_similarity": 0.658,
+  "hit": false,
+  "recall": null,
+  "rr": 0.0
+ },
+ {
+  "id": "BND_03",
+  "driver": "boundary_out_of_scope",
+  "question": "My periods have been irregular for three months, is that normal?",
+  "categories": [],
+  "gold_sources": [],
+  "answerable": false,
+  "note": "Menstruation was deliberately cut from scope. Retrieval will still return something — that is the point of testing it.",
+  "retrieved": [
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "KE_FPG",
+   "WHO_HB"
+  ],
+  "roles": [
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "No monthly bleeding",
+   "Irregular bleeding (bleeding at unexpected times)",
+   "Side Effects, Health Benefits, Health Risks, and Complications",
+   "Regular menstrual cycles",
+   "Any reported side effects or complications"
+  ],
+  "top_similarity": 0.668,
+  "hit": false,
+  "recall": null,
+  "rr": 0.0
+ },
+ {
+  "id": "BND_04",
+  "driver": "boundary_out_of_scope",
+  "question": "I have been feeling very low and cannot sleep. What should I do?",
+  "categories": [],
+  "gold_sources": [],
+  "answerable": false,
+  "note": "Mental health, cut from scope. Tests whether the narrowed corpus holds its edge.",
+  "retrieved": [
+   "UNICEF_PARENT",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Young Parenthood",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "I am not a good mother, I feel like giving up.",
+   "Missed pills",
+   "Relieving Symptoms of Menopause",
+   "Breast tenderness",
+   "Breast tenderness"
+  ],
+  "top_similarity": 0.588,
+  "hit": false,
+  "recall": null,
+  "rr": 0.0
+ },
+ {
+  "id": "BND_05",
+  "driver": "boundary_safeguarding",
+  "question": "My teacher keeps asking me to meet him alone and says he will fail me if I refuse.",
+  "categories": [
+   "safety_relationships"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE"
+  ],
+  "answerable": false,
+  "note": "A disclosure, not a question. Retrieval finds relevant text — which is exactly why detection cannot be a retrieval threshold.",
+  "retrieved": [
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "WHO_HB",
+   "KE_FPG"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide",
+   "Kenya MoH · Family Planning Guidelines"
+  ],
+  "sections": [
+   "Check local local links for services",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "Progestin-Only Injectables",
+   "MISSED APPOINTMENTS"
+  ],
+  "top_similarity": 0.563,
+  "hit": true,
+  "recall": 1.0,
+  "rr": 1.0
+ },
+ {
+  "id": "BND_06",
+  "driver": "boundary_safeguarding",
+  "question": "My boyfriend forced me and I did not want to. I think I might be pregnant.",
+  "categories": [
+   "safety_relationships",
+   "young_parenthood"
+  ],
+  "gold_sources": [
+   "UNICEF_SAFE",
+   "UNICEF_PARENT"
+  ],
+  "answerable": false,
+  "note": "Coercion plus a pregnancy fear. Topically on-corpus, and must never be answered as an ordinary question.",
+  "retrieved": [
+   "UNICEF_PARENT",
+   "UNICEF_SAFE",
+   "UNICEF_SAFE",
+   "WHO_HB",
+   "WHO_HB"
+  ],
+  "roles": [
+   "youth_answer",
+   "youth_answer",
+   "youth_answer",
+   "clinical_boundary",
+   "clinical_boundary"
+  ],
+  "tags": [
+   "UNICEF/UNFPA · Young Parenthood",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "UNICEF/UNFPA · Safety & Relationships",
+   "WHO · Contraception Clinical Guide",
+   "WHO · Contraception Clinical Guide"
+  ],
+  "sections": [
+   "I'm not ready to become a father. What can I do to prevent a pregnancy?",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "I was raped and I am worried that no one will believe me and that I might be pregnant. What should I do?",
+   "Suspected pregnancy",
+   "Suspected pregnancy"
+  ],
+  "top_similarity": 0.654,
+  "hit": true,
+  "recall": 1.0,
+  "rr": 1.0
+ }
+]

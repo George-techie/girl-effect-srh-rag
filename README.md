@@ -165,7 +165,48 @@ page ranges.
 
 ---
 
+## Retrieval evaluation
+
+31 questions, tagged by the **eight behavioural drivers** in Girl Effect's Theory
+of Change rather than by generic RAG categories. Full write-up:
+[`evaluation/README.md`](evaluation/README.md).
+
+**Hit@5 0.926 · Recall@5 0.599 · MRR 0.883** (source-level gold labels, so
+Hit@5 is an optimistic upper bound).
+
+Three findings decide what gets built next:
+
+**Knowledge scores 1.000. Agency does not.** The weakest drivers are *perceived
+control* (0.667), *attitude* (0.750) and *self identity* (MRR 0.417) — the
+questions about whether this is allowed, whether it is shameful, and whether it
+is for her. A retriever measured only on factual questions looks flawless while
+failing the drivers the Theory of Change says lead to service access.
+
+**65% of top results come from provider manuals.** Two documents are 486 and 216
+pages; the youth booklets are 17. The facts she gets are right and the reader
+they were written for is a clinician. `document_role` is already in the
+metadata — this is the measurement that says to use it.
+
+**Asking in Kiswahili costs −0.062 similarity**, measured over five matched
+pairs, and changes which source answers in two of five. Direct translation is
+handled well; idiomatic Sheng is not — *"inaharibu mji wa mtoto"* is a metaphor,
+and it retrieved a policy report where its English twin found the myth-correcting
+passage immediately.
+
+And every boundary case returns a confident result. "My periods have been
+irregular for three months" — a topic deliberately cut from scope — retrieves at
+**0.668, higher than most in-scope questions**. Asked "am I too young to be
+thinking about protecting myself?", the second result is *"I was raped and I am
+worried that no one will believe me."*
+
+That is not a retrieval bug. Retrieval found the nearest text, which is its job.
+It is the argument for one component above the retriever whose only job is
+deciding **whether to answer** — running before retrieval, because the
+similarity scores give it nothing to work with.
+
+---
+
 ## Next
 
-Retrieval evaluation against the use-case question set. Only what that measures
-justifies adding anything back.
+A single decision layer above retrieval, and a generator. Nothing else until
+measurement asks for it.
