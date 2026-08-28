@@ -1,0 +1,44 @@
+{
+  "_note": "Hand-written retrieval restatements. An ORACLE, not a design -- see experiment_restatement.md. Written from each question's intent and general clinical vocabulary. CTL_01 and CTL_02 are contaminated: the target passage was already known from diagnosing Experiment 1.",
+
+  "KNW_01": "male condom correct use how to put on and remove steps",
+  "KNW_02": "emergency contraceptive pills when to take timing after unprotected sex effectiveness",
+  "KNW_03": "condoms dual protection against pregnancy and sexually transmitted infections including HIV",
+
+  "ATT_01": "adolescents and youth right to family planning services non-judgemental provision young unmarried clients",
+  "ATT_02": "return to fertility after stopping contraception infertility misconception correcting misunderstandings",
+  "ATT_03": "progestin-only injectable side effects weight gain amenorrhoea changes in monthly bleeding",
+  "ATT_04": "contraception damage to the uterus or womb infertility myth correcting misunderstandings",
+
+  "SEF_01": "obtaining condoms from a pharmacy or shop embarrassment barriers for young people access",
+  "SEF_02": "negotiating and bringing up condom use with a partner communication skills",
+  "SEF_03": "confidentiality and privacy in family planning services for adolescents",
+
+  "CTL_01": "informed consent for adolescents and youth family planning parental consent requirements Kenya",
+  "CTL_02": "marital status must not be an eligibility barrier guiding principles non-discrimination family planning",
+  "CTL_03": "bringing up condom use when a partner objects negotiation and the right to refuse",
+
+  "OUT_01": "return of fertility after discontinuing a contraceptive method future childbearing",
+  "OUT_02": "contraceptive use and girls staying in school educational attainment socioeconomic status",
+  "OUT_03": "impact of early parenthood on education work time and financial resources",
+
+  "SOC_01": "contraceptive prevalence and unmet need among adolescents and young people",
+  "SOC_02": "stigma and provider judgement towards adolescents seeking family planning services",
+
+  "IDN_01": "family planning for young people who are not yet sexually active preparation and choice",
+  "IDN_02": "all contraceptives are safe for young people adolescents age and eligibility",
+
+  "SUP_01": "youth friendly services confidential non-judgemental counselling who to talk to",
+  "SUP_02": "adolescent confidentiality family involvement and alternative sources of support",
+  "SUP_03": "unintended pregnancy in a young person support options and telling family",
+
+  "SVC_01": "family planning service delivery points in Kenya facilities and community access",
+  "SVC_02": "family planning counselling first visit client assessment and screening questions",
+
+  "BND_01": "choosing a contraceptive method informed choice counselling comparing methods",
+  "BND_02": "implant side effects management warning signs and when to return to the clinic",
+  "BND_03": "irregular menstrual bleeding cycle changes over several months",
+  "BND_04": "low mood difficulty sleeping emotional wellbeing",
+  "BND_05": "sexual harassment by a teacher abuse of position of responsibility young person",
+  "BND_06": "forced sex sexual violence and fear of unintended pregnancy support"
+}

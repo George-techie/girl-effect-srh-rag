@@ -43,11 +43,29 @@ def load_questions() -> list[dict]:
     return [json.loads(line) for line in QUESTIONS.open(encoding="utf-8") if line.strip()]
 
 
-def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0) -> list[dict]:
+RESTATEMENTS = Path(__file__).resolve().parents[1] / "evaluation" / "restatements_v1.json"
+
+
+def load_restatements() -> dict[str, str]:
+    data = json.loads(RESTATEMENTS.read_text(encoding="utf-8"))
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0,
+             restate: bool = False) -> list[dict]:
+    """Score each question.
+
+    With `restate`, the *retrieval* query is the hand-written restatement while
+    the question itself is untouched. That split is the point: her words are
+    what a generator would answer; the restatement only ever reaches the
+    encoder.
+    """
+    rewrites = load_restatements() if restate else {}
     rows: list[dict] = []
 
     for q in questions:
-        hits = retrieval.search(q["question"], k=k, role_bonus=role_bonus)
+        query = rewrites.get(q["id"], q["question"]) if restate else q["question"]
+        hits = retrieval.search(query, k=k, role_bonus=role_bonus)
         metas = [h.metadata for h in hits]
         dists = [1 - h.similarity for h in hits]
 
@@ -59,6 +77,7 @@ def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0) -> list[dic
 
         rows.append({
             **q,
+            "query_used": query,
             "retrieved": retrieved,
             "roles": [m["document_role"] for m in metas],
             "tags": [m["citation_tag"] for m in metas],
@@ -117,6 +136,67 @@ def sweep(questions: list[dict], k: int, bonuses: list[float]) -> None:
               f"{m['youth_top']:>10.0%}{m['clinical_top']:>10.0%}")
     print("\n  youth top / clin top = share of questions whose FIRST result")
     print("  came from that role. 31 questions, so one is 3 percentage points.")
+
+
+def compare(questions: list[dict], k: int) -> None:
+    """Baseline against oracle restatement, with the criteria fixed beforehand."""
+    base = evaluate(questions, k)
+    orac = evaluate(questions, k, restate=True)
+    b, o = summarise(base), summarise(orac)
+
+    print("\n" + "=" * 84)
+    print(f"ORACLE RESTATEMENT · top-{k}")
+    print("Hand-written retrieval queries. An upper bound, not a design.\n")
+
+    keys = [("hit", "Hit@5"), ("recall", "Recall@5"), ("mrr", "MRR"),
+            ("knowledge_mrr", "knowledge MRR"), ("control_mrr", "control MRR"),
+            ("attitude_mrr", "attitude MRR"), ("identity_mrr", "identity MRR"),
+            ("youth_top", "youth-facing top")]
+    print(f"  {'':22}{'baseline':>10}{'oracle':>10}{'delta':>10}")
+    print("  " + "-" * 52)
+    for key, label in keys:
+        d = o[key] - b[key]
+        print(f"  {label:22}{b[key]:10.3f}{o[key]:10.3f}{d:+10.3f}")
+
+    agency_b = (b["control_mrr"] + b["attitude_mrr"] + b["identity_mrr"]) / 3
+    agency_o = (o["control_mrr"] + o["attitude_mrr"] + o["identity_mrr"]) / 3
+    improved = sum(o[k_] > b[k_] for k_ in
+                   ("control_mrr", "attitude_mrr", "identity_mrr"))
+
+    print("\n  Criteria fixed before the run:")
+    checks = [
+        ("1 Hit@5 >= 0.90", o["hit"] >= 0.90, f"{o['hit']:.3f}"),
+        ("2 knowledge MRR >= 0.90", o["knowledge_mrr"] >= 0.90, f"{o['knowledge_mrr']:.3f}"),
+        (f"3 agency mean >= 0.761 and 2 of 3 up",
+         agency_o >= 0.761 and improved >= 2,
+         f"{agency_o:.3f}, {improved}/3 up"),
+        ("4 overall MRR >= 0.863", o["mrr"] >= 0.863, f"{o['mrr']:.3f}"),
+    ]
+    for label, ok, got in checks:
+        print(f"    [{'PASS' if ok else 'FAIL'}]  {label:38} {got}")
+    print(f"\n  agency mean {agency_b:.3f} -> {agency_o:.3f}  ({agency_o - agency_b:+.3f})")
+
+    # --- per-question movement ----------------------------------------------
+    print(f"\n  {'question':10}{'driver':24}{'base':>7}{'oracle':>8}  movement")
+    print("  " + "-" * 74)
+    for rb, ro in zip(base, orac):
+        if not rb["gold_sources"]:
+            continue
+        d = ro["rr"] - rb["rr"]
+        if abs(d) < 1e-9:
+            continue
+        arrow = "improved" if d > 0 else "WORSE"
+        print(f"  {rb['id']:10}{rb['driver']:24}{rb['rr']:7.2f}{ro['rr']:8.2f}  {arrow}")
+
+    print(f"\n  {'boundary':10}{'':24}{'base sim':>9}{'oracle':>8}")
+    print("  " + "-" * 74)
+    for rb, ro in zip(base, orac):
+        if rb["gold_sources"]:
+            continue
+        d = ro["top_similarity"] - rb["top_similarity"]
+        flag = "  <-- more confident" if d > 0.02 else ""
+        print(f"  {rb['id']:10}{rb['question'][:24]:24}"
+              f"{rb['top_similarity']:9.3f}{ro['top_similarity']:8.3f}{flag}")
 
 
 def report(rows: list[dict], k: int, show_misses: bool) -> None:
@@ -188,6 +268,10 @@ def main() -> int:
     ap.add_argument("--role-bonus", type=float, default=0.0)
     ap.add_argument("--sweep", action="store_true",
                     help="compare role-preference strengths and stop")
+    ap.add_argument("--restate", action="store_true",
+                    help="use the hand-written retrieval restatements")
+    ap.add_argument("--compare-restatement", action="store_true",
+                    help="baseline against oracle restatement, and stop")
     args = ap.parse_args()
 
     questions = load_questions()
@@ -196,7 +280,12 @@ def main() -> int:
         sweep(questions, args.k, [0.0, 0.02, 0.04, 0.06, 0.08, 0.12, 0.20])
         return 0
 
-    rows = evaluate(questions, args.k, role_bonus=args.role_bonus)
+    if args.compare_restatement:
+        compare(questions, args.k)
+        return 0
+
+    rows = evaluate(questions, args.k, role_bonus=args.role_bonus,
+                    restate=args.restate)
     report(rows, args.k, args.show_misses)
 
     if args.save:
