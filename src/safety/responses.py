@@ -73,3 +73,11 @@ BLOCKED = (
 TECHNICAL = (
     "Something went wrong on my side just now. Please try again in a moment."
 )
+
+#: Nothing usable arrived. Says so without implying she did something wrong.
+EMPTY_INPUT = "I didn't catch that — what would you like to ask?"
+
+TOO_LONG = (
+    "That's a lot to read in one go and I'd rather not answer half of it.\n\n"
+    "Could you send me the main thing you want to know?"
+)

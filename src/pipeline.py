@@ -29,7 +29,7 @@ from typing import Any
 
 from src import config
 from src.prompt_files import loader
-from src.decision import rules
+from src.decision import input_validation, rules
 from src.llm.client import get_client
 from src.rag import retrieval
 from src.safety import checks, responses
@@ -81,6 +81,19 @@ def _cited_sources(draft: str, hits: list[retrieval.Hit]) -> list[dict[str, Any]
 
 def answer(message: str, *, k: int | None = None) -> Reply:
     started = time.perf_counter()
+
+    # The front door. Nothing unusable reaches routing, the encoder or a model.
+    checked = input_validation.validate(message)
+    if not checked.ok:
+        return Reply(
+            responses.TOO_LONG if "longer" in checked.reason
+            else responses.EMPTY_INPUT,
+            "invalid_input",
+            trace={"path": "invalid_input", "why": checked.reason,
+                   "llm_calls": 0, "latency_ms": 0},
+        )
+
+    message = checked.text
     decision = rules.decide(message)
     trace: dict[str, Any] = {
         "path": decision.path,

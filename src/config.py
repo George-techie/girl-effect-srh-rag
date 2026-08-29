@@ -162,3 +162,7 @@ CONVERSE_MAX_WORDS = int(os.getenv("CONVERSE_MAX_WORDS", "60"))
 CONVERSE_MIN_WORDS = int(os.getenv("CONVERSE_MIN_WORDS", "4"))
 CONVERSE_MAX_TOKENS = int(CONVERSE_MAX_WORDS * TOKENS_PER_WORD) + 80
 RESPONSE_MIN_TARGET_WORDS = RESPONSE_MIN_WORDS
+
+#: Longest message accepted. Generous -- she may paste a long worry -- but a
+#: bound exists so nothing unbounded reaches the encoder or the model.
+MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "2000"))
