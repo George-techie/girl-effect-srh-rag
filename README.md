@@ -9,12 +9,66 @@ overengineered in places, and this repository is the answer to that: the same
 solution philosophy, with every component either justified by a measurement or
 deleted.
 
-```
-decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
+```mermaid
+flowchart TD
+    HER["Her message"]:::her
+
+    VAL["<b>1 · Validate</b><br/>reject empty, non-text, over 2000 chars<br/><i>her words otherwise untouched — no<br/>sanitising of Sheng, emoji or case</i>"]:::free
+
+    DEC{"<b>2 · Decide</b><br/>ordered rules + Kenyan lexicon<br/>reads her words alone, never the conversation"}:::decide
+
+    SAFE["<b>Safeguarding</b><br/>approved text, never generated"]:::approved
+    OOS["<b>Out of scope</b><br/>approved text"]:::approved
+    HELP["<b>Asked where to go,<br/>after a disclosure</b><br/>help pathway, approved text"]:::approved
+    CHAT["<b>Conversational contract</b><br/>no passages · claims nothing"]:::model
+
+    RES["<b>3 · Resolve</b><br/>give a fragment its antecedent<br/><i>retrieval query only</i>"]:::free
+    PREP["<b>4 · Prepare</b><br/>append the corpus's vocabulary<br/><i>factual and access turns only</i>"]:::free
+    RET["<b>5 · Retrieve</b><br/>bge-m3 local · ChromaDB cosine · top-5"]:::free
+    GEN["<b>6 · Generate</b><br/>grounded contract · every claim cited"]:::model
+    CHK["<b>7 · Check</b><br/>fabricated citation · phone number ·<br/>claimed experience · machinery talk"]:::free
+
+    REPLY["Her reply, with sources"]:::her
+    EVT[("<b>8 · Event</b><br/>one per turn<br/>+ invariants")]:::obs
+
+    HER --> VAL --> DEC
+
+    DEC -->|"disclosure of harm"| SAFE
+    DEC -->|"deliberately not covered"| OOS
+    DEC -->|"greeting · thanks · her ambitions"| CHAT
+    DEC -->|"fragment + disclosed earlier"| HELP
+    DEC -->|"factual · access · support"| RES
+
+    RES --> PREP --> RET --> GEN --> CHK
+
+    SAFE --> REPLY
+    OOS --> REPLY
+    HELP --> REPLY
+    CHAT --> REPLY
+    CHK -->|"fatal → blocked"| REPLY
+    CHK --> REPLY
+
+    REPLY -.-> EVT
+
+    classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef decide fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
+    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
+    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
 ```
 
-**Five deterministic steps and one model call.** The model is reached only on
-turns the decision layer sends to it, and never on a disclosure of harm.
+**One model call, and only on turns the decision layer sends to it — never on a
+disclosure of harm.** Teal is deterministic: free, instant, auditable. Rust is
+human-approved text that is never generated. Gold is the model.
+
+Roughly a third of turns never reach a model at all, and they are the turns
+where that matters most — every safeguarding reply is instant, because a girl
+who has just disclosed coercion should not wait on a network round trip.
+
+Four more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: why
+the safety floor runs *before* retrieval, the two output contracts, what state
+is and is not kept, and where the evidence comes from.
 
 ---
 
@@ -151,19 +205,6 @@ Mappings are labelled `evidenced` or `extrapolated` **in the source code**. Thre
 come from measured failures; seven are the same kind of gap written from the
 corpus's own section titles. Tuning a table against the set you then report on
 measures the tuning, not the layer.
-
----
-
-## How it fits together
-
-```
-decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
-```
-
-**Five diagrams in [`docs/architecture.md`](docs/architecture.md)**, rendered
-inline by GitHub: the pipeline and where the one model call sits, why the safety
-floor runs *before* retrieval, the two output contracts, what state is and is not
-kept, and what each component had to prove to stay in.
 
 ---
 
