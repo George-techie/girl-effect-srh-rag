@@ -1,0 +1,146 @@
+{
+  "_about": "Multi-turn journeys. Each turn is labelled with the path it should take GIVEN THE TURNS BEFORE IT, which is the only context in which a fragment like 'is it free?' has a correct answer at all.",
+  "_limitation": "Written by the same person who wrote the rules, like every other evaluation set in this repo. That makes them a regression harness and a design instrument, not evidence about real girls. The first journey is the one the reviewer described; it was not adjusted afterwards to make anything pass.",
+  "_must_not_retrieve": "Passages this turn must not be answered from. Not a style rule: a 15-year-old asking a follow-up about the implant and being shown female sterilization is being told about a permanent procedure she did not ask about.",
+  "journeys": [
+    {
+      "id": "J1_the_journey",
+      "description": "contraception -> her ambitions -> coercion -> seeking a service (the reviewer's own example)",
+      "turns": [
+        {
+          "message": "Hi aunti",
+          "expected_path": "chat"
+        },
+        {
+          "message": "Does the implant stop you from having children later?",
+          "expected_path": "factual"
+        },
+        {
+          "message": "and does it hurt?",
+          "expected_path": "factual",
+          "must_not_retrieve": [
+            "sterilization",
+            "sterilisation",
+            "vasectomy"
+          ]
+        },
+        {
+          "message": "what about the injection",
+          "expected_path": "factual",
+          "must_not_retrieve": [
+            "sterilization",
+            "sterilisation"
+          ]
+        },
+        {
+          "message": "I want to be a doctor one day, I am the first in my family to finish school",
+          "expected_path": "chat"
+        },
+        {
+          "message": "my boyfriend says if I really loved him I would not use anything",
+          "expected_path": "safeguarding"
+        },
+        {
+          "message": "he took it off last time without telling me",
+          "expected_path": "safeguarding"
+        },
+        {
+          "message": "where can I go?",
+          "expected_path": "access",
+          "must_not_retrieve": [
+            "BTL",
+            "vasectomy",
+            "sterilization",
+            "sterilisation"
+          ]
+        },
+        {
+          "message": "is it free?",
+          "expected_path": "access",
+          "must_not_retrieve": [
+            "vasectomy",
+            "sterilization",
+            "sterilisation"
+          ]
+        },
+        {
+          "message": "thanks aunti",
+          "expected_path": "chat"
+        }
+      ]
+    },
+    {
+      "id": "J2_comparing_methods",
+      "description": "a chain of follow-ups, each one shorter than the last",
+      "turns": [
+        {
+          "message": "How well does the pill work at stopping pregnancy?",
+          "expected_path": "factual"
+        },
+        {
+          "message": "and the condom?",
+          "expected_path": "factual"
+        },
+        {
+          "message": "which one is better",
+          "expected_path": "factual"
+        },
+        {
+          "message": "does it make you gain weight",
+          "expected_path": "factual"
+        },
+        {
+          "message": "where do I get them",
+          "expected_path": "access"
+        }
+      ]
+    },
+    {
+      "id": "J3_worry_first",
+      "description": "she is frightened before she is curious, then becomes practical",
+      "turns": [
+        {
+          "message": "I am so scared someone will see me at the clinic",
+          "expected_path": "support"
+        },
+        {
+          "message": "can I get family planning without my parents knowing",
+          "expected_path": "access"
+        },
+        {
+          "message": "even at my age?",
+          "expected_path": "factual"
+        },
+        {
+          "message": "what will they ask me",
+          "expected_path": "factual",
+          "note": "disputed label - router says access, see _disputed_labels"
+        }
+      ]
+    },
+    {
+      "id": "J4_drifts_out_and_back",
+      "description": "she asks something out of scope mid-conversation and then comes back",
+      "turns": [
+        {
+          "message": "Can I use family planning if I am not married?",
+          "expected_path": "access",
+          "note": "disputed label - router says factual, see _disputed_labels"
+        },
+        {
+          "message": "My periods have been irregular for three months",
+          "expected_path": "out_of_scope"
+        },
+        {
+          "message": "ok. so does the injection change your periods?",
+          "expected_path": "factual"
+        },
+        {
+          "message": "I feel better knowing that",
+          "expected_path": "support"
+        }
+      ]
+    }
+  ],
+  "_disputed_labels": "Two turns disagree with the router and BOTH labels are mine, written before the run. They are left as written rather than corrected, because changing a label after seeing the result is how an evaluation stops measuring anything. J3 'what will they ask me' -- I labelled factual, the router says access, and the router is arguably right: it is a question about the service encounter. J4 'Can I use family planning if I am not married?' -- I labelled access, the router says factual, and the router is arguably right: it is an eligibility fact, not a question about where to go. Criterion 2 fails at 0.913 because of these two. A reviewer should judge the labels, not just the score."
+}

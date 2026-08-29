@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from src.conversation import Conversation
 from src import config, pipeline
 from src.decision import rules
 from src.ui import theme
@@ -47,6 +48,7 @@ with st.sidebar:
     st.divider()
     if st.button("Clear conversation", use_container_width=True):
         st.session_state.messages = []
+        st.session_state.conversation = Conversation()
         st.rerun()
 
     # The scope note lives here rather than under every message. Three
@@ -67,6 +69,12 @@ st.markdown(
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# The conversation the pipeline reads. Separate from `messages`, which is what
+# the page draws: this one is bounded to six turns and carries the routing path
+# per turn, and it is what makes "and does it hurt?" mean anything.
+if "conversation" not in st.session_state:
+    st.session_state.conversation = Conversation()
 
 thread = st.container()
 with thread:
@@ -152,7 +160,8 @@ message = typed or st.session_state.pop("pending", None)
 if message:
     st.session_state.messages.append({"role": "user", "text": message})
     with st.spinner(" "):
-        reply = pipeline.answer(message)
+        reply = pipeline.answer(
+            message, conversation=st.session_state.conversation)
     st.session_state.messages.append({
         "role": "bot",
         "text": reply.text,

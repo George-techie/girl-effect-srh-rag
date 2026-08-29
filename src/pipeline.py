@@ -1,8 +1,10 @@
 """The whole system.
 
-    decide  →  retrieve  →  generate  →  check
+    decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
 
-Four steps, one model call, and the model is only reached on turns the decision
+Only `generate` costs anything. The other five are rules.
+
+Six steps, one model call, and the model is only reached on turns the decision
 layer sends to it. Everything else — the decision, the retrieval, the checks —
 is deterministic and free.
 
@@ -18,7 +20,10 @@ What is deliberately not here, and why, with the measurement in each case:
                      table in rag/query_prep.py got Adequate@5 from 0.880 to
                      0.960 with no question regressing, for no tokens. A model
                      would have to beat that, not merely work
-  conversation memory  nothing has measured that this demo needs it
+  conversation memory  bounded to six turns in conversation.py, and it is state
+                     rather than memory: no summariser, no entity tracker, no
+                     profile. Measured: a follow-up fragment retrieved material
+                     about sterilisation until it could see the turn before it
 """
 
 from __future__ import annotations
@@ -28,6 +33,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src import config
+from src import conversation as conversation_mod
+from src.conversation import Conversation
 from src.prompt_files import loader
 from src.decision import input_validation, rules
 from src.llm.client import get_client
@@ -79,7 +86,26 @@ def _cited_sources(draft: str, hits: list[retrieval.Hit]) -> list[dict[str, Any]
     return used
 
 
-def answer(message: str, *, k: int | None = None) -> Reply:
+def answer(message: str, *, k: int | None = None,
+           conversation: Conversation | None = None) -> Reply:
+    """One turn, and the record of it.
+
+    `conversation` is optional. Without it this behaves exactly as it did
+    before, which is what keeps every single-turn evaluation still valid.
+
+    Recording brackets the turn rather than sitting inside it: her message must
+    not appear in its own history block, and the reply is recorded on every
+    return path -- including the safeguarding ones, which leave early.
+    """
+    reply = _answer(message, k=k, conversation=conversation)
+    if conversation is not None:
+        conversation.record_her(message, reply.path)
+        conversation.record_aunti(reply.text, reply.path)
+    return reply
+
+
+def _answer(message: str, *, k: int | None = None,
+            conversation: Conversation | None = None) -> Reply:
     started = time.perf_counter()
 
     # The front door. Nothing unusable reaches routing, the encoder or a model.
@@ -94,6 +120,10 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         )
 
     message = checked.text
+
+    # The decision is made on her words alone, never on the conversation. A
+    # safety floor that depends on state is a safety floor with a state bug in
+    # it, and the floor is re-evaluated from scratch on every single turn.
     decision = rules.decide(message)
     trace: dict[str, Any] = {
         "path": decision.path,
@@ -101,6 +131,21 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         "matched": decision.matched,
         "llm_calls": 0,
     }
+
+    if conversation is not None:
+        # Built from prior turns only -- this message arrives separately, as
+        # "her message just now", and a prompt that shows it in both places
+        # invites the model to answer it twice.
+        history = conversation.history_block()
+        trace["turn"] = len(conversation.turns) // 2 + 1
+        if conversation.disclosed:
+            # Sticky within the session. It never softens the floor -- it only
+            # stops a girl who told us about coercion four turns ago being
+            # handled as an anonymous first-time asker when she finally asks
+            # where to go.
+            trace["disclosed_earlier"] = True
+    else:
+        history = ""
 
     # --- the safety floor, before anything is searched ----------------------
     # Retrieval cannot decline: a deliberately out-of-scope question was
@@ -147,7 +192,7 @@ def answer(message: str, *, k: int | None = None) -> Reply:
     # Safe for the opposite reason to a grounded answer: that one is safe
     # because every claim is cited, this one because it makes no claim at all.
     if decision.path == rules.CHAT:
-        return _converse(message, decision, trace, started)
+        return _converse(message, decision, trace, started, history)
 
     # --- retrieve ------------------------------------------------------------
     # The query the encoder sees is not always the message. On factual and
@@ -156,7 +201,17 @@ def answer(message: str, *, k: int | None = None) -> Reply:
     # path `restate` is False and the query is her message verbatim, which is
     # the condition that keeps support turns pointed at material written for
     # her rather than policy literature about her.
-    query = query_prep.prepare(message, restate=decision.restate)
+    #
+    # Before that, a dependent fragment gets its antecedent back. "and does it
+    # hurt?" asked after a question about the implant retrieved *female
+    # sterilization*; "where can I go?" after a coercion disclosure retrieved
+    # *BTL*, which is permanent. Both are answers to a question she did not ask.
+    followup = conversation_mod.resolve(message, conversation,
+                                        retrieves=decision.retrieves)
+    if followup.resolved:
+        trace["resolved_from"] = followup.antecedent
+
+    query = query_prep.prepare(followup.text, restate=decision.restate)
     trace["query"] = query.text
     trace["query_prepared"] = query.restated
     if query.restated:
@@ -188,7 +243,7 @@ def answer(message: str, *, k: int | None = None) -> Reply:
                 language_label="",
                 seriousness=SERIOUSNESS.get(decision.path, "personal"),
                 context_block="",
-                history_block="",
+                history_block=history,
                 context=_context(hits),
                 question=message,
             ),
@@ -250,7 +305,8 @@ SERIOUSNESS = {
 SITUATION = {rules.CHAT: "greeting", rules.SUPPORT: "support"}
 
 
-def _converse(message: str, decision, trace: dict, started: float) -> Reply:
+def _converse(message: str, decision, trace: dict, started: float,
+              history: str = "") -> Reply:
     """A reply written with no passages, and forbidden from stating a fact."""
     prompt = loader.load("converse")
     seriousness = SERIOUSNESS.get(decision.path, "personal")
@@ -261,7 +317,7 @@ def _converse(message: str, decision, trace: dict, started: float) -> Reply:
                 language_label="",
                 seriousness=seriousness,
                 context_block="",
-                history_block="",
+                history_block=history,
                 message=message,
                 situation=prompt.situation(SITUATION.get(decision.path, "explore"),
                                            prompt.situation("explore")),

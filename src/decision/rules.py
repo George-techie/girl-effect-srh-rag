@@ -61,8 +61,20 @@ class Decision:
 
     @property
     def retrieves(self) -> bool:
-        """Chat has nothing to look up; out-of-scope must not look."""
-        return self.path not in (OUT_OF_SCOPE, CHAT)
+        """Does this turn actually reach the corpus?
+
+        Chat has nothing to look up, out-of-scope must not look, and
+        safeguarding is answered entirely from approved text -- the pipeline
+        returns before the encoder is touched.
+
+        Safeguarding was missing from this list while the pipeline returned
+        early anyway, so the property and the code disagreed and nothing
+        noticed. It surfaced the moment something else started trusting it:
+        follow-up resolution rewrote a girl's disclosure against her earlier
+        question about the implant. Harmless there, because the query was
+        discarded — but a property that lies is only ever harmless by accident.
+        """
+        return self.path not in (OUT_OF_SCOPE, CHAT, SAFEGUARDING)
 
     @property
     def grounded(self) -> bool:
@@ -236,6 +248,26 @@ _CHAT = _res(
     r"^\s*\w{1,12}\s*[?!.]?\s*$",
 )
 
+#: What she wants for herself. Girl Effect's Theory of Change puts self-identity
+#: and aspiration among the eight drivers of behaviour change, and this build
+#: measured self-identity as its weakest retrieval driver (MRR 0.417). Part of
+#: that is a corpus gap. Part of it is that these turns should never have gone
+#: to the corpus at all.
+#:
+#: Deliberately tight frames. "I want to be a doctor" is an ambition; "I want to
+#: be on the pill" is an access question, and only the article keeps them apart.
+_ASPIRATION = _res(
+    r"\bi want to (be|become) an? \w+",
+    r"\bi (want|hope|plan|dream) to (finish|complete|go back to|stay in) "
+    r"(school|college|university|form \w+)\b",
+    r"\bmy dream is\b|\bwhen i (finish|complete) school\b",
+    r"\bi('?m| am) the first in my (family|home)\b",
+    r"\bi (passed|got into|was accepted)\b.{0,30}\b(school|college|university|"
+    r"form \w+|exams?|kcse|kcpe)\b",
+    r"\bnataka kuwa\b|\bndoto yangu\b",
+    r"\bi want (a career|a better life|to make something of myself)\b",
+)
+
 # --- 5 · support -------------------------------------------------------------
 #: Feeling rather than question. Checked before `factual` because a girl saying
 #: she is frightened has not asked for information, and Experiment 2 measured
@@ -337,6 +369,17 @@ def decide(message: str) -> Decision:
     matched = _hits(_CHAT, text)
     if matched:
         return Decision(CHAT, "greeting or small talk", matched)
+
+    # Her ambitions, on the conversational contract. Empowerment is in scope --
+    # it is half of what this product is for -- but "I want to be a doctor, I'm
+    # the first in my family to finish school" has nothing to retrieve and
+    # nothing to cite. It was falling through to `factual`, which sent it to the
+    # corpus and answered it under a contract requiring a citation, from
+    # passages about contraception. The right reply says something back to her;
+    # it does not look anything up.
+    matched = _hits(_ASPIRATION, text)
+    if matched:
+        return Decision(CHAT, "her ambitions — nothing to look up", matched)
 
     matched = _hits(_SUPPORT, text)
     if matched:
