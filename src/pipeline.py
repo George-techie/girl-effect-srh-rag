@@ -14,10 +14,10 @@ What is deliberately not here, and why, with the measurement in each case:
   output judge       what refused a girl's compliment twice. Its deterministic
                      half is in safety/checks.py and does the work
   turn planner       replaced by rules: 51 of 52 with precision 1.000
-  query restatement  measured as helping factual and access turns and actively
-                     harming support and disclosure ones. The oracle showed the
-                     ceiling; an automatic version is the next experiment, not
-                     a shipped feature
+  query rewriting    a model call to rewrite her question. The deterministic
+                     table in rag/query_prep.py got Adequate@5 from 0.880 to
+                     0.960 with no question regressing, for no tokens. A model
+                     would have to beat that, not merely work
   conversation memory  nothing has measured that this demo needs it
 """
 
@@ -31,7 +31,7 @@ from src import config
 from src.prompt_files import loader
 from src.decision import input_validation, rules
 from src.llm.client import get_client
-from src.rag import retrieval
+from src.rag import query_prep, retrieval
 from src.safety import checks, responses
 
 INSUFFICIENT = "INSUFFICIENT_CONTEXT"
@@ -150,7 +150,19 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         return _converse(message, decision, trace, started)
 
     # --- retrieve ------------------------------------------------------------
-    hits = retrieval.search(message, k=k or config.RETRIEVAL_TOP_K)
+    # The query the encoder sees is not always the message. On factual and
+    # access turns her words get the corpus's vocabulary appended -- measured at
+    # Adequate@5 0.880 -> 0.960 with no question regressing. On every other
+    # path `restate` is False and the query is her message verbatim, which is
+    # the condition that keeps support turns pointed at material written for
+    # her rather than policy literature about her.
+    query = query_prep.prepare(message, restate=decision.restate)
+    trace["query"] = query.text
+    trace["query_prepared"] = query.restated
+    if query.restated:
+        trace["query_mappings"] = query.applied
+
+    hits = retrieval.search(query.text, k=k or config.RETRIEVAL_TOP_K)
     trace["retrieved"] = [
         {"tag": h.metadata["citation_tag"], "page": h.metadata["page_pdf"],
          "section": h.metadata["section_title"], "similarity": round(h.similarity, 3),

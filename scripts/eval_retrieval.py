@@ -34,7 +34,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src import config
-from src.rag import retrieval
+from src.decision import rules
+from src.rag import query_prep, retrieval
 
 QUESTIONS = Path(__file__).resolve().parents[1] / "evaluation" / "questions_v1.jsonl"
 
@@ -79,19 +80,28 @@ def is_adequate(qid: str, texts: list[str]) -> bool | None:
 
 
 def evaluate(questions: list[dict], k: int, role_bonus: float = 0.0,
-             restate: bool = False) -> list[dict]:
+             restate: bool = False, prepare: bool = False) -> list[dict]:
     """Score each question.
 
     With `restate`, the *retrieval* query is the hand-written restatement while
     the question itself is untouched. That split is the point: her words are
     what a generator would answer; the restatement only ever reaches the
     encoder.
+
+    With `prepare`, the query is what the shipped deterministic layer actually
+    builds -- her words plus appended corpus vocabulary -- gated on the same
+    condition the pipeline gates it on, so this measures the feature rather
+    than an idealised version of it.
     """
     rewrites = load_restatements() if restate else {}
     rows: list[dict] = []
 
     for q in questions:
         query = rewrites.get(q["id"], q["question"]) if restate else q["question"]
+        if prepare:
+            decision = rules.decide(q["question"])
+            query = query_prep.prepare(q["question"],
+                                       restate=decision.restate).text
         hits = retrieval.search(query, k=k, role_bonus=role_bonus)
         metas = [h.metadata for h in hits]
         adequate = is_adequate(q["id"], [h.text for h in hits])
@@ -230,6 +240,96 @@ def compare(questions: list[dict], k: int) -> None:
               f"{rb['top_similarity']:9.3f}{ro['top_similarity']:8.3f}{flag}")
 
 
+def compare_prepared(questions: list[dict], k: int) -> None:
+    """Natural / shipped deterministic layer / oracle, side by side.
+
+    The oracle column is a ceiling written by hand with the answer already
+    known. The deterministic column is what a girl actually gets. They are not
+    expected to meet, and the question this answers is only whether the cheap
+    version moves toward the ceiling without dragging anything backwards.
+    """
+    base = evaluate(questions, k)
+    prep = evaluate(questions, k, prepare=True)
+    orac = evaluate(questions, k, restate=True)
+    b, p, o = summarise(base), summarise(prep), summarise(orac)
+
+    print("\n" + "=" * 84)
+    print(f"DETERMINISTIC QUERY PREPARATION · top-{k}")
+    print("Her words, plus corpus vocabulary appended, on factual and access "
+          "turns only.\n")
+
+    keys = [("adequate", "Adequate@5"), ("hit", "Hit@5"), ("recall", "Recall@5"),
+            ("mrr", "MRR"), ("knowledge_mrr", "knowledge MRR"),
+            ("control_mrr", "control MRR"), ("attitude_mrr", "attitude MRR"),
+            ("identity_mrr", "identity MRR"), ("youth_top", "youth-facing top")]
+    print(f"  {'':22}{'natural':>10}{'prepared':>10}{'oracle':>10}{'delta':>9}")
+    print("  " + "-" * 61)
+    for key, label in keys:
+        print(f"  {label:22}{b[key]:10.3f}{p[key]:10.3f}{o[key]:10.3f}"
+              f"{p[key] - b[key]:+9.3f}")
+
+    def agency(m):
+        return (m["control_mrr"] + m["attitude_mrr"] + m["identity_mrr"]) / 3
+
+    print(f"\n  agency mean  {agency(b):.3f} natural -> {agency(p):.3f} prepared "
+          f"-> {agency(o):.3f} oracle")
+
+    touched = sum(1 for q in questions
+                  if query_prep.prepare(
+                      q["question"], restate=rules.decide(q["question"]).restate
+                  ).restated)
+    print(f"  {touched} of {len(questions)} questions had any mapping applied. "
+          "The rest are untouched by construction.")
+
+    print("\n  Adoption criteria, fixed before the run:")
+    regressions = [(rb["id"], rb["rr"], rp["rr"])
+                   for rb, rp in zip(base, prep)
+                   if rb["gold_sources"] and rp["rr"] < rb["rr"] - 1e-9]
+    adequacy_drop = p["adequate"] < b["adequate"] - 1e-9
+    for label, ok, got in [
+        ("A no drop in Adequate@5", not adequacy_drop,
+         f"{b['adequate']:.3f} -> {p['adequate']:.3f}"),
+        ("B no drop in Hit@5", p["hit"] >= b["hit"] - 1e-9,
+         f"{b['hit']:.3f} -> {p['hit']:.3f}"),
+        ("C at most 1 per-question regression", len(regressions) <= 1,
+         f"{len(regressions)} regressed"),
+        ("D some measured gain somewhere",
+         p["adequate"] > b["adequate"] or p["mrr"] > b["mrr"],
+         f"MRR {b['mrr']:.3f} -> {p['mrr']:.3f}"),
+    ]:
+        print(f"    [{'PASS' if ok else 'FAIL'}]  {label:38} {got}")
+
+    print(f"\n  {'question':10}{'driver':24}{'natural':>8}{'prep':>7}  movement")
+    print("  " + "-" * 74)
+    moved = False
+    for rb, rp in zip(base, prep):
+        if not rb["gold_sources"] or abs(rp["rr"] - rb["rr"]) < 1e-9:
+            continue
+        moved = True
+        print(f"  {rb['id']:10}{rb['driver']:24}{rb['rr']:8.2f}{rp['rr']:7.2f}  "
+              f"{'improved' if rp['rr'] > rb['rr'] else 'WORSE'}")
+    if not moved:
+        print("  no question changed rank")
+
+    print(f"\n  {'question':10}{'adequacy natural -> prepared'}")
+    print("  " + "-" * 74)
+    for rb, rp in zip(base, prep):
+        if rb["adequate"] is None or rb["adequate"] == rp["adequate"]:
+            continue
+        print(f"  {rb['id']:10}{str(rb['adequate']):>6} -> {str(rp['adequate']):<6}"
+              f"  {'GAINED' if rp['adequate'] else 'LOST'}")
+
+    print(f"\n  {'boundary':10}{'':24}{'natural':>9}{'prep':>8}")
+    print("  " + "-" * 74)
+    for rb, rp in zip(base, prep):
+        if rb["gold_sources"]:
+            continue
+        d = rp["top_similarity"] - rb["top_similarity"]
+        flag = "  <-- more confident" if d > 0.02 else ""
+        print(f"  {rb['id']:10}{rb['question'][:24]:24}"
+              f"{rb['top_similarity']:9.3f}{rp['top_similarity']:8.3f}{flag}")
+
+
 def report(rows: list[dict], k: int, show_misses: bool) -> None:
     scored = [r for r in rows if r["gold_sources"]]
     boundary = [r for r in rows if not r["gold_sources"]]
@@ -303,9 +403,17 @@ def main() -> int:
                     help="use the hand-written retrieval restatements")
     ap.add_argument("--compare-restatement", action="store_true",
                     help="baseline against oracle restatement, and stop")
+    ap.add_argument("--prepare", action="store_true",
+                    help="use the shipped deterministic query preparation")
+    ap.add_argument("--compare-prepared", action="store_true",
+                    help="natural vs deterministic vs oracle, and stop")
     args = ap.parse_args()
 
     questions = load_questions()
+
+    if args.compare_prepared:
+        compare_prepared(questions, args.k)
+        return 0
 
     if args.sweep:
         sweep(questions, args.k, [0.0, 0.02, 0.04, 0.06, 0.08, 0.12, 0.20])
@@ -316,7 +424,7 @@ def main() -> int:
         return 0
 
     rows = evaluate(questions, args.k, role_bonus=args.role_bonus,
-                    restate=args.restate)
+                    restate=args.restate, prepare=args.prepare)
     report(rows, args.k, args.show_misses)
 
     if args.save:

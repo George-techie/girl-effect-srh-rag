@@ -118,7 +118,15 @@ _HARM = _res(
 #: Four documented forms, all of which arrive sounding like relationship talk:
 _REPRODUCTIVE_COERCION = _res(
     # 1 · consent made conditional
-    r"\bif (you|u) (really )?love[d]? me\b",
+    #
+    # Any grammatical person, in either direction. D38 was the miss that forced
+    # this: *"He said if I really loved him I wouldn't make him use a condom"*
+    # is the same coercion script as "if you loved me you would", reported
+    # afterwards instead of said to her face. Girls repeat what he said far more
+    # often than they quote it at us in the second person, and a rule that only
+    # reads direct address misses the way the disclosure actually arrives.
+    r"\bif (i|you|u|she|we|he) (really |truly )?love[ds]? "
+    r"(me|him|her|you|us|them)\b",
     r"\b(won'?t|will not|refuses? to) (use|wear) (a )?condom\b.{0,50}"
     r"\b(if|unless|or)\b",
     r"\b(unless|if) (i|you) (don'?t|do not|refuse)\b.{0,40}"

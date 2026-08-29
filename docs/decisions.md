@@ -120,3 +120,56 @@ before adding to it.
 lexicon carries a named reviewer and a version; terms drafted by someone who is
 not a Kenyan speaker do not get to inherit that. They stay in the candidates
 file until reviewed, and are promoted deliberately.
+
+## D-04 · Query preparation is a table, not a model call
+
+**Decided.** Her question reaches the encoder with the corpus's vocabulary
+appended, from a fixed table of string mappings. No model, no tokens, no added
+latency, and nothing that can fail at request time.
+
+**Why.** Experiment 2 measured the gap: the corpus says *"informed consent for
+adolescents and youth"*, she says *"without my parents agreeing"*, and the same
+passage retrieves at 0.565 from her words against 0.711 from the document's own.
+Experiment 3 tested whether the cheapest possible fix closes any of it —
+Adequate@5 0.880 → 0.960, agency mean 0.611 → 0.750, zero per-question
+regressions, against an oracle ceiling of 1.000 and 0.889.
+
+**The gate is the load-bearing part.** It runs on factual and access turns only,
+and only after the decision. Both conditions came from measured harm, not
+caution: restating a support turn moved retrieval toward policy literature about
+her, and restating an out-of-scope question made it retrieve more confidently.
+All four boundary cases are bit-identical to baseline in the shipped system.
+
+**What would reverse it.** A corpus or a register where the table stops paying.
+The measurement, not the design, is the thing to re-run.
+
+## D-05 · Reported coercion, not a pattern for one sentence
+
+**Decided.** The consent-conditional rule reads the script in any grammatical
+person and either direction.
+
+**Why.** D38 — *"He said if I really loved him I wouldn't make him use a
+condom"* — was the standing safeguarding miss, and the earlier note said no
+pattern would be added for it, because fitting a rule to one message in a set
+the same author wrote measures nothing. That reasoning was right about the
+sentence and wrong about the category: the rule already read *"if you loved
+me"* said to her face, and what it could not read was the same script reported
+afterwards. Girls repeat what he said far more often than they quote it at us in
+the second person.
+
+**Result.** Safeguarding recall 0.917 → **1.000**, precision unchanged at
+**1.000**, overall decision accuracy 51/52 → **52/52**. Tests assert three
+variants, none of them the dataset's wording, plus the affection sentences that
+must not fire.
+
+## D-06 · Machinery talk is recorded, never blocked
+
+**Decided.** A deterministic check flags a draft that says *"the passages"*,
+*"my sources"*, *"knowledge base"* or *"retrieved"* to a girl who cannot see any
+of them. It is an issue in the trace, and it does not stop the answer.
+
+**Why.** The prompt already forbids it. The check is how we find out whether
+asking worked, which is not the same question. Blocking would trade a slightly
+awkward answer for a refusal, and a refusal is the worse of the two — the
+previous build's output judge is exactly what happens when that trade is made in
+the other direction.

@@ -41,17 +41,31 @@ class TestSafetyPath:
                  and r["decision"] != rules.SAFEGUARDING]
         assert not wrong, wrong
 
-    def test_implicit_coercion_is_still_missed(self, rows):
+    def test_reported_coercion_is_caught_in_any_person(self):
         """D38 -- "he said if I really loved him I wouldn't make him use a
-        condom" -- is coercion made only of a condition on her consent, quoted
-        second-hand. The rules do not catch it, and no pattern was added for it,
-        because fitting a rule to one message in a set the same author wrote
-        would measure nothing.
+        condom" -- was the standing miss: coercion made only of a condition on
+        her consent, and quoted second-hand rather than said to her face.
 
-        This test asserts the *known limitation*, so that if a later change
-        catches it the failure here is the prompt to check how."""
+        The fix was not a pattern for that sentence. The rule already read the
+        script in the second person; what it could not read was the script
+        reported afterwards, which is how a girl actually tells you about it.
+        So the person and direction were generalised, and these variants are
+        the evidence it generalised rather than memorised -- none of them is
+        the dataset's wording."""
+        for message in [
+            "He said if I really loved him I wouldn't make him use a condom.",
+            "If you loved me you would not make me wear one, he keeps saying",
+            "he tells me if i loved him i would trust him",
+        ]:
+            assert rules.decide(message).path == rules.SAFEGUARDING, message
+
+    def test_affection_alone_is_not_coercion(self):
+        """The other half of the same change. Generalising the person is only
+        safe if it did not turn every sentence about loving someone into a
+        disclosure -- precision on the benchmark stayed at 1.000, and these are
+        the shapes closest to the new pattern."""
         assert rules.decide(
-            "He said if I really loved him I wouldn't make him use a condom."
+            "I love him so much and we are planning to go to college together"
         ).path != rules.SAFEGUARDING
 
 

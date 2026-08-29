@@ -38,6 +38,18 @@ LIVED = re.compile(
 )
 
 
+#: The system describing its own plumbing to a girl who cannot see it. Recorded,
+#: never fatal, and the asymmetry is the point: blocking here would trade a
+#: slightly awkward answer for a refusal, which is the worse of the two. The
+#: prompt asks for this; the check is how we find out whether asking worked.
+MACHINERY = re.compile(
+    r"\b(the |these |those |my )?passages?\b"
+    r"|\bknowledge base\b|\bretrieved\b|\bthe context i (have|was given)\b"
+    r"|\bthe documents? i\b|\bmy (source|document)s?\b",
+    re.IGNORECASE,
+)
+
+
 def check(draft: str, *, n_passages: int, grounded: bool = True
           ) -> tuple[list[str], bool]:
     """Returns ``(issues, fatal)``."""
@@ -73,6 +85,11 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
         issues.append(f"claims lived experience it does not have: "
                       f"{match.group(0)!r}")
         fatal = True
+
+    machinery = MACHINERY.search(draft)
+    if machinery:
+        issues.append(f"describes its own machinery to her: "
+                      f"{machinery.group(0)!r}")
 
     words = len(draft.split())
     if words < config.RESPONSE_MIN_WORDS:

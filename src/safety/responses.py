@@ -43,8 +43,8 @@ SELF_HARM = (
 #: read like one.
 OUT_OF_SCOPE = (
     "That's outside what I can help with — I stick to contraception, sexual "
-    "health, staying safe, and finding services, because those are what my "
-    "sources actually cover.\n\n"
+    "health, staying safe, and finding services, because those are what I'm "
+    "here for.\n\n"
     "For anything medical about your own body — what's causing something, which "
     "method is right for you, or how much of anything to take — a nurse or "
     "clinician is the right person, and they won't turn you away.\n\n"
