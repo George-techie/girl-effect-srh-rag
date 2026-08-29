@@ -33,6 +33,13 @@ removal here has a number attached.
 | **Two content tracks (mental health, menstruation)** | Out of scope as *topics*. Not out of scope as *risk* — see below |
 | **`rag/citations.py`** | Unreferenced. Deleted |
 
+**Added back, and why.** Two things this build originally left out are now in it,
+both because a measurement asked for them rather than because they seemed like
+good ideas: **conversation state**, after replaying a real journey retrieved
+material about sterilisation for a girl asking a follow-up about the implant; and
+**observability**, after three defects in one afternoon were all found by a person
+reading output by hand. Neither is a model call. Both are covered below.
+
 **What was kept, for the same reason.** The decision layer, the safety floor, the
 citation contract and the deterministic validator all stayed, because each has a
 measured failure behind it. Minimum justified complexity is not fewest parts.
@@ -147,102 +154,6 @@ measures the tuning, not the layer.
 
 ---
 
-## What is known to be wrong
-
-**The phone-number check was firing on page numbers.** Run over the corpus, the
-short-code half of the regex matched 9 chunks -- every one a page reference,
-*"see LNG-IUD for Women With HIV, p. 199"*. That check is **fatal**, so a
-generated answer citing p. 116 would have been blocked and the girl would have
-got a refusal. Rewritten to the actual four-digit Kenyan short codes plus 116
-only where something nearby presents it as a number to call: **0 corpus matches**,
-and every fabricated-contact case still caught. The regression test carries both
-directions.
-
-This one is worth naming because of how it was found. It was not found by a
-test, a judge or a review -- it was found by checking whether a claim in this
-README was true, and it was not.
-
-**Recall@5 fell 0.012 under query preparation.** One question's worth, inside the
-noise of 31. Reported because it moved.
-
-**Two service contacts are `unverified` and the system will not surface them.**
-They were carried over from the previous build with no source, date or checker.
-A table whose column says `verified_at` is worthless if the dates in it were
-invented, so they stay unverified and unreachable until a person confirms them.
-The schema, the fillable Word document and the guidance are all in place:
-[`data/services/`](data/services/).
-
-**78% of corpus chunks are provider guidance** — 1,326 clinical against 58
-youth-facing. The facts are right; the reader they were written for is a
-clinician. Query preparation narrows this, it does not fix it.
-
-**Kiswahili costs −0.062 similarity**, over five matched pairs. Direct
-translation is handled; idiomatic Sheng is not. *"Inaharibu mji wa mtoto"* is a
-metaphor, and it retrieved a policy report where its English twin found the
-myth-correcting passage immediately — which is what the lexicon and one query
-mapping now exist for.
-
-**Boundary cases retrieve confidently.** *"My periods have been irregular for
-three months"* — deliberately out of scope — retrieves at **0.668, above most
-in-scope questions**. Retrieval cannot decline. That is the entire argument for
-deciding **before** searching, on her words, which is what the pipeline does.
-
----
-
-## Quick start
-
-```bash
-pip install -r requirements.txt
-python scripts/ingest.py                            # build the index
-streamlit run app.py                                # the demo
-```
-
-```bash
-python -m pytest -q                                 # 120 tests
-python scripts/eval_decision.py                     # 52/52
-python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
-python scripts/eval_retrieval.py --compare-prepared # Experiment 3
-python scripts/eval_multiturn.py                    # four journeys, 23 turns
-python scripts/inspect_events.py                    # read the event log
-```
-
-Embeddings are **local** (`BAAI/bge-m3`) — no per-query embedding cost, and no
-girl's question leaves the machine to be embedded. Generation runs through
-OpenRouter on `anthropic/claude-sonnet-5`; set `OPENROUTER_API_KEY` in `.env`.
-
----
-
-## Layout
-
-```
-src/
-  pipeline.py            the whole system, ~300 lines
-  conversation.py        six turns, one topic, one flag — state, not memory
-  observability.py       one event per turn, invariants checked at runtime
-  decision/
-    rules.py             ordered deterministic router, 6 paths
-    input_validation.py  the front door
-  rag/
-    query_prep.py        Experiment 3 — the mapping table
-    retrieval.py         cosine search over ChromaDB
-    chunking.py          500/650/0, section-aware
-  safety/
-    checks.py            deterministic output validation, no model
-    responses.py         approved text, never generated
-  language/glossary.py   Kenyan lexicon, 19 terms, 90 surface forms
-  prompt_files/          persona.yaml + two contracts
-docs/decisions.md        D-01 … D-06, each with what would reverse it
-evaluation/              four experiments, criteria fixed beforehand
-```
-
-**Safeguarding text is never generated.** Not because a model would do worse,
-but because nobody can review, approve or audit text rewritten on every turn.
-Contacts are a **table read** — no corpus chunk contains a phone number -- checked
-across all 1,693 -- so any number in a generated answer is invented by
-definition, and the validator treats a phone-shaped string as fatal.
-
----
-
 ## Multi-turn, because she arrives with a conversation
 
 A girl does not send a query. She moves — contraception, what she wants to be,
@@ -340,6 +251,102 @@ issue names. No message text, no reply text, no identifier for her, no session i
 that survives a restart. Text is written only under an explicit `TRACE_MESSAGES=1`
 for a developer replaying a bug locally. You can learn from the default stream
 that fragments are failing to resolve. You cannot learn who said what.
+
+---
+
+## What is known to be wrong
+
+**The phone-number check was firing on page numbers.** Run over the corpus, the
+short-code half of the regex matched 9 chunks -- every one a page reference,
+*"see LNG-IUD for Women With HIV, p. 199"*. That check is **fatal**, so a
+generated answer citing p. 116 would have been blocked and the girl would have
+got a refusal. Rewritten to the actual four-digit Kenyan short codes plus 116
+only where something nearby presents it as a number to call: **0 corpus matches**,
+and every fabricated-contact case still caught. The regression test carries both
+directions.
+
+This one is worth naming because of how it was found. It was not found by a
+test, a judge or a review -- it was found by checking whether a claim in this
+README was true, and it was not.
+
+**Recall@5 fell 0.012 under query preparation.** One question's worth, inside the
+noise of 31. Reported because it moved.
+
+**Two service contacts are `unverified` and the system will not surface them.**
+They were carried over from the previous build with no source, date or checker.
+A table whose column says `verified_at` is worthless if the dates in it were
+invented, so they stay unverified and unreachable until a person confirms them.
+The schema, the fillable Word document and the guidance are all in place:
+[`data/services/`](data/services/).
+
+**78% of corpus chunks are provider guidance** — 1,326 clinical against 58
+youth-facing. The facts are right; the reader they were written for is a
+clinician. Query preparation narrows this, it does not fix it.
+
+**Kiswahili costs −0.062 similarity**, over five matched pairs. Direct
+translation is handled; idiomatic Sheng is not. *"Inaharibu mji wa mtoto"* is a
+metaphor, and it retrieved a policy report where its English twin found the
+myth-correcting passage immediately — which is what the lexicon and one query
+mapping now exist for.
+
+**Boundary cases retrieve confidently.** *"My periods have been irregular for
+three months"* — deliberately out of scope — retrieves at **0.668, above most
+in-scope questions**. Retrieval cannot decline. That is the entire argument for
+deciding **before** searching, on her words, which is what the pipeline does.
+
+---
+
+## Quick start
+
+```bash
+pip install -r requirements.txt
+python scripts/ingest.py                            # build the index
+streamlit run app.py                                # the demo
+```
+
+```bash
+python -m pytest -q                                 # 120 tests
+python scripts/eval_decision.py                     # 52/52
+python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
+python scripts/eval_retrieval.py --compare-prepared # Experiment 3
+python scripts/eval_multiturn.py                    # four journeys, 23 turns
+python scripts/inspect_events.py                    # read the event log
+```
+
+Embeddings are **local** (`BAAI/bge-m3`) — no per-query embedding cost, and no
+girl's question leaves the machine to be embedded. Generation runs through
+OpenRouter on `anthropic/claude-sonnet-5`; set `OPENROUTER_API_KEY` in `.env`.
+
+---
+
+## Layout
+
+```
+src/
+  pipeline.py            the whole system, ~380 lines
+  conversation.py        six turns, one topic, one flag — state, not memory
+  observability.py       one event per turn, invariants checked at runtime
+  decision/
+    rules.py             ordered deterministic router, 6 paths
+    input_validation.py  the front door
+  rag/
+    query_prep.py        Experiment 3 — the mapping table
+    retrieval.py         cosine search over ChromaDB
+    chunking.py          500/650/0, section-aware
+  safety/
+    checks.py            deterministic output validation, no model
+    responses.py         approved text, never generated
+  language/glossary.py   Kenyan lexicon, 19 terms, 90 surface forms
+  prompt_files/          persona.yaml + two contracts
+docs/decisions.md        D-01 … D-06, each with what would reverse it
+evaluation/              four experiments, criteria fixed beforehand
+```
+
+**Safeguarding text is never generated.** Not because a model would do worse,
+but because nobody can review, approve or audit text rewritten on every turn.
+Contacts are a **table read** — no corpus chunk contains a phone number -- checked
+across all 1,693 -- so any number in a generated answer is invented by
+definition, and the validator treats a phone-shaped string as fatal.
 
 ---
 
