@@ -154,6 +154,19 @@ measures the tuning, not the layer.
 
 ---
 
+## How it fits together
+
+```
+decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
+```
+
+**Five diagrams in [`docs/architecture.md`](docs/architecture.md)**, rendered
+inline by GitHub: the pipeline and where the one model call sits, why the safety
+floor runs *before* retrieval, the two output contracts, what state is and is not
+kept, and what each component had to prove to stay in.
+
+---
+
 ## Multi-turn, because she arrives with a conversation
 
 A girl does not send a query. She moves — contraception, what she wants to be,
