@@ -1,9 +1,147 @@
 # Architecture
 
-Eight steps end to end. **One of them costs money.**
+## Solution architecture
 
-The six in the middle — decide, resolve, prepare, retrieve, generate, check —
-are the pipeline. Validation is the front door and the event is the record.
+Six layers, four data stores, **one external dependency**. Everything shaded
+teal is deterministic — it costs nothing, runs instantly, and can be audited by
+reading it.
+
+```mermaid
+flowchart TB
+    subgraph UI["Interface"]
+        APP["<b>app.py</b> · Streamlit<br/>ui/theme.py"]:::iface
+    end
+
+    subgraph ORCH["Orchestration"]
+        PIPE["<b>pipeline.py</b><br/><i>one turn, start to finish</i>"]:::orch
+    end
+
+    subgraph DEC["Decision · deterministic"]
+        IV["input_validation.py<br/><i>the front door</i>"]:::free
+        RU["<b>rules.py</b><br/><i>6 paths, ordered</i>"]:::free
+        GL["language/glossary.py<br/><i>Kenyan lexicon</i>"]:::free
+    end
+
+    subgraph CST["Conversation · deterministic"]
+        CV["<b>conversation.py</b><br/><i>6 turns · topic · disclosed</i>"]:::free
+    end
+
+    subgraph RAGL["Retrieval · deterministic"]
+        QP["query_prep.py<br/><i>vocabulary mapping</i>"]:::free
+        RT["retrieval.py<br/><i>cosine, top-5</i>"]:::free
+        IX["indexing.py"]:::free
+    end
+
+    subgraph GENL["Generation · the only model call"]
+        PR["prompt_files/<br/><i>persona · answer · converse</i>"]:::model
+        LC["llm/client.py"]:::model
+    end
+
+    subgraph SAF["Safety · spans every path"]
+        CK["checks.py<br/><i>validation, no model</i>"]:::approved
+        RS["responses.py<br/><i>approved text</i>"]:::approved
+    end
+
+    subgraph OBSL["Observability"]
+        OB["observability.py<br/><i>events + invariants</i>"]:::obs
+    end
+
+    CHR[("<b>ChromaDB</b><br/>1,693 chunks")]:::store
+    LEX[("kenyan_lexicon<br/>.json")]:::store
+    SVC[("services.csv<br/><b>unverified · gated</b>")]:::gated
+    EVT[("events.jsonl<br/><i>no message text</i>")]:::store
+
+    BGE["<b>BAAI/bge-m3</b><br/><i>embeddings, on this machine</i>"]:::local
+    OR["<b>OpenRouter</b><br/>claude-sonnet-5<br/><i>the only network call</i>"]:::ext
+
+    APP --> PIPE
+    PIPE --> DEC
+    PIPE --> CST
+    PIPE --> RAGL
+    PIPE --> GENL
+    PIPE --> SAF
+    PIPE -.-> OBSL
+
+    GL -.-> LEX
+    RT --> IX --> CHR
+    IX --> BGE
+    LC --> OR
+    RS -.-> SVC
+    OB -.-> EVT
+
+    classDef iface fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef orch fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
+    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
+    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123
+    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
+    classDef store fill:#F2F0EC,stroke:#7A736B,color:#123
+    classDef gated fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
+    classDef ext fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
+```
+
+**Three properties worth naming.**
+
+**One external dependency.** Only generation leaves the machine. Embeddings run
+locally on `bge-m3`, so there is no per-query embedding cost and no girl's
+question is sent anywhere to be encoded. If OpenRouter is down, every
+safeguarding reply still works, because those never needed it.
+
+**Safety is a layer, not a step.** `responses.py` and `checks.py` are reachable
+from every path rather than sitting at one point in a sequence. A disclosure is
+answered from approved text without touching retrieval or generation.
+
+**The service table is gated, not just present.** Nothing in `services.csv`
+reaches a girl until a person has verified it. It is currently unverified, so
+the system refuses to surface it — which is the correct behaviour, not a gap.
+
+---
+
+## Build time and run time are separate
+
+Ingestion happens once. Nothing at run time writes to the corpus.
+
+```mermaid
+flowchart LR
+    subgraph BUILD["Build time — scripts/ingest.py"]
+        direction LR
+        P["8 governed PDFs<br/><i>corpus/raw</i>"]:::store
+        RG["registry.py<br/><i>citation tag, role,<br/>authority per source</i>"]:::free
+        LD["loaders.py"]:::free
+        CL["cleaning.py"]:::free
+        CHK2["chunking.py<br/><i>500/650/0, section-aware</i>"]:::free
+        EM["bge-m3"]:::local
+        DB[("ChromaDB")]:::store
+        P --> LD --> CL --> CHK2 --> EM --> DB
+        RG -.->|"metadata"| CHK2
+    end
+
+    subgraph RUN["Run time — every turn"]
+        direction LR
+        Q["her question"]:::iface
+        E2["bge-m3"]:::local
+        S["cosine, top-5"]:::free
+        Q --> E2 --> S
+    end
+
+    DB -.->|"read only"| S
+
+    classDef store fill:#F2F0EC,stroke:#7A736B,color:#123
+    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
+    classDef iface fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+```
+
+Source labels shown to a girl are built from **metadata**, never from anything
+the model wrote — which is what makes a fabricated source name impossible rather
+than merely discouraged.
+
+---
+
+## How one turn moves through it
+
+Eight steps end to end. **One of them costs money.**
 
 ```mermaid
 flowchart TD

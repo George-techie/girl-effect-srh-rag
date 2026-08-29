@@ -10,6 +10,95 @@ solution philosophy, with every component either justified by a measurement or
 deleted.
 
 ```mermaid
+flowchart TB
+    subgraph UI["Interface"]
+        APP["<b>app.py</b> · Streamlit<br/>ui/theme.py"]:::iface
+    end
+
+    subgraph ORCH["Orchestration"]
+        PIPE["<b>pipeline.py</b><br/><i>one turn, start to finish</i>"]:::orch
+    end
+
+    subgraph DEC["Decision · deterministic"]
+        IV["input_validation.py<br/><i>the front door</i>"]:::free
+        RU["<b>rules.py</b><br/><i>6 paths, ordered</i>"]:::free
+        GL["language/glossary.py<br/><i>Kenyan lexicon</i>"]:::free
+    end
+
+    subgraph CST["Conversation · deterministic"]
+        CV["<b>conversation.py</b><br/><i>6 turns · topic · disclosed</i>"]:::free
+    end
+
+    subgraph RAGL["Retrieval · deterministic"]
+        QP["query_prep.py<br/><i>vocabulary mapping</i>"]:::free
+        RT["retrieval.py<br/><i>cosine, top-5</i>"]:::free
+        IX["indexing.py"]:::free
+    end
+
+    subgraph GENL["Generation · the only model call"]
+        PR["prompt_files/<br/><i>persona · answer · converse</i>"]:::model
+        LC["llm/client.py"]:::model
+    end
+
+    subgraph SAF["Safety · spans every path"]
+        CK["checks.py<br/><i>validation, no model</i>"]:::approved
+        RS["responses.py<br/><i>approved text</i>"]:::approved
+    end
+
+    subgraph OBSL["Observability"]
+        OB["observability.py<br/><i>events + invariants</i>"]:::obs
+    end
+
+    CHR[("<b>ChromaDB</b><br/>1,693 chunks")]:::store
+    LEX[("kenyan_lexicon<br/>.json")]:::store
+    SVC[("services.csv<br/><b>unverified · gated</b>")]:::gated
+    EVT[("events.jsonl<br/><i>no message text</i>")]:::store
+
+    BGE["<b>BAAI/bge-m3</b><br/><i>embeddings, on this machine</i>"]:::local
+    OR["<b>OpenRouter</b><br/>claude-sonnet-5<br/><i>the only network call</i>"]:::ext
+
+    APP --> PIPE
+    PIPE --> DEC
+    PIPE --> CST
+    PIPE --> RAGL
+    PIPE --> GENL
+    PIPE --> SAF
+    PIPE -.-> OBSL
+
+    GL -.-> LEX
+    RT --> IX --> CHR
+    IX --> BGE
+    LC --> OR
+    RS -.-> SVC
+    OB -.-> EVT
+
+    classDef iface fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef orch fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
+    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
+    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123
+    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
+    classDef store fill:#F2F0EC,stroke:#7A736B,color:#123
+    classDef gated fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
+    classDef ext fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
+```
+
+Six layers, four data stores, **one external dependency.** Everything teal is
+deterministic — free, instant, and auditable by reading it. Rust is
+human-approved text that is never generated. Gold is the model.
+
+**Only generation leaves the machine.** Embeddings run locally on `bge-m3`, so
+no girl's question is sent anywhere to be encoded, and there is no per-query
+embedding cost. If the provider is down, every safeguarding reply still works —
+those never needed it.
+
+**Safety is a layer, not a step.** `responses.py` and `checks.py` are reachable
+from every path rather than sitting at one point in a sequence.
+
+### One turn, end to end
+
+```mermaid
 flowchart TD
     HER["Her message"]:::her
 
@@ -57,6 +146,15 @@ flowchart TD
     classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
     classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
 ```
+
+One model call, and only on turns the decision layer sends to it — **never on a
+disclosure of harm.** Roughly a third of turns never reach a model at all, and
+they are the turns where that matters most: a girl who has just disclosed
+coercion should not wait on a network round trip.
+
+Four more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: build
+time versus run time, why the safety floor runs *before* retrieval, the two
+output contracts, and what state is deliberately not kept.
 
 **One model call, and only on turns the decision layer sends to it — never on a
 disclosure of harm.** Teal is deterministic: free, instant, auditable. Rust is
