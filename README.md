@@ -156,20 +156,6 @@ Four more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: build
 time versus run time, why the safety floor runs *before* retrieval, the two
 output contracts, and what state is deliberately not kept.
 
-**One model call, and only on turns the decision layer sends to it — never on a
-disclosure of harm.** Teal is deterministic: free, instant, auditable. Rust is
-human-approved text that is never generated. Gold is the model.
-
-Roughly a third of turns never reach a model at all, and they are the turns
-where that matters most — every safeguarding reply is instant, because a girl
-who has just disclosed coercion should not wait on a network round trip.
-
-Four more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: why
-the safety floor runs *before* retrieval, the two output contracts, what state
-is and is not kept, and where the evidence comes from.
-
----
-
 ## What was removed, and what it cost to find out
 
 Removing things is the easy half. Knowing which ones is the work, so every
