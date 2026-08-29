@@ -1,12 +1,20 @@
 """The whole system.
 
-    decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
+    validate  →  SAFEGUARDING SCREEN  →  route
+                          │                  ├─ out of scope  → approved text
+                          │                  ├─ chat          → conversational
+                          ↓                  └─ question      → resolve* → prepare*
+                    approved text                               → retrieve → generate
+                    0 model calls                               → check
 
-Only `generate` costs anything. The other five are rules.
+    * conditional: resolution only for context-dependent turns, preparation
+      only for factual and access ones. Neither is a universal stage.
 
-Six steps, one model call, and the model is only reached on turns the decision
-layer sends to it. Everything else — the decision, the retrieval, the checks —
-is deterministic and free.
+Only `generate` uses a hosted generative LLM, and only on turns the decision
+layer sends to it. Routing, safeguarding, resolution, query preparation and
+validation are deterministic rules. Retrieval is neither: `bge-m3` runs locally,
+so it costs no tokens but is still an ML encoder doing real compute — which is
+why it has a measurable cold start, and why the app warms it before she asks.
 
 What is deliberately not here, and why, with the measurement in each case:
 

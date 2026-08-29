@@ -1,100 +1,147 @@
 # Architecture
 
-## Solution architecture
+## The product architecture
 
-Six layers, four data stores, **one external dependency**. Everything shaded
-teal is deterministic — it costs nothing, runs instantly, and can be audited by
-reading it.
+Not every message passes through every stage. **That is the architecture** — the
+branching is the design, not an implementation detail underneath it.
+
+Only generation uses a hosted generative LLM. All routing, safeguarding, query
+preparation and validation are deterministic; **embeddings run locally**, which
+is compute rather than a rule and is why the encoder has a measurable cold start.
 
 ```mermaid
-flowchart TB
-    subgraph UI["Interface"]
-        APP["<b>app.py</b> · Streamlit<br/>ui/theme.py"]:::iface
+flowchart TD
+    USER["<b>HER MESSAGE</b>"]:::her
+
+    subgraph OBS["🔒 PRIVACY-SAFE OBSERVABILITY — route · safety · retrieval · LLM calls · latency · validator · journey stage · invariant failures · no message text"]
+    direction TB
+
+        VAL["<b>INPUT VALIDATION</b>"]:::det
+        LEXS["<b>KENYAN LEXICON / LANGUAGE SIGNALS</b><br/><i>19 terms · 90 surface forms · risk tags</i>"]:::det
+
+        DEC{"<b>DETERMINISTIC DECISION + SAFETY FLOOR</b><br/>safeguarding checked first, before any other family<br/><i>52/52 · recall 1.000 · precision 1.000</i>"}:::gate
+
+        SG["<b>SAFEGUARDING</b>"]:::stop
+        OOS["<b>OUT OF SCOPE</b>"]:::stop
+        CHAT["<b>CHAT</b>"]:::model
+        GRD["<b>FACTUAL / SUPPORT / ACCESS</b>"]:::det
+
+        SGR["approved response<br/>/ help pathway<br/><b>0 LLM calls</b>"]:::stop
+        OOSR["approved boundary<br/>response<br/><b>0 LLM calls</b>"]:::stop
+        CHATR["conversational contract<br/><b>ONE LLM CALL</b><br/><i>claims nothing</i>"]:::model
+
+        MT["<b>MULTI-TURN RESOLUTION</b><br/><i>only when context-dependent ·<br/>changes the query, not her message</i>"]:::det
+        QP["<b>CONDITIONAL QUERY PREP</b><br/><i>factual / access, where a<br/>vocabulary gap was measured</i>"]:::det
+
+        BGE["<b>BGE-M3 RETRIEVAL</b><br/>governed SRH corpus<br/><i>local encoder · 1,693 chunks</i>"]:::local
+        TDL["<b>TRUSTED DATA LOOKUP</b><br/>verified services / contacts<br/><i>table read, never generated</i>"]:::gated
+
+        GEN["<b>GROUNDED GENERATION</b><br/><b>ONE LLM CALL</b><br/><i>every claim cited</i>"]:::model
+        DV["<b>DETERMINISTIC VALIDATION</b><br/><i>fabricated citation · invented number ·<br/>claimed experience</i>"]:::det
     end
 
-    subgraph ORCH["Orchestration"]
-        PIPE["<b>pipeline.py</b><br/><i>one turn, start to finish</i>"]:::orch
-    end
+    OUT["<b>HER REPLY</b>"]:::her
 
-    subgraph DEC["Decision · deterministic"]
-        IV["input_validation.py<br/><i>the front door</i>"]:::free
-        RU["<b>rules.py</b><br/><i>6 paths, ordered</i>"]:::free
-        GL["language/glossary.py<br/><i>Kenyan lexicon</i>"]:::free
-    end
+    USER --> VAL --> LEXS --> DEC
 
-    subgraph CST["Conversation · deterministic"]
-        CV["<b>conversation.py</b><br/><i>6 turns · topic · disclosed</i>"]:::free
-    end
+    DEC ==>|"harm · coercion · self-harm"| SG
+    DEC -->|"deliberately not covered"| OOS
+    DEC -->|"greeting · thanks · ambitions"| CHAT
+    DEC -->|"a question to answer"| GRD
 
-    subgraph RAGL["Retrieval · deterministic"]
-        QP["query_prep.py<br/><i>vocabulary mapping</i>"]:::free
-        RT["retrieval.py<br/><i>cosine, top-5</i>"]:::free
-        IX["indexing.py"]:::free
-    end
+    SG ==> SGR
+    OOS --> OOSR
+    CHAT --> CHATR
+    GRD --> MT --> QP
+    QP --> BGE
+    QP --> TDL
+    BGE --> GEN
+    TDL --> GEN
+    GEN --> DV
 
-    subgraph GENL["Generation · the only model call"]
-        PR["prompt_files/<br/><i>persona · answer · converse</i>"]:::model
-        LC["llm/client.py"]:::model
-    end
+    SGR ==> OUT
+    OOSR --> OUT
+    CHATR --> OUT
+    DV --> OUT
 
-    subgraph SAF["Safety · spans every path"]
-        CK["checks.py<br/><i>validation, no model</i>"]:::approved
-        RS["responses.py<br/><i>approved text</i>"]:::approved
-    end
-
-    subgraph OBSL["Observability"]
-        OB["observability.py<br/><i>events + invariants</i>"]:::obs
-    end
-
-    CHR[("<b>ChromaDB</b><br/>1,693 chunks")]:::store
-    LEX[("kenyan_lexicon<br/>.json")]:::store
-    SVC[("services.csv<br/><b>unverified · gated</b>")]:::gated
-    EVT[("events.jsonl<br/><i>no message text</i>")]:::store
-
-    BGE["<b>BAAI/bge-m3</b><br/><i>embeddings, on this machine</i>"]:::local
-    OR["<b>OpenRouter</b><br/>claude-sonnet-5<br/><i>the only network call</i>"]:::ext
-
-    APP --> PIPE
-    PIPE --> DEC
-    PIPE --> CST
-    PIPE --> RAGL
-    PIPE --> GENL
-    PIPE --> SAF
-    PIPE -.-> OBSL
-
-    GL -.-> LEX
-    RT --> IX --> CHR
-    IX --> BGE
-    LC --> OR
-    RS -.-> SVC
-    OB -.-> EVT
-
-    classDef iface fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
-    classDef orch fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
-    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
-    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
-    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123
-    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
-    classDef store fill:#F2F0EC,stroke:#7A736B,color:#123
-    classDef gated fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef det fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef gate fill:#C04B2F,stroke:#C04B2F,color:#fff,font-weight:bold
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
     classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
-    classDef ext fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
+    classDef gated fill:#F2F0EC,stroke:#7A736B,color:#123
 ```
 
-**Three properties worth naming.**
+| | |
+|---|---|
+| **rust** | the safeguarding gate, and every reply written from approved text |
+| **pale teal** | deterministic — free, instant, auditable by reading it |
+| **green** | local compute — the encoder. No token cost, but not a rule either |
+| **gold** | a hosted LLM call. One, or none |
 
-**One external dependency.** Only generation leaves the machine. Embeddings run
-locally on `bge-m3`, so there is no per-query embedding cost and no girl's
-question is sent anywhere to be encoded. If OpenRouter is down, every
-safeguarding reply still works, because those never needed it.
+**Observability is not a stage.** It wraps the runtime and records what each
+turn did — route, safety outcome, retrieval, LLM calls, latency, validator
+issues, journey stage, invariant failures. It holds no message text by default.
+It has already paid for itself twice: it surfaced a **39.5 s cold encoder load**
+hiding behind a 5.4 s median, and the **service-access gap** — the Theory of
+Change's terminal stage returning nothing.
 
-**Safety is a layer, not a step.** `responses.py` and `checks.py` are reachable
-from every path rather than sitting at one point in a sequence. A disclosure is
-answered from approved text without touching retrieval or generation.
+---
 
-**The service table is gated, not just present.** Nothing in `services.csv`
-reaches a girl until a person has verified it. It is currently unverified, so
-the system refuses to surface it — which is the correct behaviour, not a gap.
+## Session state is a supporting component, not a stage
+
+```mermaid
+flowchart LR
+    SS["<b>SESSION STATE</b><br/>6 turns · resolved topic · disclosure flag<br/><i>in memory, one session, nothing written down</i>"]:::det
+
+    A["multi-turn resolution<br/><i>gives a fragment its antecedent</i>"]:::det
+    B["generation context<br/><i>so a reply does not re-introduce itself</i>"]:::model
+    C["post-disclosure routing<br/><i>the disclosure flag</i>"]:::stop
+
+    N["<b>Not built:</b> summariser · entity tracker ·<br/>persistent profile · vector store of past turns"]:::none
+
+    SS --> A
+    SS --> B
+    SS --> C
+    SS -.-> N
+
+    classDef det fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef none fill:#F3F0EE,stroke:#9A9088,color:#555
+```
+
+No turn "passes through" session state. Three things consult it, and each one is
+gated on a condition.
+
+---
+
+## Safeguarding to service access, without a model
+
+The branch the use case turns on. She discloses, and later asks where to go —
+and that second question is not a contraception question.
+
+```mermaid
+flowchart LR
+    D["<b>safeguarding disclosure</b><br/><i>“if I really loved him<br/>I wouldn't make him use one”</i>"]:::stop
+    F["<b>later:</b> “where can I go?”<br/><i>no subject of its own</i>"]:::her
+    R["<b>post-disclosure help</b><br/><i>disclosure flag + dependent fragment</i>"]:::gate
+    P["<b>approved help pathway</b><br/>health worker · trusted adult · helpline"]:::stop
+    Z["<b>0 LLM calls · 0 ms</b>"]:::good
+
+    D --> F --> R --> P --> Z
+
+    classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef gate fill:#C04B2F,stroke:#C04B2F,color:#fff,font-weight:bold
+    classDef good fill:#E6F2E8,stroke:#2E7D4F,color:#123,font-weight:bold
+```
+
+Before this existed, that turn resolved against her earlier question about the
+**implant**, searched implant passages, found nothing about *where*, and
+refused — at the exact moment she asked for help. A rehearsal found it; no unit
+test would have, because every component was behaving correctly.
 
 ---
 
@@ -136,72 +183,6 @@ flowchart LR
 Source labels shown to a girl are built from **metadata**, never from anything
 the model wrote — which is what makes a fabricated source name impossible rather
 than merely discouraged.
-
----
-
-## How one turn moves through it
-
-Eight steps end to end. **One of them costs money.**
-
-```mermaid
-flowchart TD
-    HER["Her message"]:::her
-
-    VAL["<b>1 · Validate</b><br/>reject empty, non-text, over 2000 chars<br/><i>her words otherwise untouched — no<br/>sanitising of Sheng, emoji or case</i>"]:::free
-
-    DEC{"<b>2 · Decide</b><br/>ordered rules + Kenyan lexicon<br/>reads her words alone, never the conversation"}:::decide
-
-    SAFE["<b>Safeguarding</b><br/>approved text, never generated"]:::approved
-    OOS["<b>Out of scope</b><br/>approved text"]:::approved
-    HELP["<b>Asked where to go,<br/>after a disclosure</b><br/>help pathway, approved text"]:::approved
-    CHAT["<b>Conversational contract</b><br/>no passages · claims nothing"]:::model
-
-    RES["<b>3 · Resolve</b><br/>give a fragment its antecedent<br/><i>retrieval query only</i>"]:::free
-    PREP["<b>4 · Prepare</b><br/>append the corpus's vocabulary<br/><i>factual and access turns only</i>"]:::free
-    RET["<b>5 · Retrieve</b><br/>bge-m3 local · ChromaDB cosine · top-5"]:::free
-    GEN["<b>6 · Generate</b><br/>grounded contract · every claim cited"]:::model
-    CHK["<b>7 · Check</b><br/>fabricated citation · phone number ·<br/>claimed experience · machinery talk"]:::free
-
-    REPLY["Her reply, with sources"]:::her
-    EVT[("<b>8 · Event</b><br/>one per turn<br/>+ invariants")]:::obs
-
-    HER --> VAL --> DEC
-
-    DEC -->|"disclosure of harm"| SAFE
-    DEC -->|"deliberately not covered"| OOS
-    DEC -->|"greeting · thanks · her ambitions"| CHAT
-    DEC -->|"fragment + disclosed earlier"| HELP
-    DEC -->|"factual · access · support"| RES
-
-    RES --> PREP --> RET --> GEN --> CHK
-
-    SAFE --> REPLY
-    OOS --> REPLY
-    HELP --> REPLY
-    CHAT --> REPLY
-    CHK -->|"fatal → blocked"| REPLY
-    CHK --> REPLY
-
-    REPLY -.-> EVT
-
-    classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
-    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
-    classDef decide fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
-    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
-    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
-    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
-```
-
-| Colour | Meaning |
-|---|---|
-| pale teal | deterministic — free, instant, auditable |
-| pale rust | human-approved text, never generated |
-| pale gold | the model. One call, or none |
-| plum | her, and the sources |
-
-**Roughly a third of turns never reach a model at all**, and they are the turns
-where that matters most: every safeguarding reply is instant, because a girl who
-has just disclosed coercion should not wait on a network round trip.
 
 ---
 
@@ -279,46 +260,6 @@ flowchart TD
     classDef bad fill:#FBEAE4,stroke:#C04B2F,color:#123
     classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
 ```
-
----
-
-## State, and what is deliberately not stored
-
-```mermaid
-flowchart LR
-    subgraph KEPT["Conversation state — in memory, one session"]
-        direction TB
-        K1["last <b>6 turns</b><br/><i>for the prompt</i>"]:::free
-        K2["<b>topic</b> — the last question<br/>that stood on its own"]:::free
-        K3["<b>disclosed</b> — sticky flag"]:::free
-    end
-
-    subgraph GONE["Not built"]
-        direction TB
-        N1["summarisation model"]:::bad
-        N2["entity tracker"]:::bad
-        N3["per-girl profile"]:::bad
-        N4["vector store of past turns"]:::bad
-    end
-
-    subgraph LOG["Event log — operational only"]
-        direction TB
-        L1["paths · timings · similarity<br/>flags · issue names"]:::free
-        L2["<b>no message text</b><br/><b>no identifier for her</b>"]:::good
-        L3["<i>TRACE_MESSAGES=1 opts in,<br/>locally, for debugging</i>"]:::obs
-    end
-
-    KEPT --> LOG
-
-    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
-    classDef bad fill:#F3F0EE,stroke:#9A9088,color:#555
-    classDef good fill:#E6F2E8,stroke:#2E7D4F,color:#123
-    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
-```
-
-An event log for a safeguarding product, kept by default, is a surveillance
-database with a dashboard on top — and the girls most at risk from it are the
-ones the product exists for.
 
 ---
 

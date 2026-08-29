@@ -10,151 +10,150 @@ solution philosophy, with every component either justified by a measurement or
 deleted.
 
 ```mermaid
-flowchart TB
-    subgraph UI["Interface"]
-        APP["<b>app.py</b> · Streamlit<br/>ui/theme.py"]:::iface
-    end
-
-    subgraph ORCH["Orchestration"]
-        PIPE["<b>pipeline.py</b><br/><i>one turn, start to finish</i>"]:::orch
-    end
-
-    subgraph DEC["Decision · deterministic"]
-        IV["input_validation.py<br/><i>the front door</i>"]:::free
-        RU["<b>rules.py</b><br/><i>6 paths, ordered</i>"]:::free
-        GL["language/glossary.py<br/><i>Kenyan lexicon</i>"]:::free
-    end
-
-    subgraph CST["Conversation · deterministic"]
-        CV["<b>conversation.py</b><br/><i>6 turns · topic · disclosed</i>"]:::free
-    end
-
-    subgraph RAGL["Retrieval · deterministic"]
-        QP["query_prep.py<br/><i>vocabulary mapping</i>"]:::free
-        RT["retrieval.py<br/><i>cosine, top-5</i>"]:::free
-        IX["indexing.py"]:::free
-    end
-
-    subgraph GENL["Generation · the only model call"]
-        PR["prompt_files/<br/><i>persona · answer · converse</i>"]:::model
-        LC["llm/client.py"]:::model
-    end
-
-    subgraph SAF["Safety · spans every path"]
-        CK["checks.py<br/><i>validation, no model</i>"]:::approved
-        RS["responses.py<br/><i>approved text</i>"]:::approved
-    end
-
-    subgraph OBSL["Observability"]
-        OB["observability.py<br/><i>events + invariants</i>"]:::obs
-    end
-
-    CHR[("<b>ChromaDB</b><br/>1,693 chunks")]:::store
-    LEX[("kenyan_lexicon<br/>.json")]:::store
-    SVC[("services.csv<br/><b>unverified · gated</b>")]:::gated
-    EVT[("events.jsonl<br/><i>no message text</i>")]:::store
-
-    BGE["<b>BAAI/bge-m3</b><br/><i>embeddings, on this machine</i>"]:::local
-    OR["<b>OpenRouter</b><br/>claude-sonnet-5<br/><i>the only network call</i>"]:::ext
-
-    APP --> PIPE
-    PIPE --> DEC
-    PIPE --> CST
-    PIPE --> RAGL
-    PIPE --> GENL
-    PIPE --> SAF
-    PIPE -.-> OBSL
-
-    GL -.-> LEX
-    RT --> IX --> CHR
-    IX --> BGE
-    LC --> OR
-    RS -.-> SVC
-    OB -.-> EVT
-
-    classDef iface fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
-    classDef orch fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
-    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
-    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
-    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123
-    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
-    classDef store fill:#F2F0EC,stroke:#7A736B,color:#123
-    classDef gated fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
-    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
-    classDef ext fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
-```
-
-Six layers, four data stores, **one external dependency.** Everything teal is
-deterministic — free, instant, and auditable by reading it. Rust is
-human-approved text that is never generated. Gold is the model.
-
-**Only generation leaves the machine.** Embeddings run locally on `bge-m3`, so
-no girl's question is sent anywhere to be encoded, and there is no per-query
-embedding cost. If the provider is down, every safeguarding reply still works —
-those never needed it.
-
-**Safety is a layer, not a step.** `responses.py` and `checks.py` are reachable
-from every path rather than sitting at one point in a sequence.
-
-### One turn, end to end
-
-```mermaid
 flowchart TD
-    HER["Her message"]:::her
+    USER["<b>HER MESSAGE</b>"]:::her
 
-    VAL["<b>1 · Validate</b><br/>reject empty, non-text, over 2000 chars<br/><i>her words otherwise untouched — no<br/>sanitising of Sheng, emoji or case</i>"]:::free
+    subgraph OBS["🔒 PRIVACY-SAFE OBSERVABILITY — route · safety · retrieval · LLM calls · latency · validator · journey stage · invariant failures · no message text"]
+    direction TB
 
-    DEC{"<b>2 · Decide</b><br/>ordered rules + Kenyan lexicon<br/>reads her words alone, never the conversation"}:::decide
+        VAL["<b>INPUT VALIDATION</b>"]:::det
+        LEXS["<b>KENYAN LEXICON / LANGUAGE SIGNALS</b><br/><i>19 terms · 90 surface forms · risk tags</i>"]:::det
 
-    SAFE["<b>Safeguarding</b><br/>approved text, never generated"]:::approved
-    OOS["<b>Out of scope</b><br/>approved text"]:::approved
-    HELP["<b>Asked where to go,<br/>after a disclosure</b><br/>help pathway, approved text"]:::approved
-    CHAT["<b>Conversational contract</b><br/>no passages · claims nothing"]:::model
+        DEC{"<b>DETERMINISTIC DECISION + SAFETY FLOOR</b><br/>safeguarding checked first, before any other family<br/><i>52/52 · recall 1.000 · precision 1.000</i>"}:::gate
 
-    RES["<b>3 · Resolve</b><br/>give a fragment its antecedent<br/><i>retrieval query only</i>"]:::free
-    PREP["<b>4 · Prepare</b><br/>append the corpus's vocabulary<br/><i>factual and access turns only</i>"]:::free
-    RET["<b>5 · Retrieve</b><br/>bge-m3 local · ChromaDB cosine · top-5"]:::free
-    GEN["<b>6 · Generate</b><br/>grounded contract · every claim cited"]:::model
-    CHK["<b>7 · Check</b><br/>fabricated citation · phone number ·<br/>claimed experience · machinery talk"]:::free
+        SG["<b>SAFEGUARDING</b>"]:::stop
+        OOS["<b>OUT OF SCOPE</b>"]:::stop
+        CHAT["<b>CHAT</b>"]:::model
+        GRD["<b>FACTUAL / SUPPORT / ACCESS</b>"]:::det
 
-    REPLY["Her reply, with sources"]:::her
-    EVT[("<b>8 · Event</b><br/>one per turn<br/>+ invariants")]:::obs
+        SGR["approved response<br/>/ help pathway<br/><b>0 LLM calls</b>"]:::stop
+        OOSR["approved boundary<br/>response<br/><b>0 LLM calls</b>"]:::stop
+        CHATR["conversational contract<br/><b>ONE LLM CALL</b><br/><i>claims nothing</i>"]:::model
 
-    HER --> VAL --> DEC
+        MT["<b>MULTI-TURN RESOLUTION</b><br/><i>only when context-dependent ·<br/>changes the query, not her message</i>"]:::det
+        QP["<b>CONDITIONAL QUERY PREP</b><br/><i>factual / access, where a<br/>vocabulary gap was measured</i>"]:::det
 
-    DEC -->|"disclosure of harm"| SAFE
+        BGE["<b>BGE-M3 RETRIEVAL</b><br/>governed SRH corpus<br/><i>local encoder · 1,693 chunks</i>"]:::local
+        TDL["<b>TRUSTED DATA LOOKUP</b><br/>verified services / contacts<br/><i>table read, never generated</i>"]:::gated
+
+        GEN["<b>GROUNDED GENERATION</b><br/><b>ONE LLM CALL</b><br/><i>every claim cited</i>"]:::model
+        DV["<b>DETERMINISTIC VALIDATION</b><br/><i>fabricated citation · invented number ·<br/>claimed experience</i>"]:::det
+    end
+
+    OUT["<b>HER REPLY</b>"]:::her
+
+    USER --> VAL --> LEXS --> DEC
+
+    DEC ==>|"harm · coercion · self-harm"| SG
     DEC -->|"deliberately not covered"| OOS
-    DEC -->|"greeting · thanks · her ambitions"| CHAT
-    DEC -->|"fragment + disclosed earlier"| HELP
-    DEC -->|"factual · access · support"| RES
+    DEC -->|"greeting · thanks · ambitions"| CHAT
+    DEC -->|"a question to answer"| GRD
 
-    RES --> PREP --> RET --> GEN --> CHK
+    SG ==> SGR
+    OOS --> OOSR
+    CHAT --> CHATR
+    GRD --> MT --> QP
+    QP --> BGE
+    QP --> TDL
+    BGE --> GEN
+    TDL --> GEN
+    GEN --> DV
 
-    SAFE --> REPLY
-    OOS --> REPLY
-    HELP --> REPLY
-    CHAT --> REPLY
-    CHK -->|"fatal → blocked"| REPLY
-    CHK --> REPLY
-
-    REPLY -.-> EVT
+    SGR ==> OUT
+    OOSR --> OUT
+    CHATR --> OUT
+    DV --> OUT
 
     classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
-    classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
-    classDef decide fill:#0E7A86,stroke:#0E7A86,color:#fff,font-weight:bold
-    classDef approved fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef det fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef gate fill:#C04B2F,stroke:#C04B2F,color:#fff,font-weight:bold
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
     classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
-    classDef obs fill:#EFEAF2,stroke:#5B2340,color:#123
+    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
+    classDef gated fill:#F2F0EC,stroke:#7A736B,color:#123
 ```
 
-One model call, and only on turns the decision layer sends to it — **never on a
-disclosure of harm.** Roughly a third of turns never reach a model at all, and
-they are the turns where that matters most: a girl who has just disclosed
-coercion should not wait on a network round trip.
+Not every message passes through every stage — **the branching is the
+architecture**, not an implementation detail underneath it.
 
-Four more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: build
-time versus run time, why the safety floor runs *before* retrieval, the two
-output contracts, and what state is deliberately not kept.
+| | |
+|---|---|
+| **rust** | the safeguarding gate, and every reply written from approved text |
+| **pale teal** | deterministic — free, instant, auditable by reading it |
+| **green** | local compute — the encoder. No token cost, but not a rule either |
+| **gold** | a hosted LLM call. One, or none |
+
+**Only generation uses a hosted generative LLM.** Routing, safeguarding, query
+preparation and validation are deterministic. Embeddings run locally, which is
+compute rather than a rule — and is why the encoder has a measurable cold start.
+
+**Safeguarding is a gate, not a route.** It is checked before any other family,
+and when it fires nothing downstream runs: no retrieval, no model call, no
+validator. That is why a safeguarding reply takes 0 ms. 52/52 on the decision
+benchmark, with safeguarding recall and precision both 1.000.
+
+**Two knowledge sources, not one.** The governed corpus answers what is true;
+a trusted table answers what to contact. Contacts are read, never generated —
+and gated on human verification, which is why nothing surfaces from it yet.
+
+**Resolution and preparation are conditional.** Resolution runs only on
+context-dependent turns and changes the retrieval query, never her message.
+Preparation runs only on factual and access turns, where a vocabulary gap was
+measured.
+
+**Observability wraps the runtime rather than sitting in it.** It has already
+surfaced a 39.5 s cold encoder load hiding behind a 5.4 s median, and the
+service-access gap.
+
+### Session state is a supporting component, not a stage
+
+```mermaid
+flowchart LR
+    SS["<b>SESSION STATE</b><br/>6 turns · resolved topic · disclosure flag<br/><i>in memory, one session, nothing written down</i>"]:::det
+
+    A["multi-turn resolution<br/><i>gives a fragment its antecedent</i>"]:::det
+    B["generation context<br/><i>so a reply does not re-introduce itself</i>"]:::model
+    C["post-disclosure routing<br/><i>the disclosure flag</i>"]:::stop
+
+    N["<b>Not built:</b> summariser · entity tracker ·<br/>persistent profile · vector store of past turns"]:::none
+
+    SS --> A
+    SS --> B
+    SS --> C
+    SS -.-> N
+
+    classDef det fill:#E8F4F3,stroke:#0E7A86,color:#123
+    classDef model fill:#FFF4D6,stroke:#B8860B,color:#123
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef none fill:#F3F0EE,stroke:#9A9088,color:#555
+```
+
+Three things consult it, each gated on a condition. No turn passes through it.
+
+### Safeguarding to service access, without a model
+
+```mermaid
+flowchart LR
+    D["<b>safeguarding disclosure</b><br/><i>“if I really loved him<br/>I wouldn't make him use one”</i>"]:::stop
+    F["<b>later:</b> “where can I go?”<br/><i>no subject of its own</i>"]:::her
+    R["<b>post-disclosure help</b><br/><i>disclosure flag + dependent fragment</i>"]:::gate
+    P["<b>approved help pathway</b><br/>health worker · trusted adult · helpline"]:::stop
+    Z["<b>0 LLM calls · 0 ms</b>"]:::good
+
+    D --> F --> R --> P --> Z
+
+    classDef her fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
+    classDef stop fill:#FBEAE4,stroke:#C04B2F,color:#123,font-weight:bold
+    classDef gate fill:#C04B2F,stroke:#C04B2F,color:#fff,font-weight:bold
+    classDef good fill:#E6F2E8,stroke:#2E7D4F,color:#123,font-weight:bold
+```
+
+The branch the use case turns on: she discloses, and later asks where to go —
+and that second question is not a contraception question.
+
+Five more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: build
+time versus run time, why the safety floor runs before retrieval, the two output
+contracts, where the evidence comes from, and what each component had to prove.
 
 ## What was removed, and what it cost to find out
 
