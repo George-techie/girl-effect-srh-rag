@@ -173,3 +173,23 @@ asking worked, which is not the same question. Blocking would trade a slightly
 awkward answer for a refusal, and a refusal is the worse of the two — the
 previous build's output judge is exactly what happens when that trade is made in
 the other direction.
+
+## D-07 · The phone check now fires on contacts, not on page numbers
+
+**Decided.** The short-code half of the phone regex is the actual four-digit
+Kenyan codes, plus `116` only where something nearby presents it as a number to
+call.
+
+**Why.** The old pattern `1(?:99|95|16)` matched **9 corpus chunks**, all of them
+page references — *"see LNG-IUD for Women With HIV, p. 199"*, *"p. 116"*, a
+journal page range. The phone check is fatal. A generated answer mentioning
+p. 116 would have been blocked, and a girl would have received a refusal in place
+of a correct, cited answer.
+
+Both failure directions are now regression-tested, including an assertion that
+**no corpus chunk matches at all** — the README's claim checked by the test suite
+rather than believed.
+
+**How it was found.** Not by a test, a judge or a review. By checking whether a
+number written in the README was true. It was not, and the check that produced
+the number was itself the defect.

@@ -18,13 +18,28 @@ from src import config
 #: afterwards from metadata.
 MARKER = re.compile(r"\[S(\d+)\]")
 
-#: Kenyan and international phone shapes. Nothing in the corpus contains one --
-#: measured, zero of 1,693 chunks -- so any number in a generated answer was
+#: Kenyan and international phone shapes. No corpus chunk contains a real phone
+#: number -- checked across all 1,693 -- so any number in a generated answer was
 #: invented, and a plausible wrong number given to a girl in crisis is the
-#: highest-consequence output this system could produce.
+#: highest-consequence output this system could produce. Hence fatal.
+#:
+#: The short-code half was rewritten after being run over the corpus. It was
+#: `1(?:99|95|16)`, which matched **9 chunks**: every one of them a page
+#: reference -- *"see LNG-IUD for Women With HIV, p. 199"*, *"p. 116"*, a
+#: citation's page range. None was a phone number. A fatal check firing on a
+#: page number does not produce a wrong contact; it produces a refusal, which is
+#: the failure this whole build exists to stop repeating.
+#:
+#: So the short codes are now the actual four-digit Kenyan ones, plus 116 only
+#: where something nearby presents it as a number to call. A fabricated contact
+#: arrives with that cue -- a bare 116 in prose does not.
 PHONE = re.compile(
     r"(?<!\[S)\b(?:\+?254|0)\s?\d{3}[\s-]?\d{3}[\s-]?\d{3,4}\b"
-    r"|\b1(?:99|95|16)\b"
+    r"|\b(?:1190|1195|1199)\b"
+    r"|(?:\b(?:call|dial|text|whatsapp|helpline|hotline|toll[- ]free|number)\b"
+    r"[^.\n]{0,30}\b116\b)"
+    r"|(?:\b116\b[^.\n]{0,20}\b(?:free|24/7|helpline|hotline|toll)\b)",
+    re.IGNORECASE,
 )
 
 #: Claims of lived experience. Narrow on purpose: "I hear what you're going

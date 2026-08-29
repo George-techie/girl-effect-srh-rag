@@ -1,62 +1,191 @@
-# Girl Effect SRH — corpus and retrieval
+# Trusted Aunti — sexual and reproductive health, for adolescent girls in Kenya
 
-A refined take on a safety-aware assistant for adolescent girls in Kenya,
-narrowed to what Girl Effect actually works on: **contraception and sexual
-health, and the empowerment outcomes that follow from them.**
+A safety-aware assistant answering questions about **contraception, sexual
+health, staying safe, and how to reach a service** — grounded in eight governed
+documents, with a deterministic safety floor above it.
 
-**This repository currently contains one thing: eight governed PDFs turned into a
-searchable vector index.** No chatbot, no routing, no agents, no judges, no UI.
-Those come back only where evaluation shows they are needed.
+This is a **refined** build. The feedback on the previous one was that it was
+overengineered in places, and this repository is the answer to that: the same
+solution philosophy, with every component either justified by a measurement or
+deleted.
 
----
+```
+decide  →  prepare  →  retrieve  →  generate  →  check
+```
 
-## Why this repo is small
-
-The previous build answered the same brief across four content tracks with five
-model roles, two LLM judges and a six-configuration ablation. Its own benchmark
-said that was too much: the simplest safe configuration scored the **highest**
-action accuracy (0.882) with the **fewest** unhelpful refusals, and adding the
-LLM evidence judge dropped accuracy to 0.745 while doubling refusals.
-
-So the rule here is: **deterministic and free earns its place; a model asked for
-a second opinion has to prove it.** Task 1 stops at retrieval, because retrieval
-is the part that cannot be skipped.
+**Four deterministic steps and one model call.** The model is reached only on
+turns the decision layer sends to it, and never on a disclosure of harm.
 
 ---
 
-## The corpus
+## What was removed, and what it cost to find out
 
-Eight sources, chosen for authority and for who they were written for.
+Removing things is the easy half. Knowing which ones is the work, so every
+removal here has a number attached.
 
-| Citation tag | Year | Role | Chunks |
-|---|---|---|---|
-| Kenya MoH · Contraception FAQs | 2023 | youth answer | 23 |
-| UNICEF/UNFPA · HIV & Prevention | 2021 | youth answer | 15 |
-| UNICEF/UNFPA · Young Parenthood | 2021 | youth answer | 12 |
-| UNICEF/UNFPA · Safety & Relationships | 2021 | youth answer | 8 |
-| UNFPA · SRHR Rights & Empowerment | 2024 | evidence | 287 |
-| WHO · Contraception & Empowerment | 2020 | evidence | 22 |
-| WHO · Contraception Clinical Guide | 2022 | clinical boundary | 1,005 |
-| Kenya MoH · Family Planning Guidelines | 2018 | clinical boundary | 321 |
+| Removed | The measurement |
+|---|---|
+| **LLM evidence judge** | The previous build's own ablation: it bought **+6 unhelpful refusals** to prevent one unsafe case, inside a variance floor of ~3 in 51 |
+| **LLM output judge** | It refused a girl's compliment. Twice. Its non-opinion half is [`src/safety/checks.py`](src/safety/checks.py) -- deterministic, free, and doing the actual work |
+| **LLM turn planner** | Replaced by ordered rules: **52/52** on the decision benchmark, safeguarding precision **1.000** |
+| **LLM query rewriter** | Never built. A string table got Adequate@5 **0.880 → 0.960** for zero tokens. A model would have to beat that, not merely work |
+| **Five model roles → one** | Nothing measured that the others earned their latency |
+| **Two content tracks (mental health, menstruation)** | Out of scope as *topics*. Not out of scope as *risk* — see below |
+| **`rag/citations.py`** | Unreferenced. Deleted |
 
-**1,693 chunks · 388,360 tokens · 962 pages · 0 chunks over the encoder cap**
+**What was kept, for the same reason.** The decision layer, the safety floor, the
+citation contract and the deterministic validator all stayed, because each has a
+measured failure behind it. Minimum justified complexity is not fewest parts.
 
-The citation tag is the point. It travels into Chroma metadata and out to the
-interface, so a girl sees `WHO · Contraception Clinical Guide` rather than
-`family-planning-a-global-handbook-for-providers-2022`.
+---
 
-### The one governance field that survived
+## The one distinction the whole design rests on
 
-`document_role` separates **what she reads** from **what a clinician reads**.
-Two sources are provider guidance — a 486-page WHO handbook whose title says
-"for providers", and Kenya's national service-delivery guidelines. They belong
-in the corpus because they settle what is true and what Kenyan practice is. They
-are not the voice that should answer a sixteen-year-old asking whether
-contraception will make her infertile.
+**Narrowing what the product answers does not narrow what it must not walk past.**
 
-Nothing filters on the role yet. It is recorded now because it is unrecoverable
-later without re-ingesting, and the filtering decision belongs after retrieval
-evaluation rather than before it.
+The scope is contraception and sexual health. But a girl who asks about the pill
+and then says her boyfriend threatened to leave her if she keeps taking it has
+not changed the subject — she has told you something the product must handle
+whether or not it is "in scope".
+
+So there are two different things, and they are sized differently:
+
+- **The safeguarding floor is risk-based and universal.** Self-harm, violence,
+  coercion, third-party disclosure. It does not shrink when the topic list does.
+- **The answering vocabulary is domain-scoped.** It shrank with the scope, and
+  five old-scope terms were removed from the Kenyan lexicon in a recorded pass.
+
+Written up as [D-01](docs/decisions.md). **Reproductive coercion** was added as a
+safeguarding category for this scope ([D-02](docs/decisions.md)) — including
+contraceptive sabotage, pressure to stop a method, and consent made conditional.
+
+---
+
+## Two output contracts
+
+Every reply is written under one of two contracts, and **which one is chosen by
+provenance, never inferred from whether citations happen to be present.**
+
+|  | **Grounded** | **Conversational** |
+|---|---|---|
+| Used for | factual, access, support | greetings, thanks, small talk |
+| Safe because | every claim carries a citation | it makes **no claim at all** |
+| Uncited claim | fatal, blocked | fatal, blocked |
+| Citation marker | required | fatal — a marker with no passage looks *more* verified than an uncited claim |
+
+This split is what stopped *"hello aunti"* being answered under a contract
+requiring a citation — which is how the previous build turned a greeting into
+*"I had trouble putting that answer together."*
+
+Both contracts render from **one persona file**. They were two hand-written
+personas until a merge, and the reason is not tidiness: a girl cannot see which
+path her message took, so a warm greeting followed by a flatter answer reads as
+the service losing interest in her.
+
+---
+
+## What is measured
+
+Four evaluations, each with criteria fixed **before** the run. Full write-ups in
+[`evaluation/`](evaluation/).
+
+### Decision layer — 52 messages
+```
+overall accuracy       1.000   (52/52)
+safeguarding recall    1.000   (12/12)
+safeguarding precision 1.000   (12/12)
+contrast pairs           6/6
+```
+The contrast pairs are the point: six pairs that share a surface form and need
+different paths. *"My boyfriend doesn't like condoms"* is support; *"my boyfriend
+says he'll leave me if I don't stop taking the pill"* is safeguarding.
+
+### Retrieval — 31 questions, tagged by Theory-of-Change driver
+```
+Hit@5 0.963 · Recall@5 0.586 · MRR 0.920 · Adequate@5 0.960
+```
+Gold labels are **source-level**, so Hit@5 is an optimistic upper bound and is
+reported as one. `Adequate@5` is the floor under it — a coarse phrase check for
+whether a retrieved passage plausibly *answers* her, which is a different
+question from whether the right document came back.
+
+Questions are tagged by the **eight behavioural drivers** in Girl Effect's
+Theory of Change, not by generic RAG categories, because **knowledge is one
+driver of eight**. A retriever measured only on factual questions looks flawless
+while failing the drivers that actually lead to service access — and this one
+did: knowledge MRR **1.000** while self-identity sat at **0.417**.
+
+### Experiment 1 — source role preference · **rejected**
+A soft score bonus on youth-facing sources. Swept seven strengths; it moved
+youth material to the top without improving what the answers could support.
+Rejected, `role_bonus` left at 0.0.
+
+### Experiment 2 — oracle restatement · **ceiling established, feature refused**
+Hand-written retrieval queries. Adequate@5 1.000, agency mean 0.889 — and two
+findings that became constraints rather than a feature: restating **support**
+turns pulled retrieval toward policy literature *about* her, and restating an
+**out-of-scope** question made it retrieve *more* confidently (0.668 → 0.691).
+
+### Experiment 3 — deterministic query preparation · **adopted**
+Her words with the corpus's vocabulary appended, from a fixed table.
+
+| | natural | prepared | oracle |
+|---|--:|--:|--:|
+| Adequate@5 | 0.880 | **0.960** | 1.000 |
+| MRR | 0.883 | **0.920** | 0.864 |
+| agency mean | 0.611 | **0.750** | 0.889 |
+
+Zero per-question regressions. **All four boundary cases are bit-identical to
+baseline**, because the gate — factual and access turns only, and only after the
+decision — never opens for them. That is Experiment 2's constraint doing its job
+in the shipped system rather than in a note.
+
+Mappings are labelled `evidenced` or `extrapolated` **in the source code**. Three
+come from measured failures; seven are the same kind of gap written from the
+corpus's own section titles. Tuning a table against the set you then report on
+measures the tuning, not the layer.
+
+---
+
+## What is known to be wrong
+
+**The phone-number check was firing on page numbers.** Run over the corpus, the
+short-code half of the regex matched 9 chunks -- every one a page reference,
+*"see LNG-IUD for Women With HIV, p. 199"*. That check is **fatal**, so a
+generated answer citing p. 116 would have been blocked and the girl would have
+got a refusal. Rewritten to the actual four-digit Kenyan short codes plus 116
+only where something nearby presents it as a number to call: **0 corpus matches**,
+and every fabricated-contact case still caught. The regression test carries both
+directions.
+
+This one is worth naming because of how it was found. It was not found by a
+test, a judge or a review -- it was found by checking whether a claim in this
+README was true, and it was not.
+
+**Recall@5 fell 0.012 under query preparation.** One question's worth, inside the
+noise of 31. Reported because it moved.
+
+**Two service contacts are `unverified` and the system will not surface them.**
+They were carried over from the previous build with no source, date or checker.
+A table whose column says `verified_at` is worthless if the dates in it were
+invented, so they stay unverified and unreachable until a person confirms them.
+The schema, the fillable Word document and the guidance are all in place:
+[`data/services/`](data/services/).
+
+**78% of corpus chunks are provider guidance** — 1,326 clinical against 58
+youth-facing. The facts are right; the reader they were written for is a
+clinician. Query preparation narrows this, it does not fix it.
+
+**Kiswahili costs −0.062 similarity**, over five matched pairs. Direct
+translation is handled; idiomatic Sheng is not. *"Inaharibu mji wa mtoto"* is a
+metaphor, and it retrieved a policy report where its English twin found the
+myth-correcting passage immediately — which is what the lexicon and one query
+mapping now exist for.
+
+**Boundary cases retrieve confidently.** *"My periods have been irregular for
+three months"* — deliberately out of scope — retrieves at **0.668, above most
+in-scope questions**. Retrieval cannot decline. That is the entire argument for
+deciding **before** searching, on her words, which is what the pipeline does.
 
 ---
 
@@ -64,149 +193,60 @@ evaluation rather than before it.
 
 ```bash
 pip install -r requirements.txt
-
-python scripts/ingest.py --dry-run     # parse, chunk, report — no embedding
-python scripts/ingest.py               # the same, then embed and index
-python scripts/search.py "can contraception make me infertile"
-python scripts/inspect_corpus.py --source KE_FAQ --sections
-pytest tests/ -q
+python scripts/ingest.py                            # build the index
+streamlit run app.py                                # the demo
 ```
 
-Embeddings are **BAAI/bge-m3, run locally** — multilingual, because the audience
-code-switches, and neither the corpus nor the query leaves the machine.
-Chunking is a 500-token target, 650 cap, **zero overlap**.
-
-> Those chunk settings come from the previous project's 12-configuration sweep,
-> which found Hit@5 flat from 400–650 and no benefit from overlap. **That sweep
-> ran on a differently-shaped corpus** — mostly narrative guides, where this one
-> is heavily question-and-answer. They are a sensible starting point, not a
-> validated setting for this corpus.
-
----
-
-## What ingestion found
-
-Two extraction defects, both caught by reading the output rather than by a test.
-
-**The Kenya MoH FAQ was corrupted.** That PDF encodes its `ti`/`ft`/`tt`
-ligatures at Latin Extended-B codepoints, so extraction returned `Ɵme`, `aŌer`,
-`transmiƩed`, `breasƞeeding` — 85 occurrences in the only Kenyan youth-facing
-source in the corpus. It fails quietly, because the result still looks like
-words. Each repair is confirmed against several words rather than inferred from
-one, and a test now fails if any survive.
-
-**One Q&A source lost its structure.** UNICEF *Staying Safe* produced 2 sections
-from 17 pages where its siblings gave 12 and 17. The cause was a 20-word cap on
-headings: youth Q&A booklets ask questions in her own words, and *"I feel
-embarrassed and ashamed when my friends shout sexual comments at girls on the
-street; how can I get them to stop?"* is 23 words. Every such question was
-dropped into the body before the question rule could see it. Widening the cap
-recovered structure across all three Q&A sources — but *Staying Safe* still
-reaches only 5 sections, because it is laid out magazine-style and its questions
-are not adjacent to their answers in the text layer. **Left as a known
-limitation.** It is one source of eight, and fixing it means a special-case
-parser for one PDF — worth doing if evaluation shows that source
-underperforming, not before.
-
----
-
-## What the smoke tests showed
-
-Retrieval routes by **register**, which was not the expected result.
-
-Asked clinically, the provider handbooks answer:
-
-```
-"Can contraception make me infertile?"
-1. WHO · Contraception Clinical Guide          0.676
-   p.417 · Contraceptives Do Not Cause Infertility
+```bash
+python -m pytest -q                                 # 84 tests
+python scripts/eval_decision.py                     # 52/52
+python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
+python scripts/eval_retrieval.py --compare-prepared # Experiment 3
 ```
 
-Asked the way a girl would ask, the youth Q&A wins outright:
-
-```
-"I'm not ready to have a baby. What can I do?"
-1. UNICEF/UNFPA · Young Parenthood             0.701
-   p.5 · I'm not ready to become a father. What can I do to prevent a pregnancy?
-2. UNICEF/UNFPA · Young Parenthood             0.628
-   p.3 · How do I know if I'm ready to have a baby?
-```
-
-**The open question for the next task.** 78% of chunks are provider guidance —
-1,326 clinical against 58 youth-facing — because two documents run to 486 and
-216 pages while the youth booklets are 17. Factual questions are therefore
-usually answered from a clinician's handbook. That may be correct, since the
-handbook is the authority on what is true. It may also mean the answers she gets
-are accurate and written for the wrong reader. Retrieval evaluation on the
-use-case question set decides which, and `document_role` is already in the
-metadata if the answer turns out to be weighting or filtering by it.
+Embeddings are **local** (`BAAI/bge-m3`) — no per-query embedding cost, and no
+girl's question leaves the machine to be embedded. Generation runs through
+OpenRouter on `anthropic/claude-sonnet-5`; set `OPENROUTER_API_KEY` in `.env`.
 
 ---
 
 ## Layout
 
 ```
-corpus/raw/                 the eight PDFs, named as they appear in citations
-corpus/registry/            source_registry.csv — 8 rows, editable by anyone
-src/config.py               settings; small on purpose
-src/rag/registry.py         reads the CSV
-src/rag/loaders.py          PyMuPDF extraction, heading recovery
-src/rag/cleaning.py         running headers, ligature repair, hyphen joins
-src/rag/chunking.py         section-aware, sentence-boundary, 500/650/0
-src/rag/indexing.py         bge-m3 embeddings, persistent Chroma
-scripts/                    ingest · search · inspect_corpus
-tests/test_corpus.py        13 tests
+src/
+  pipeline.py            the whole system, ~280 lines
+  decision/
+    rules.py             ordered deterministic router, 6 paths
+    input_validation.py  the front door
+  rag/
+    query_prep.py        Experiment 3 — the mapping table
+    retrieval.py         cosine search over ChromaDB
+    chunking.py          500/650/0, section-aware
+  safety/
+    checks.py            deterministic output validation, no model
+    responses.py         approved text, never generated
+  language/glossary.py   Kenyan lexicon, 19 terms, 90 surface forms
+  prompt_files/          persona.yaml + two contracts
+docs/decisions.md        D-01 … D-06, each with what would reverse it
+evaluation/              four experiments, criteria fixed beforehand
 ```
 
-Ingestion is ported from the previous repository rather than rewritten. The
-registry is not: 462 lines of hand-written Python became a CSV and 120 lines of
-code, because every document here is open-licence and none needs hand-picked
-page ranges.
+**Safeguarding text is never generated.** Not because a model would do worse,
+but because nobody can review, approve or audit text rewritten on every turn.
+Contacts are a **table read** — no corpus chunk contains a phone number -- checked
+across all 1,693 -- so any number in a generated answer is invented by
+definition, and the validator treats a phone-shaped string as fatal.
 
 ---
 
-## Retrieval evaluation
+## What was deliberately not built
 
-31 questions, tagged by the **eight behavioural drivers** in Girl Effect's Theory
-of Change rather than by generic RAG categories. Full write-up:
-[`evaluation/README.md`](evaluation/README.md).
+**Conversation memory** — nothing measured that this demo needs it.
+**A journey-event schema** and **an observability layer** — both defensible for a
+production service and neither justified by anything measured here. Adding them
+now would repeat the exact mistake this build exists to correct.
 
-**Hit@5 0.926 · Recall@5 0.599 · MRR 0.883** (source-level gold labels, so
-Hit@5 is an optimistic upper bound).
-
-Three findings decide what gets built next:
-
-**Knowledge scores 1.000. Agency does not.** The weakest drivers are *perceived
-control* (0.667), *attitude* (0.750) and *self identity* (MRR 0.417) — the
-questions about whether this is allowed, whether it is shameful, and whether it
-is for her. A retriever measured only on factual questions looks flawless while
-failing the drivers the Theory of Change says lead to service access.
-
-**65% of top results come from provider manuals.** Two documents are 486 and 216
-pages; the youth booklets are 17. The facts she gets are right and the reader
-they were written for is a clinician. `document_role` is already in the
-metadata — this is the measurement that says to use it.
-
-**Asking in Kiswahili costs −0.062 similarity**, measured over five matched
-pairs, and changes which source answers in two of five. Direct translation is
-handled well; idiomatic Sheng is not — *"inaharibu mji wa mtoto"* is a metaphor,
-and it retrieved a policy report where its English twin found the myth-correcting
-passage immediately.
-
-And every boundary case returns a confident result. "My periods have been
-irregular for three months" — a topic deliberately cut from scope — retrieves at
-**0.668, higher than most in-scope questions**. Asked "am I too young to be
-thinking about protecting myself?", the second result is *"I was raped and I am
-worried that no one will believe me."*
-
-That is not a retrieval bug. Retrieval found the nearest text, which is its job.
-It is the argument for one component above the retriever whose only job is
-deciding **whether to answer** — running before retrieval, because the
-similarity scores give it nothing to work with.
-
----
-
-## Next
-
-A single decision layer above retrieval, and a generator. Nothing else until
-measurement asks for it.
+The honest version of "what's next" is not a feature list. It is: **verify the
+service directory**, because the safeguarding routes are where having nothing
+verified costs the most; and **get the corpus more youth-facing material**,
+because 78%-clinical is the constraint underneath most of what is still weak.
