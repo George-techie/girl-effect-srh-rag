@@ -27,7 +27,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from src import config, prompts
+from src import config
 from src.prompt_files import loader
 from src.decision import rules
 from src.llm.client import get_client
@@ -130,14 +130,24 @@ def answer(message: str, *, k: int | None = None) -> Reply:
         return Reply(responses.NO_EVIDENCE, decision.path, trace=trace)
 
     # --- generate ------------------------------------------------------------
+    # Both contracts are rendered by the same loader from the same persona.
+    # They were two implementations until now -- the conversational path got
+    # persona.yaml with its tone notes, emoji policy and register mirroring,
+    # while the grounded path got a second persona written by hand. A girl
+    # cannot see which path her message took, so a warm greeting followed by a
+    # flatter answer reads as the service losing interest in her.
+    prompt = loader.load("answer")
     try:
         response = get_client().complete(
             "generation",
-            [
-                {"role": "system", "content": prompts.ANSWER_SYSTEM},
-                {"role": "user", "content": prompts.ANSWER_USER.format(
-                    context=_context(hits), question=message)},
-            ],
+            prompt.messages(
+                language_label="",
+                seriousness=SERIOUSNESS.get(decision.path, "personal"),
+                context_block="",
+                history_block="",
+                context=_context(hits),
+                question=message,
+            ),
             temperature=config.GENERATION_TEMPERATURE,
             max_tokens=config.GENERATION_MAX_TOKENS,
         )
@@ -152,6 +162,8 @@ def answer(message: str, *, k: int | None = None) -> Reply:
     draft = response.text.strip()
     trace["llm_calls"] = 1
     trace["model"] = response.model
+    trace["contract"] = "grounded"
+    trace["seriousness"] = SERIOUSNESS.get(decision.path, "personal")
 
     # The generator read the passages and said they do not cover it. That
     # judgement stands, and it is not the same as the question being out of
