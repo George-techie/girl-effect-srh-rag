@@ -277,3 +277,24 @@ are the ones the product exists for. There is no identifier for her and no
 session id that survives a restart. The default stream still answers every
 operational question that matters — it can tell you fragments are failing to
 resolve; it cannot tell you who said what.
+
+## D-13 · "Where can I go?" after a disclosure is a request for help
+
+**Decided.** An access turn with no subject of its own, in a conversation where
+she has already disclosed, is answered from approved text — the help pathway,
+no model call, no corpus.
+
+**Why.** It was the worst-placed failure in the build and only a full rehearsal
+found it. She disclosed coercion, asked *"where can I go?"*, and the fragment
+resolved against her earlier question about the implant, searched implant
+passages, found nothing about *where*, and returned the no-evidence refusal — at
+the exact turn she asked for help. The following turn then apologised for it.
+
+Two things were wrong at once: a stale topic survived across a disclosure, and
+the `disclosed` flag existed while nothing consumed it. That second one is the
+same defect as the previous build's `urgent` — a signal written and read by
+nobody — which is why it is now one of the runtime invariants.
+
+**The line.** A fragment is a request for help. A message naming its own subject
+("where can I get the pill?") is still a real access question and is answered
+from the corpus as before. She may well still want the pill.

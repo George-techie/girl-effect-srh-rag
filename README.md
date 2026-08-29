@@ -198,7 +198,7 @@ streamlit run app.py                                # the demo
 ```
 
 ```bash
-python -m pytest -q                                 # 117 tests
+python -m pytest -q                                 # 120 tests
 python scripts/eval_decision.py                     # 52/52
 python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
 python scripts/eval_retrieval.py --compare-prepared # Experiment 3
@@ -266,6 +266,17 @@ nothing written down about her. Three boundaries are pinned by tests:
 2. **Resolution touches the retrieval query only** — the same split that made
    query preparation safe.
 3. **It is bounded and it forgets.**
+
+The rehearsal found one more, and it was the worst-placed failure in the build.
+She discloses coercion, then asks *"where can I go?"* — and it resolved against
+her earlier question about the **implant**, searched implant passages, found
+nothing about *where*, and refused. At the exact turn she asked for help. Then
+apologised for it on the next turn.
+
+A subjectless question after a disclosure is a request for help, not a
+contraception question, and it is now answered from approved text with no model
+call. *"Where can I get the pill?"* names its own subject and is still a real
+access question. The `disclosed` flag existed for this and was doing nothing.
 
 Measured with `python scripts/eval_multiturn.py` over four journeys, 23 turns:
 **forbidden passages 1 → 0**, path accuracy 21/23 either way. The two

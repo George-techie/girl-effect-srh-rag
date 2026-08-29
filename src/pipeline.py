@@ -210,6 +210,24 @@ def _answer(message: str, *, k: int | None = None,
     if decision.path == rules.CHAT:
         return _converse(message, decision, trace, started, history)
 
+    # She disclosed earlier, and has now asked where to go without naming a
+    # subject. That is not a contraception question and the corpus cannot answer
+    # it -- measured: it resolved against her earlier question about the
+    # implant, searched implant passages, found nothing about *where*, and
+    # refused, at the single most important turn in the conversation.
+    #
+    # A message that names its own subject ("where can I get the pill?") is a
+    # real access question and is left alone. This fires only on a fragment,
+    # which is the shape of a girl asking for help.
+    if (decision.path == rules.ACCESS and conversation is not None
+            and conversation.disclosed
+            and conversation_mod.is_dependent(message)):
+        trace["why"] += " · asking where to go after a disclosure"
+        trace["disclosed_earlier"] = True
+        trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        return Reply(responses.WHERE_TO_GO_AFTER_DISCLOSURE, decision.path,
+                     trace=trace)
+
     # --- retrieve ------------------------------------------------------------
     # The query the encoder sees is not always the message. On factual and
     # access turns her words get the corpus's vocabulary appended -- measured at

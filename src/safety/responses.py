@@ -81,3 +81,25 @@ TOO_LONG = (
     "That's a lot to read in one go and I'd rather not answer half of it.\n\n"
     "Could you send me the main thing you want to know?"
 )
+
+
+#: She disclosed something, and then asked where to go — with no subject of her
+#: own in the question. "Where can I go?" after telling you her boyfriend
+#: pressures her is not a question about contraception, and answering it from
+#: the corpus is how the demo's most important turn became a refusal: it
+#: resolved against her earlier question about the implant, searched for implant
+#: passages, found nothing about *where*, and declined.
+#:
+#: A human aunti would not look anything up here. She would answer the question
+#: the girl is actually asking, which is who can help me.
+WHERE_TO_GO_AFTER_DISCLOSURE = (
+    "For what you've just told me, the people who can actually help are real "
+    "people, not a service like me.\n\n"
+    "**A health worker at any clinic** — they see this often, they won't judge "
+    "you, and you don't need a parent with you.\n"
+    "**A teacher or an adult you already trust** — someone who knows you and "
+    "can stay with it.\n"
+    "**A helpline**, if you'd rather talk to someone who doesn't know you.\n\n"
+    "You don't have to explain it as well as you just did to me. Saying "
+    "\"someone is pressuring me\" is enough to start."
+)

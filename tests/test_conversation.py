@@ -149,3 +149,34 @@ class TestAspirations:
     def test_the_article_is_the_only_thing_separating_these(self):
         assert rules.decide("I want to be a doctor").path == rules.CHAT
         assert rules.decide("I want to be on the pill").path != rules.CHAT
+
+
+class TestWhereToGoAfterDisclosure:
+    """The demo's most important turn, and the one that was failing.
+
+    She discloses coercion, then asks "where can I go?". The corpus has no
+    answer to *where*, so it resolved against her earlier question about the
+    implant, searched implant passages and refused -- at the exact moment she
+    asked for help.
+    """
+
+    def test_a_fragment_after_a_disclosure_is_a_request_for_help(self):
+        from src import pipeline
+        from src.safety import responses
+        c = journey(
+            "Does the implant stop you having children later?",
+            "my boyfriend says if I really loved him I would not use anything",
+        )
+        reply = pipeline.answer("where can I go?", conversation=c)
+        assert reply.text == responses.WHERE_TO_GO_AFTER_DISCLOSURE
+        assert reply.trace["llm_calls"] == 0
+
+    def test_a_named_subject_is_still_a_real_access_question(self):
+        """She may well still want the pill. Only a subjectless fragment is
+        read as asking for help."""
+        c = journey("my boyfriend says if I really loved him I would not use anything")
+        assert not conv.is_dependent("where can I get the pill?")
+
+    def test_without_a_disclosure_nothing_changes(self):
+        c = journey("Does the implant stop you having children later?")
+        assert not c.disclosed
