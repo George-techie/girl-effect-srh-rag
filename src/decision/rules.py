@@ -48,6 +48,13 @@ class Decision:
     reason: str
     matched: list[str] = field(default_factory=list)
 
+    #: She asked for a service, a contact or a person -- in the same message.
+    #: Orthogonal to `path`, never a replacement for it: "where can I get help
+    #: if someone hurt me?" is a disclosure AND a request, and reading it as
+    #: only one of the two is how she ends up being asked whether she wants
+    #: help that she has just asked for.
+    help_requested: bool = False
+
     @property
     def restate(self) -> bool:
         return self.path in RESTATED
@@ -81,13 +88,18 @@ _HARM = _res(
     # the reviewed lexicon, which reaches this pattern two ways: as a risk tag,
     # and by normalising the message to "hits me" before it is scanned. An
     # inline copy would drift from the lexicon the reviewer maintains.
-    r"\btouch\w*\s+me\b.{0,44}\b(not (to )?tell|don'?t tell|secret|keep it)\b",
+    r"\btouch\w*\s+me\b.{0,44}\b(not (to )?tell|don'?t tell|do not tell"
+    r"|secret|keep it)\b",
     r"\b(uncle|teacher|stepfather|step-?dad|father|brother|cousin|neighbou?r)\b"
     r".{0,60}\b(touch\w*|come[s]? into my room|meet (me )?alone|sleep with)\b",
     r"\bsend (him|them) (photos|pictures|nudes)\b|\bsend me money\b.{0,40}\bphotos\b",
     r"\b(marry|married)\b.{0,40}\b(making me|forced|arrange)\b|"
     r"\b(making me|forcing me|force me) (to )?marry\b",
-    r"\bdon'?t want to be here\b|\bend (it|my life)\b|\bkill myself\b",
+    # Contractions and their expansions both. "I don't want to be here" was
+    # caught and "I do not want to be here" was not -- the same sentence, one
+    # apostrophe apart, on the path where a miss costs the most.
+    r"\b(don'?t|do not) want to be (here|alive)\b|\bend (it|my life)\b"
+    r"|\bkill myself\b|\bdon'?t want to live\b|\bdo not want to live\b",
 )
 
 #: **Reproductive coercion.** A safeguarding category the previous build did not
@@ -124,7 +136,8 @@ _REPRODUCTIVE_COERCION = _res(
     r"contraception|injection|implant)\b.{0,50}\b(leave|threat|make|force|else|"
     r"angry|beat)\b",
     r"\b(leave|dump) me\b.{0,50}\bstop (taking|using)\b",
-    r"\b(won'?t|will not|does ?n'?t) (let|allow) me (to )?(use|take|get)\b",
+    r"\b(won'?t|will not|does ?n'?t|does not|do not) (let|allow) me "
+    r"(to )?(use|take|get)\b",
     r"\bforbids? me\b|\bhanitaki nitumie\b",
 
     # 4 · pregnancy coercion
@@ -136,7 +149,8 @@ _REPRODUCTIVE_COERCION = _res(
     r"\b(threaten|threatens|threatened)\b",
     r"\b(he|she|they)\s+(said|says|will)\b.{0,40}"
     r"\b(leave me|dump me|tell everyone|fail me|report me)\b",
-    r"\bpressur(e|es|ed|ing) me\b|\bwon'?t take no\b|\bkeeps? asking me to\b",
+    r"\bpressur(e|es|ed|ing) me\b|\b(won'?t|will not) take no\b"
+    r"|\bkeeps? asking me to\b",
 )
 
 #: Someone else's disclosure. Classifiers reliably under-detect these because
@@ -236,6 +250,24 @@ _SUPPORT = _res(
 )
 
 
+#: An explicit request for a service, a contact or a person to talk to. This is
+#: not a route -- it is a fact about the message that changes what the route
+#: does. The previous build measured the failure it prevents: contacts were
+#: looked up, ranked, put in state, and then held behind a button by a girl who
+#: had already asked for them.
+_HELP_REQUEST = _res(
+    r"\bwhere (can|do|could) i (get|go|find|call)\b",
+    r"\bwho (can|do|could) i (call|talk to|see|contact|ask)\b",
+    r"\b(can|could) you (give|send|share) me\b.{0,24}"
+    r"\b(number|contact|helpline|hotline|clinic|service)\b",
+    r"\b(a|any|the) (number|helpline|hotline|contact)\b",
+    r"\bneed (help|someone|somebody|to talk)\b",
+    r"\bhelp me\b|\bi need help\b|\bnisaidie\b|\bnataka msaada\b",
+    r"\bwapi\b|\bnaweza pata\b",
+    r"\bwhere.{0,24}\b(clinic|chemist|pharmacy|hospital|counsell?or)\b",
+)
+
+
 def _hits(patterns: tuple[re.Pattern[str], ...], text: str) -> list[str]:
     return [p.pattern[:44] for p in patterns if p.search(text)]
 
@@ -253,6 +285,7 @@ def decide(message: str) -> Decision:
          "hits me" without that pattern needing a Kiswahili variant bolted on
     """
     text = " ".join(message.split())
+    asked_for_help = bool(_hits(_HELP_REQUEST, text))
 
     gloss = glossary.scan(text)
     normalised = glossary.normalise(text)
@@ -262,15 +295,17 @@ def decide(message: str) -> Decision:
     if gloss.risk_tags:
         return Decision(
             SAFEGUARDING,
-            f"safeguarding · glossary risk tag",
+            "safeguarding · glossary risk tag",
             sorted(gloss.risk_tags),
+            help_requested=asked_for_help,
         )
 
     for name, family in (("harm", _HARM), ("reproductive coercion", _REPRODUCTIVE_COERCION),
                          ("third-party", _THIRD_PARTY)):
         matched = [m for v in variants for m in _hits(family, v)]
         if matched:
-            return Decision(SAFEGUARDING, f"safeguarding · {name}", matched)
+            return Decision(SAFEGUARDING, f"safeguarding · {name}", matched,
+                            help_requested=asked_for_help)
 
     matched = _hits(_OUT_OF_SCOPE, text)
     if matched:
@@ -279,12 +314,14 @@ def decide(message: str) -> Decision:
         # collapse into one another. Prescribing, dosing and diagnosis are not
         # rescued -- they mention methods too, and they stay out of scope.
         if _hits(_MENSTRUAL_OUT_OF_SCOPE, text) and _hits(_METHOD_ATTRIBUTED, text):
-            return Decision(FACTUAL, "out-of-scope phrasing, but attributed to a method")
-        return Decision(OUT_OF_SCOPE, "out of scope", matched)
+            return Decision(FACTUAL, "out-of-scope phrasing, but attributed to a method",
+                            help_requested=asked_for_help)
+        return Decision(OUT_OF_SCOPE, "out of scope", matched,
+                        help_requested=asked_for_help)
 
     matched = _hits(_ACCESS, text)
     if matched:
-        return Decision(ACCESS, "access", matched)
+        return Decision(ACCESS, "access", matched, help_requested=asked_for_help)
 
     # Chat before support. A greeting is short and warm and contains none of
     # the feeling words support looks for, but "asante sana" was matching
@@ -295,6 +332,7 @@ def decide(message: str) -> Decision:
 
     matched = _hits(_SUPPORT, text)
     if matched:
-        return Decision(SUPPORT, "support", matched)
+        return Decision(SUPPORT, "support", matched, help_requested=asked_for_help)
 
-    return Decision(FACTUAL, "no other family matched — treated as factual")
+    return Decision(FACTUAL, "no other family matched — treated as factual",
+                    help_requested=asked_for_help)

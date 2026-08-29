@@ -108,13 +108,32 @@ def answer(message: str, *, k: int | None = None) -> Reply:
     # made on her words, and these two paths never reach the corpus at all.
     if decision.path == rules.SAFEGUARDING:
         self_harm = "self_harm_risk" in decision.matched
+        trace["help_requested"] = decision.help_requested
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
-        return Reply(
-            text=responses.SELF_HARM if self_harm else responses.SAFEGUARDING,
-            path=decision.path,
-            trace=trace,
-            followup=None if self_harm else responses.SAFEGUARDING_FOLLOWUP,
-        )
+
+        if self_harm:
+            # Urgent risk. Contacts arrive with the opening rather than behind a
+            # tap: the previous build measured that failure, where a girl who
+            # did not tap saw less than one who disclosed something less
+            # dangerous and did.
+            return Reply(responses.SELF_HARM, decision.path, trace=trace)
+
+        if decision.help_requested:
+            # She disclosed AND asked where to go, in one message. Holding the
+            # pathway behind a button here applies the opt-in backwards: it
+            # exists so a girl who has *not* asked is not handed everything at
+            # once while distressed, never to make someone who has asked, ask
+            # twice. The acknowledgement still comes first and unchanged.
+            trace["why"] += " · asked for help in the same message"
+            return Reply(
+                responses.SAFEGUARDING + "\n\n" + responses.SAFEGUARDING_FOLLOWUP,
+                decision.path, trace=trace,
+            )
+
+        # Support first, offer the option. She chooses whether to receive it,
+        # which keeps the first message short enough to read while distressed.
+        return Reply(responses.SAFEGUARDING, decision.path, trace=trace,
+                     followup=responses.SAFEGUARDING_FOLLOWUP)
 
     if decision.path == rules.OUT_OF_SCOPE:
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)

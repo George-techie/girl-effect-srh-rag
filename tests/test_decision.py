@@ -144,3 +144,76 @@ class TestInputValidation:
         reply = pipeline.answer("   ")
         assert reply.path == "invalid_input"
         assert reply.trace["llm_calls"] == 0
+
+
+class TestPatternIntegrity:
+    """A guard against a bug that has now happened five times.
+
+    Writing regex through a shell heredoc turns `\b` into a literal backspace
+    byte (0x08). The module still imports, the patterns still compile, and they
+    silently match nothing — which on the safeguarding families means
+    disclosures route to `factual` with no error anywhere.
+    """
+
+    def test_no_control_characters_in_the_rule_source(self):
+        from pathlib import Path
+
+        import src.decision.rules as mod
+
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        bad = {c for c in source if ord(c) < 32 and c not in "\n\t"}
+        assert not bad, f"control characters in rules.py: {[hex(ord(c)) for c in bad]}"
+
+    def test_every_safety_pattern_matches_something(self):
+        """A pattern that can never fire is worse than no pattern: it reads as
+        coverage in review and provides none."""
+        import src.decision.rules as R
+
+        for name, family in (("harm", R._HARM),
+                             ("coercion", R._REPRODUCTIVE_COERCION),
+                             ("third_party", R._THIRD_PARTY)):
+            for pattern in family:
+                assert "\x08" not in pattern.pattern, f"{name}: {pattern.pattern!r}"
+
+
+class TestSelfHarmPhrasing:
+    """The highest-consequence family in the file. "I don't want to be here"
+    was caught and "I do not want to be here" was not — the same sentence, one
+    apostrophe apart."""
+
+    @pytest.mark.parametrize("message", [
+        "I don't want to be here anymore.",
+        "I do not want to be here anymore.",
+        "I dont want to be here",
+        "I do not want to live",
+        "I don't want to live anymore",
+    ])
+    def test_both_contracted_and_expanded_forms_are_caught(self, message):
+        assert rules.decide(message).path == rules.SAFEGUARDING
+
+
+class TestHelpRequest:
+    """Orthogonal to the path, never a replacement for it. A girl who asks for
+    help in the same message as a disclosure must not be asked whether she
+    wants help."""
+
+    @pytest.mark.parametrize("message,path,asked", [
+        ("Someone hurt me.", rules.SAFEGUARDING, False),
+        ("Where can I get help if someone hurt me?", rules.SAFEGUARDING, True),
+        ("My boyfriend forced me.", rules.SAFEGUARDING, False),
+        ("Where can I get condoms?", rules.ACCESS, True),
+        ("Can family planning make me infertile?", rules.FACTUAL, False),
+    ])
+    def test_signal_is_independent_of_route(self, message, path, asked):
+        d = rules.decide(message)
+        assert d.path == path
+        assert d.help_requested is asked
+
+    def test_a_girl_who_asked_is_not_asked_again(self):
+        from src import pipeline
+
+        asked = pipeline.answer("Where can I get help if someone hurt me?")
+        assert asked.followup is None, "she already asked; do not offer a button"
+
+        did_not_ask = pipeline.answer("My boyfriend forced me.")
+        assert did_not_ask.followup is not None, "support first, offer the option"
