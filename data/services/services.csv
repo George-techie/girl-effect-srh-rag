@@ -1,0 +1,11 @@
+service_id,name,service_type,routes,contact_type,contact,coverage,is_free,anonymous_ok,opening_hours,eligibility,what_they_do,source,source_url,verified_by,verified_at,status
+KE_BEFRIENDERS,Befrienders Kenya,emotional support,self_harm_risk,phone_whatsapp,+254 722 178 177,Kenya,,,,,"Listens if you are struggling or thinking about ending your life. No judgement.",carried over from the previous build,,,,unverified
+KE_REDCROSS,Kenya Red Cross counselling,counselling,self_harm_risk|emotional_support,phone,1199,Kenya,,,,,"Free counselling line for when things feel like too much.",carried over from the previous build,,,,unverified
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,
