@@ -1,6 +1,9 @@
 # Architecture
 
-Six steps. **One of them costs money.**
+Eight steps end to end. **One of them costs money.**
+
+The six in the middle — decide, resolve, prepare, retrieve, generate, check —
+are the pipeline. Validation is the front door and the event is the record.
 
 ```mermaid
 flowchart TD
