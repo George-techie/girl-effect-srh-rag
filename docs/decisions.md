@@ -193,3 +193,87 @@ rather than believed.
 **How it was found.** Not by a test, a judge or a review. By checking whether a
 number written in the README was true. It was not, and the check that produced
 the number was itself the defect.
+
+## D-08 · Conversation state, not conversation memory
+
+**Decided.** Six turns, one resolved topic, one disclosure flag, all derived by
+rules. A dependent fragment gets its antecedent prepended for retrieval only.
+
+**Why.** Replaying the journey a reviewer described — contraception, her
+ambitions, coercion, seeking a service — broke four turns, two of them in
+safety-relevant ways. *"And does it hurt?"* asked after a question about the
+implant retrieved **female sterilization**; *"where can I go?"* asked after a
+coercion disclosure retrieved **BTL**, which is permanent. A girl was going to be
+answered about being sterilised because her follow-up had no subject in it.
+
+**Three boundaries, each pinned by a test.** The decision still reads her words
+alone — `rules.decide` takes a string and nothing else, so a disclosure cannot be
+missed because of what came before it. Resolution touches the retrieval query
+only. It is bounded and it forgets.
+
+**What would reverse it.** Evidence that six turns is the wrong window, or that
+prepending loses to substitution. Both are measurable with
+`scripts/eval_multiturn.py`.
+
+## D-09 · Topic outlives the transcript
+
+**Decided.** The antecedent is a field on the conversation, updated as turns are
+recorded, not something searched out of the turn window.
+
+**Why.** It was derived from the window, and the window is trimmed. In the
+reviewer's own journey she asked about the implant, talked about school,
+disclosed coercion twice, and then asked *"where can I go?"* — by which point the
+implant question had been trimmed away and the fragment resolved against nothing.
+The subject of a conversation is not the same object as its transcript, and
+sizing them together was the bug.
+
+## D-10 · A message that names its own subject is never resolved
+
+**Decided.** The content check runs before the backreference check in
+`is_dependent`.
+
+**Why.** *"What about the injection"* opens with a backreference *and* names a
+method. Resolving it against a question about the implant put both methods in
+one query and the implant won — she asked about one method and would have been
+answered about another. Ordering the checks the other way was a one-line change
+and it also fixed *"and the condom?"*, which had been dragged from MALE CONDOM
+back to the pill's MODE OF ACTION.
+
+## D-11 · Observability, and why it is not optional
+
+**Decided.** One event per turn, invariants checked at runtime, a reader that
+puts anomalies first. Violations are recorded, never raised.
+
+**Why.** Three defects were found in this codebase in one afternoon and every
+one was found by a person reading output by hand: the phone check firing on page
+numbers, the topic trimmed before use, and `Decision.retrieves` disagreeing with
+the pipeline. That is the normal failure mode of layered deterministic code — a
+component stops doing what its name says, every answer still looks plausible, and
+nothing counts. It does not scale past a demo, and what does not scale is what a
+girl relies on.
+
+Each invariant encodes a failure that has already happened here, including the
+previous build's `urgent` flag — written to the trace, read by nothing, so a girl
+at risk of self-harm saw less than one who disclosed something less dangerous.
+
+**It paid for itself immediately.** A 39,479 ms first turn against a 5,406 ms
+median (the encoder loading lazily inside her first question — now warmed at
+startup), and the `access` turn returning no evidence, which is the Theory of
+Change's terminal stage failing for a reason the corpus cannot fix.
+
+**What would reverse it.** Nothing measured. This is the one component here
+argued from a failure mode rather than a benchmark, and the argument is that you
+cannot benchmark what you cannot see.
+
+## D-12 · The event log is not a database of disclosures
+
+**Decided.** Operational fields only by default — paths, timings, similarity,
+flags, issue names. Her words are written only under an explicit
+`TRACE_MESSAGES=1`, for a developer replaying a bug locally.
+
+**Why.** An event log for a safeguarding product, kept by default, is a
+surveillance database with a dashboard on top, and the girls most at risk from it
+are the ones the product exists for. There is no identifier for her and no
+session id that survives a restart. The default stream still answers every
+operational question that matters — it can tell you fragments are failing to
+resolve; it cannot tell you who said what.

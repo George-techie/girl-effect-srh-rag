@@ -4,3 +4,4 @@ __pycache__/
 .env
 data/processed/chroma/
 .pytest_cache/
+data/events.jsonl

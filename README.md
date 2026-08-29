@@ -10,10 +10,10 @@ solution philosophy, with every component either justified by a measurement or
 deleted.
 
 ```
-decide  →  prepare  →  retrieve  →  generate  →  check
+decide  →  resolve  →  prepare  →  retrieve  →  generate  →  check
 ```
 
-**Four deterministic steps and one model call.** The model is reached only on
+**Five deterministic steps and one model call.** The model is reached only on
 turns the decision layer sends to it, and never on a disclosure of harm.
 
 ---
@@ -198,10 +198,12 @@ streamlit run app.py                                # the demo
 ```
 
 ```bash
-python -m pytest -q                                 # 84 tests
+python -m pytest -q                                 # 117 tests
 python scripts/eval_decision.py                     # 52/52
 python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
 python scripts/eval_retrieval.py --compare-prepared # Experiment 3
+python scripts/eval_multiturn.py                    # four journeys, 23 turns
+python scripts/inspect_events.py                    # read the event log
 ```
 
 Embeddings are **local** (`BAAI/bge-m3`) — no per-query embedding cost, and no
@@ -214,7 +216,9 @@ OpenRouter on `anthropic/claude-sonnet-5`; set `OPENROUTER_API_KEY` in `.env`.
 
 ```
 src/
-  pipeline.py            the whole system, ~280 lines
+  pipeline.py            the whole system, ~300 lines
+  conversation.py        six turns, one topic, one flag — state, not memory
+  observability.py       one event per turn, invariants checked at runtime
   decision/
     rules.py             ordered deterministic router, 6 paths
     input_validation.py  the front door
@@ -239,14 +243,103 @@ definition, and the validator treats a phone-shaped string as fatal.
 
 ---
 
-## What was deliberately not built
+## Multi-turn, because she arrives with a conversation
 
-**Conversation memory** — nothing measured that this demo needs it.
-**A journey-event schema** and **an observability layer** — both defensible for a
-production service and neither justified by anything measured here. Adding them
-now would repeat the exact mistake this build exists to correct.
+A girl does not send a query. She moves — contraception, what she wants to be,
+something he said, then where she can actually go — and the turns that carry a
+conversation are the shortest ones. Scored one at a time, they looked fine.
+Replayed as a journey, four things broke and two were safety-relevant:
+
+| Her turn | What came back |
+|---|---|
+| *"and does it hurt?"* after asking about the implant | **female sterilization**, 0.593 |
+| *"where can I go?"* after disclosing coercion | **BTL** — permanent sterilisation, 0.508 |
+| *"is it free?"* | "Clients rights", 0.484 |
+| *"I want to be a doctor, I'm the first in my family to finish school"* | routed to `factual`, answered from contraception passages |
+
+[`src/conversation.py`](src/conversation.py) is **state, not memory**: six turns,
+one topic, one flag, all by rules. No summariser, no entity tracker, no profile,
+nothing written down about her. Three boundaries are pinned by tests:
+
+1. **The decision still reads her words alone.** A safety floor that depends on
+   conversational state is a safety floor with a state bug in it.
+2. **Resolution touches the retrieval query only** — the same split that made
+   query preparation safe.
+3. **It is bounded and it forgets.**
+
+Measured with `python scripts/eval_multiturn.py` over four journeys, 23 turns:
+**forbidden passages 1 → 0**, path accuracy 21/23 either way. The two
+disagreements are disputed labels — mine — left uncorrected and documented in
+the dataset rather than quietly fixed to make a criterion pass.
+
+---
+
+## Observability, because otherwise you are guessing
+
+Three defects were found in this codebase in a single afternoon. **Every one was
+found by a person reading output by hand:** the phone check firing on page
+numbers, the conversation topic being trimmed before it was used, and
+`Decision.retrieves` disagreeing with the pipeline. None is exotic — they are the
+normal failure mode of a system with several deterministic layers. A component
+quietly stops doing what its name says, every answer still looks plausible, and
+nothing anywhere counts. Reading output by hand does not scale past a demo.
+
+[`src/observability.py`](src/observability.py) writes **one event per turn** —
+the pipeline already assembled a full trace for the demo panel and then threw it
+away — and checks **invariants at runtime**. Each invariant exists because
+something here has already failed in that exact shape:
+
+| Invariant | The failure behind it |
+|---|---|
+| a path that must not search, searching | `Decision.retrieves` and the pipeline disagreed for weeks |
+| grounded answer with zero cited sources | the citation-example defect that took three wrong theories to find |
+| conversational answer carrying sources | a marker with no passage looks *more* verified than an uncited claim |
+| a signal set and read by nobody | `urgent` was written to the trace and consumed by nothing, so a girl at risk of self-harm saw *less* than one who disclosed something less dangerous |
+| a fragment that found no antecedent | the trimmed-topic defect, invisible until printed by hand |
+| more than one model call in a turn | cost regressions should be visible before the bill is |
+
+Violations are **recorded, never raised**. A monitoring layer that can take down
+the service has inverted its own purpose.
+
+```bash
+python scripts/inspect_events.py            # what is wrong, anomalies first
+python scripts/inspect_events.py --violations
+```
+
+It found two things within a minute of existing:
+
+**A 39,479 ms first turn**, against a 5,406 ms median — the encoder loads lazily,
+so the first search paid for it. A median latency chart showed nothing wrong, and
+the girl who waits 39 seconds is by definition the one asking her first question.
+The app now warms the encoder at startup.
+
+**The `access` turn returned no evidence.** *"Where can I go?"* retrieved
+adequately (0.659) and the generator correctly said the passages could not answer
+it — because the corpus has no service directory. Girl Effect's Theory of Change
+runs drivers → intent → **service access** → behaviour change, so events carry a
+journey stage as well as a route. The terminal stage is the one this system
+currently cannot serve, and that is now a number rather than an intuition.
+
+### Logging adolescent girls' disclosures
+
+An event log for a safeguarding product is a surveillance database with a
+dashboard on it, and the girls most at risk from that are the ones it exists for.
+So the default stream is **operational only** — paths, timings, similarity, flags,
+issue names. No message text, no reply text, no identifier for her, no session id
+that survives a restart. Text is written only under an explicit `TRACE_MESSAGES=1`
+for a developer replaying a bug locally. You can learn from the default stream
+that fragments are failing to resolve. You cannot learn who said what.
+
+---
+
+## What is still deliberately not built
+
+No summarisation model over the conversation, no entity tracker, no per-girl
+profile, no external monitoring vendor. The event log is a JSONL file.
 
 The honest version of "what's next" is not a feature list. It is: **verify the
 service directory**, because the safeguarding routes are where having nothing
-verified costs the most; and **get the corpus more youth-facing material**,
-because 78%-clinical is the constraint underneath most of what is still weak.
+verified costs the most, and because the event log now shows the service-access
+turn is the one that returns nothing; and **get the corpus more youth-facing
+material**, because 78%-clinical is the constraint underneath most of what is
+still weak.

@@ -76,6 +76,25 @@ if "messages" not in st.session_state:
 if "conversation" not in st.session_state:
     st.session_state.conversation = Conversation()
 
+
+@st.cache_resource(show_spinner="Warming up…")
+def _warm_encoder():
+    """Load bge-m3 once, at startup, instead of inside her first question.
+
+    Measured from the event log rather than guessed: the first turn that
+    touched retrieval took **39,479 ms** against a 5,406 ms median, because the
+    encoder loads lazily and the first search paid for it. Every later turn was
+    fast, so a median latency chart showed nothing wrong -- and the girl who
+    waits 39 seconds is, by definition, always the one asking her first
+    question.
+    """
+    from src.rag import indexing
+    indexing.get_embedder()
+    return True
+
+
+_warm_encoder()
+
 thread = st.container()
 with thread:
     if not st.session_state.messages:

@@ -34,6 +34,7 @@ from typing import Any
 
 from src import config
 from src import conversation as conversation_mod
+from src import observability
 from src.conversation import Conversation
 from src.prompt_files import loader
 from src.decision import input_validation, rules
@@ -98,6 +99,21 @@ def answer(message: str, *, k: int | None = None,
     return path -- including the safeguarding ones, which leave early.
     """
     reply = _answer(message, k=k, conversation=conversation)
+
+    # One event per turn, on every path -- including the ones that return early.
+    # Wrapping rather than instrumenting each return is the point: a branch
+    # added later is observed by default instead of being the one nobody
+    # remembered to log, which is how the early-return paths stayed invisible.
+    violations = observability.record(
+        trace=reply.trace, reply_path=reply.path, n_sources=len(reply.sources),
+        text=reply.text, message=message,
+        turn=(len(conversation.turns) // 2 + 1) if conversation else None,
+    )
+    if violations:
+        reply.trace["violations"] = [
+            {"name": v.name, "detail": v.detail} for v in violations
+        ]
+
     if conversation is not None:
         conversation.record_her(message, reply.path)
         conversation.record_aunti(reply.text, reply.path)
@@ -208,6 +224,10 @@ def _answer(message: str, *, k: int | None = None,
     # *BTL*, which is permanent. Both are answers to a question she did not ask.
     followup = conversation_mod.resolve(message, conversation,
                                         retrieves=decision.retrieves)
+    # Recorded whether or not it resolved. A fragment that found no antecedent
+    # is the shape the trimmed-topic defect made, and it was invisible because
+    # nothing wrote down that the message needed one in the first place.
+    trace["dependent"] = conversation_mod.is_dependent(message)
     if followup.resolved:
         trace["resolved_from"] = followup.antecedent
 
