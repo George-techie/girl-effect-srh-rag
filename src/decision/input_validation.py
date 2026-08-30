@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from src import config
+from src.language import detect
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,9 @@ class ValidatedInput:
     #: the generator -- reads this rather than anything derived from it.
     original: str
     reason: str = ""
+    #: Which register she is writing in, so the generator can mirror it rather
+    #: than switching her to English. A signal, not a determination.
+    language: str = detect.KENYAN_ENGLISH
 
 
 def validate(message: str | None) -> ValidatedInput:
@@ -53,4 +57,4 @@ def validate(message: str | None) -> ValidatedInput:
             f"longer than {config.MAX_INPUT_CHARS} characters",
         )
 
-    return ValidatedInput(True, text, original)
+    return ValidatedInput(True, text, original, language=detect.detect(text))

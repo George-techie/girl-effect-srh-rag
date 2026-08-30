@@ -53,6 +53,10 @@ LIVED = re.compile(
 )
 
 
+#: A dash used as punctuation: em, en, or a spaced hyphen doing the same job.
+#: Not a hyphen inside a word, and not a bullet at the start of a line.
+DASH = re.compile(r"[—–]|(?<=\s)-(?=\s)")
+
 #: The system describing its own plumbing to a girl who cannot see it. Recorded,
 #: never fatal, and the asymmetry is the point: blocking here would trade a
 #: slightly awkward answer for a refusal, which is the worse of the two. The
@@ -100,6 +104,14 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
         issues.append(f"claims lived experience it does not have: "
                       f"{match.group(0)!r}")
         fatal = True
+
+    dashes = len(DASH.findall(draft))
+    if dashes:
+        # Recorded, not fatal. A dash is a register problem, not a safety one,
+        # and blocking an otherwise good answer over punctuation would be the
+        # output judge's mistake all over again. This exists so "the prompt says
+        # not to" can be checked instead of believed.
+        issues.append(f"{dashes} dash(es) used as punctuation")
 
     machinery = MACHINERY.search(draft)
     if machinery:

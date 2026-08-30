@@ -144,6 +144,7 @@ def _answer(message: str, *, k: int | None = None,
         )
 
     message = checked.text
+    language = checked.language
 
     # The decision is made on her words alone, never on the conversation. A
     # safety floor that depends on state is a safety floor with a state bug in
@@ -153,6 +154,7 @@ def _answer(message: str, *, k: int | None = None,
         "path": decision.path,
         "why": decision.reason,
         "matched": decision.matched,
+        "language": language,
         "llm_calls": 0,
     }
 
@@ -222,7 +224,7 @@ def _answer(message: str, *, k: int | None = None,
     # `Decision.grounded` for what came back -- and blocked the answer when it
     # could not cite it.
     if decision.path in (rules.CHAT, rules.SUPPORT):
-        return _converse(message, decision, trace, started, history)
+        return _converse(message, decision, trace, started, history, language)
 
     # She disclosed earlier, and has now asked where to go without naming a
     # subject. That is not a contraception question and the corpus cannot answer
@@ -292,7 +294,7 @@ def _answer(message: str, *, k: int | None = None,
         response = get_client().complete(
             "generation",
             prompt.messages(
-                language_label="",
+                language_label=language,
                 seriousness=SERIOUSNESS.get(decision.path, "personal"),
                 context_block="",
                 history_block=history,
@@ -322,6 +324,21 @@ def _answer(message: str, *, k: int | None = None,
     if draft.upper().startswith(INSUFFICIENT):
         trace["insufficient"] = True
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+
+        # Two very different turns end up here, and they need different replies.
+        #
+        # A turn that *matched* a factual or access pattern and then found no
+        # evidence should say so plainly: she asked a question, the corpus was
+        # searched, it came back thin, and pretending otherwise would be worse.
+        #
+        # A turn that only reached `factual` because nothing else matched was
+        # never a lookup. Telling her "I don't have anything solid enough in my
+        # sources" answers a question she did not ask, and reads as a brush-off
+        # to a girl who was telling you about her friends and her sister.
+        if decision.is_fallback:
+            trace["fell_through"] = "not a lookup; nothing matched but the default"
+            return _converse(message, decision, trace, started, history, language)
+
         return Reply(responses.NO_EVIDENCE, decision.path, trace=trace)
 
     # --- check ---------------------------------------------------------------
@@ -331,6 +348,24 @@ def _answer(message: str, *, k: int | None = None,
     trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
 
     if fatal:
+        # **Uncitable is not the same as unanswerable.** `factual` is the
+        # fallback path, so anything that matched no other family lands here and
+        # is then held to a contract requiring a citation. A girl writing
+        # *"mabeste wangu wote wanakaa they are having sex, but mimi i just want
+        # to study"* is not asking a factual question at all, and refusing her
+        # over a missing citation answers a question she did not ask.
+        #
+        # So when the only thing wrong is that nothing could be cited, the turn
+        # is re-answered under the conversational contract, which is safe for
+        # the opposite reason: it makes no claim. The uncited draft is discarded
+        # rather than shown -- it may well contain claims from the model's own
+        # memory, which is exactly what it must not send.
+        #
+        # A fabricated marker, an invented phone number or a claim of lived
+        # experience still blocks. Those are not vocabulary problems.
+        if issues == ["no citation on a grounded health answer"]:
+            trace["fell_through"] = "grounded answer had nothing to cite"
+            return _converse(message, decision, trace, started, history, language)
         return Reply(responses.BLOCKED, decision.path, trace=trace)
 
     return Reply(
@@ -382,6 +417,7 @@ def answer_stream(message: str, *, k: int | None = None,
         trace["turn"] = len(conversation.turns) // 2 + 1
 
     prompt = loader.load("converse")
+    language = checked.language
     seriousness = SERIOUSNESS.get(decision.path, "personal")
     accumulated: list[str] = []
     cut = False
@@ -390,7 +426,7 @@ def answer_stream(message: str, *, k: int | None = None,
         stream = get_client().stream(
             "generation",
             prompt.messages(
-                language_label="", seriousness=seriousness,
+                language_label=language, seriousness=seriousness,
                 context_block="", history_block=history, message=text,
                 situation=prompt.situation(SITUATION.get(decision.path, "explore"),
                                            prompt.situation("explore")),
@@ -477,7 +513,7 @@ SITUATION = {rules.CHAT: "greeting", rules.SUPPORT: "support"}
 
 
 def _converse(message: str, decision, trace: dict, started: float,
-              history: str = "") -> Reply:
+              history: str = "", language: str = "kenyan_english") -> Reply:
     """A reply written with no passages, and forbidden from stating a fact."""
     prompt = loader.load("converse")
     seriousness = SERIOUSNESS.get(decision.path, "personal")
@@ -485,7 +521,7 @@ def _converse(message: str, decision, trace: dict, started: float,
         response = get_client().complete(
             "generation",
             prompt.messages(
-                language_label="",
+                language_label=language,
                 seriousness=seriousness,
                 context_block="",
                 history_block=history,
@@ -502,7 +538,8 @@ def _converse(message: str, decision, trace: dict, started: float,
         return Reply(responses.TECHNICAL, decision.path, trace=trace)
 
     draft = response.text.strip()
-    trace.update({"llm_calls": 1, "model": response.model,
+    trace.update({"llm_calls": trace.get("llm_calls", 0) + 1,
+                  "model": response.model,
                   "seriousness": seriousness, "contract": "conversational"})
 
     issues, fatal = checks.check(draft, n_passages=0, grounded=False)

@@ -60,6 +60,23 @@ class Decision:
         return self.path in RESTATED
 
     @property
+    def is_fallback(self) -> bool:
+        """`factual` reached by default rather than by matching anything.
+
+        Worth distinguishing, because `factual` is the catch-all and everything
+        unmatched lands in it — including messages that are not questions at
+        all. *"Mabeste wangu wote wanakaa they are having sex, but mimi i just
+        want to study to help my family"* matched no family, became factual, was
+        held to a contract requiring a citation, and was refused.
+
+        A turn that matched a factual pattern and then found no evidence should
+        say so honestly. A turn that only landed here by default and found no
+        evidence was never a lookup in the first place, and telling her the
+        sources do not cover it answers a question she did not ask.
+        """
+        return self.path == FACTUAL and not self.matched
+
+    @property
     def retrieves(self) -> bool:
         """Does this turn actually reach the corpus?
 
