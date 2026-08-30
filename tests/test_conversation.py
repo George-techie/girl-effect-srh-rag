@@ -168,7 +168,9 @@ class TestWhereToGoAfterDisclosure:
             "my boyfriend says if I really loved him I would not use anything",
         )
         reply = pipeline.answer("where can I go?", conversation=c)
-        assert reply.text == responses.WHERE_TO_GO_AFTER_DISCLOSURE
+        # startswith, not equality: verified contacts are appended from the
+        # service table when any exist for the route.
+        assert reply.text.startswith(responses.WHERE_TO_GO_AFTER_DISCLOSURE)
         assert reply.trace["llm_calls"] == 0
 
     def test_a_named_subject_is_still_a_real_access_question(self):

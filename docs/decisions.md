@@ -298,3 +298,59 @@ nobody — which is why it is now one of the runtime invariants.
 **The line.** A fragment is a request for help. A message naming its own subject
 ("where can I get the pill?") is still a real access question and is answered
 from the corpus as before. She may well still want the pill.
+
+## D-14 · Detect safeguarding broadly, escalate narrowly
+
+**Decided.** One safeguarding route, two severities, no second classifier.
+
+**urgent** — force, threat, assault, contraceptive sabotage, self-harm risk.
+She gets safety guidance and verified contacts *in front of her*.
+
+**concern** — pressure, conditional consent, "he keeps asking", "he gets upset
+when I say no", "if you loved me you would". She gets acknowledgement, a plain
+statement of what consent is, the decision left with her, and contacts
+**offered** behind a tap.
+
+**Why the concern tier exists.** *"My boyfriend is pressuring me to have sex"*
+was being answered with the handoff text — *"I can't be the person who helps
+you with this, someone real can"* — and that gets two things wrong at once. It
+reads as being passed on when she came to talk. And it treats a conversation
+she wanted to have as a referral event, which at any real scale buries the
+services in cases that were never emergencies. The alternative failure is worse
+and was also live: routing it to `factual` and answering coercion as though it
+were a contraception decision.
+
+**What it is not.** It is not automated reporting. Nothing contacts anyone on
+her behalf. The numbers are options she may use, which is what keeps the
+service hers rather than something pointed at her.
+
+**Implementation cost: one boolean.** `Decision.urgent`, set by which family
+fired. No taxonomy, no extra model call, no per-case scoring.
+
+## D-15 · Self-harm was detected by a signal nothing ever set
+
+**Decided.** `Decision.tags` carries stable risk names; `matched` carries regex
+sources for the trace. They are separate fields.
+
+**Why.** The pipeline asked `"self_harm_risk" in decision.matched`, and
+`matched` held regex *source strings*. That tag only ever appeared there via
+the glossary, so **every self-harm disclosure phrased in English got the
+ordinary safeguarding reply instead of the urgent one with crisis numbers.**
+*"I dont want to be here anymore"* received a message about being a digital
+guide, and pulled sexual-violence services because a substring check for
+`"harm"` matched `"safeguarding · harm"`.
+
+Nothing errored. No test failed. The check read correctly at a glance. It is
+the same defect as the previous build's `urgent` flag — a signal written and
+read by nobody — running in the opposite direction, and it was found by a
+person typing one sentence into the demo.
+
+## D-16 · The self-harm contacts moved into the table
+
+**Decided.** `responses.SELF_HARM` no longer contains phone numbers. They are
+read from the verified table like every other contact.
+
+**Why.** Two numbers were hardcoded in an approved string while the same two
+sat in `services.csv`. Two copies, one authoritative, and no mechanism to keep
+them agreeing. Now there is one source, and the rule the rest of the system
+already follows — a contact is a table read, never text — has no exception.

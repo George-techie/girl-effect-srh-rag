@@ -229,8 +229,67 @@ class TestHelpRequest:
         asked = pipeline.answer("Where can I get help if someone hurt me?")
         assert asked.followup is None, "she already asked; do not offer a button"
 
-        did_not_ask = pipeline.answer("My boyfriend forced me.")
-        assert did_not_ask.followup is not None, "support first, offer the option"
+
+class TestDetectBroadlyEscalateNarrowly:
+    """One safeguarding route, two severities.
+
+    Pressure and conditional consent are safeguarding and must be recognised as
+    such. They are not emergencies, and answering them with a handoff both reads
+    as being passed on when she came to talk, and at scale buries the services
+    in cases that were never emergencies.
+    """
+
+    URGENT = [
+        "He forced me and I did not want to",
+        "he took the condom off without telling me",
+        "My uncle keeps touching me and says not to tell anyone",
+        "i dont want to be here anymore",
+    ]
+    CONCERN = [
+        "my boyfriend is pressuring me to have sex",
+        "he keeps asking me to and gets upset when i say no",
+        "He said if I really loved him I wouldnt make him use a condom",
+        "my boyfriend says he'll leave me if I don't stop taking the pill",
+    ]
+
+    @pytest.mark.parametrize("message", URGENT + CONCERN)
+    def test_both_tiers_are_safeguarding(self, message):
+        """Detection is broad. Neither tier is treated as an ordinary question."""
+        assert rules.decide(message).path == rules.SAFEGUARDING, message
+
+    @pytest.mark.parametrize("message", URGENT)
+    def test_force_and_threat_are_urgent(self, message):
+        assert rules.decide(message).urgent is True, message
+
+    @pytest.mark.parametrize("message", CONCERN)
+    def test_pressure_is_not_urgent(self, message):
+        assert rules.decide(message).urgent is False, message
+
+    def test_urgent_puts_contacts_in_front_of_her(self):
+        from src import pipeline
+
+        reply = pipeline.answer("He forced me and I did not want to")
+        assert reply.followup is None, "urgent contacts are not behind a tap"
+        assert reply.trace["tier"] == "urgent"
+
+    def test_a_concern_is_acknowledged_and_offered_not_referred(self):
+        from src import pipeline
+        from src.safety import responses
+
+        reply = pipeline.answer("my boyfriend is pressuring me to have sex")
+        assert reply.trace["tier"] == "concern"
+        assert reply.text == responses.PRESSURE
+        assert reply.followup is not None, "offered, not pushed"
+        assert reply.trace["llm_calls"] == 0
+
+    def test_a_concern_that_asks_for_help_gets_it_without_asking_twice(self):
+        from src import pipeline
+
+        reply = pipeline.answer(
+            "my boyfriend keeps pressuring me, where can I get help?")
+        assert reply.trace["tier"] == "concern"
+        assert reply.followup is None
+        assert "confidential places" in reply.text
 
 
 class TestIntensifiersDoNotDecideWhetherSheIsHeard:

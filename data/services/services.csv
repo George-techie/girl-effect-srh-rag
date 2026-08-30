@@ -1,11 +1,9 @@
 service_id,name,service_type,routes,contact_type,contact,coverage,is_free,anonymous_ok,opening_hours,eligibility,what_they_do,source,source_url,verified_by,verified_at,status
-KE_BEFRIENDERS,Befrienders Kenya,emotional support,self_harm_risk,phone_whatsapp,+254 722 178 177,Kenya,,,,,"Listens if you are struggling or thinking about ending your life. No judgement.",carried over from the previous build,,,,unverified
-KE_REDCROSS,Kenya Red Cross counselling,counselling,self_harm_risk|emotional_support,phone,1199,Kenya,,,,,"Free counselling line for when things feel like too much.",carried over from the previous build,,,,unverified
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,
+KE_GBV_1195,National GBV Helpline,GBV helpline,sexual_violence|intimate_partner_violence,phone,1195,Kenya,yes,,24/7,GBV survivors in Kenya,"They listen and help if someone has hurt you, any time of the day or night. Calling is free.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_CHILD_116,National Child Helpline,child protection helpline,sexual_violence|intimate_partner_violence|emotional_support,phone_whatsapp,116,Kenya,yes,,24/7,Children and young people needing protection or support,"For anyone under 18 who needs protecting or just needs to talk. You can call, or WhatsApp on 0722 116 116 if calling is not safe.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_GVRC,Gender Violence Recovery Centre,GBV medical and psychosocial support,sexual_violence|intimate_partner_violence,phone,0800 720 565,Kenya,yes,,24/7,"Survivors of sexual, physical, psychological or emotional violence","Medical care and counselling after violence, free, and they are used to this.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_ONE2ONE,One2One / LVCT Health,youth SRH counselling and referral,contraception|youth_friendly|hiv_sti|sexual_violence|emotional_support,sms,1190,Kenya,,,Daily 8:00 am to 10:00 pm,Adolescents and young people aged 10 to 24,"A youth line you can call or text about contraception, HIV or anything worrying you. They are used to talking to people your age.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_FIDA,FIDA-Kenya,legal aid and psychosocial support,sexual_violence|intimate_partner_violence,phone,0800 720 501,All 47 counties,yes,,,Women and girls seeking legal aid or psychosocial support,"Free legal help and someone to talk to, if you want to know what your options are.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_MSI,Marie Stopes Kenya,SRH contact centre,contraception|hiv_sti|pregnancy_support,phone_whatsapp,0800 720 005,Kenya,yes,,Daily 7:00 am to 9:00 pm,"People seeking contraception, pregnancy or SRH information and services","They can tell you about family planning and where to go, by phone or on WhatsApp at 0709 819 001.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_BEFRIENDERS,Befrienders Kenya,emotional support,self_harm_risk,phone_whatsapp,+254 722 178 177,Kenya,,,,,"Listens if you are struggling or thinking about ending your life. No judgement.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified
+KE_REDCROSS,Kenya Red Cross counselling,counselling,self_harm_risk|emotional_support,phone,1199,Kenya,,,,,"Free counselling line for when things feel like too much.",compiled from current official sources and signed off by the reviewer,,George Nyatangi,2026-08-30,verified

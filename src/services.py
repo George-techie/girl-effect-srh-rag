@@ -55,7 +55,7 @@ class Service:
 
     def render(self) -> str:
         """One line, as she would read it. Built from columns, never written."""
-        bits = [f"**{self.name}** — {self.contact}"]
+        bits = [f"**{self.name}** · {self.contact}"]
         detail = []
         if self.textable:
             detail.append("call or text")

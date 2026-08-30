@@ -97,21 +97,28 @@ def _cited_sources(draft: str, hits: list[retrieval.Hit]) -> list[dict[str, Any]
 
 
 
-#: Which service route a safeguarding turn should draw contacts from. Derived
-#: from what the rules already matched rather than from a second classifier.
-_ROUTE_BY_MATCH = (
-    ("self_harm", "self_harm_risk"),
-    ("reproductive coercion", "sexual_violence"),
-    ("harm", "sexual_violence"),
-)
+#: Routes the service table can be asked for. A tag outside this set falls back
+#: to the broadest route rather than silently asking for something no row has.
+_KNOWN_ROUTES = frozenset({
+    "self_harm_risk", "sexual_violence", "intimate_partner_violence",
+    "emotional_support", "contraception", "youth_friendly", "hiv_sti",
+    "pregnancy_support",
+})
 
 
 def _route_for(decision) -> str:
-    """The service route for a disclosure, defaulting to the broadest one."""
-    blob = (decision.reason + " " + " ".join(decision.matched)).lower()
-    for needle, route in _ROUTE_BY_MATCH:
-        if needle in blob:
-            return route
+    """The service route for a disclosure.
+
+    Read straight off `decision.tags`, which the rules set explicitly. The
+    earlier version scanned the reason string and the regex sources for
+    substrings, which is how a self-harm disclosure ended up drawing
+    sexual-violence services: the reason said "safeguarding · harm", the
+    substring "harm" matched, and "self_harm" never appeared anywhere to check
+    against.
+    """
+    for tag in decision.tags:
+        if tag in _KNOWN_ROUTES:
+            return tag
     return "emotional_support"
 
 
@@ -215,9 +222,11 @@ def _answer(message: str, *, k: int | None = None,
     # measured retrieving at 0.691, above most in-scope ones. So the decision is
     # made on her words, and these two paths never reach the corpus at all.
     if decision.path == rules.SAFEGUARDING:
-        self_harm = "self_harm_risk" in decision.matched
+        self_harm = "self_harm_risk" in decision.tags
         trace["help_requested"] = decision.help_requested
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+
+        trace["urgent"] = decision.urgent
 
         if self_harm:
             # Urgent risk. Contacts arrive with the opening rather than behind a
@@ -228,27 +237,42 @@ def _answer(message: str, *, k: int | None = None,
                 _with_contacts(responses.SELF_HARM, "self_harm_risk", trace),
                 decision.path, trace=trace)
 
-        if decision.help_requested:
-            # She disclosed AND asked where to go, in one message. Holding the
-            # pathway behind a button here applies the opt-in backwards: it
-            # exists so a girl who has *not* asked is not handed everything at
-            # once while distressed, never to make someone who has asked, ask
-            # twice. The acknowledgement still comes first and unchanged.
-            trace["why"] += " · asked for help in the same message"
-            return Reply(
-                _with_contacts(
-                    responses.SAFEGUARDING + "\n\n"
-                    + responses.SAFEGUARDING_FOLLOWUP,
-                    _route_for(decision), trace),
-                decision.path, trace=trace,
-            )
+        # --- detect broadly, escalate narrowly ------------------------------
+        # Pressure and conditional consent are safeguarding, and are answered as
+        # safeguarding. They are not emergencies, and treating them as one gets
+        # two things wrong: it reads as being passed on when she came to talk,
+        # and at any real scale it buries the services in cases that were never
+        # emergencies. She is acknowledged, told plainly what consent is, and
+        # *offered* somewhere to go. The offer sits behind the tap.
+        if not decision.urgent:
+            trace["tier"] = "concern"
+            followup = _with_contacts(
+                responses.PRESSURE_FOLLOWUP, _route_for(decision), trace)
+            if decision.help_requested:
+                # She asked in the same message. Making her ask twice is the
+                # opt-in applied backwards.
+                trace["why"] += " · asked for help in the same message"
+                return Reply(responses.PRESSURE + "\n\n" + followup,
+                             decision.path, trace=trace)
+            return Reply(responses.PRESSURE, decision.path, trace=trace,
+                         followup=followup)
 
-        # Support first, offer the option. She chooses whether to receive it,
-        # which keeps the first message short enough to read while distressed.
-        return Reply(responses.SAFEGUARDING, decision.path, trace=trace,
-                     followup=_with_contacts(
-                         responses.SAFEGUARDING_FOLLOWUP,
-                         _route_for(decision), trace))
+        # Force, threat, assault, or something already done to her. Contacts go
+        # in front of her rather than behind a tap, for the reason the previous
+        # build measured: a girl who did not tap saw less than one who disclosed
+        # something less dangerous and did. The staged opt-in still exists -- it
+        # is what the concern tier above uses -- but it is the wrong instrument
+        # here, and this is the half of "escalate narrowly" that does escalate.
+        trace["tier"] = "urgent"
+        if decision.help_requested:
+            trace["why"] += " · asked for help in the same message"
+        return Reply(
+            _with_contacts(
+                responses.SAFEGUARDING + "\n\n"
+                + responses.SAFEGUARDING_FOLLOWUP,
+                _route_for(decision), trace),
+            decision.path, trace=trace,
+        )
 
     if decision.path == rules.OUT_OF_SCOPE:
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)

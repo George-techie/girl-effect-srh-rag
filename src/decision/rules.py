@@ -46,7 +46,25 @@ RESTATED = frozenset({FACTUAL, ACCESS})
 class Decision:
     path: str
     reason: str
+    #: The regex sources that fired, for the trace. Debug detail, not semantics.
     matched: list[str] = field(default_factory=list)
+
+    #: Force, threat, assault, something already done to her, or danger to her
+    #: life. Verified contacts go in front of her rather than behind a tap.
+    #: False on a coercion *concern*, which is still safeguarding and still
+    #: acknowledged -- see `_URGENT_FAMILIES`.
+    urgent: bool = False
+
+    #: What kind of risk this is, in stable names the rest of the system can
+    #: branch on: `self_harm_risk`, `sexual_violence`, `emotional_support`.
+    #:
+    #: Separate from `matched` because conflating them cost the most important
+    #: behaviour in the build. The pipeline asked `"self_harm_risk" in
+    #: decision.matched`, `matched` held regex source strings, and so a girl
+    #: writing *"i dont want to be here anymore"* received the ordinary
+    #: safeguarding reply rather than the urgent one with crisis numbers in it.
+    #: Nothing errored, no test failed, and the check looked correct.
+    tags: list[str] = field(default_factory=list)
 
     #: She asked for a service, a contact or a person -- in the same message.
     #: Orthogonal to `path`, never a replacement for it: "where can I get help
@@ -143,12 +161,62 @@ _HARM = _res(
     r"\bsend (him|them) (photos|pictures|nudes)\b|\bsend me money\b.{0,40}\bphotos\b",
     r"\b(marry|married)\b.{0,40}\b(making me|forced|arrange)\b|"
     r"\b(making me|forcing me|force me) (to )?marry\b",
-    # Contractions and their expansions both. "I don't want to be here" was
-    # caught and "I do not want to be here" was not -- the same sentence, one
-    # apostrophe apart, on the path where a miss costs the most.
-    r"\b(don'?t|do not) want to be (here|alive)\b|\bend (it|my life)\b"
-    r"|\bkill myself\b|\bdon'?t want to live\b|\bdo not want to live\b",
 )
+
+#: Suicidal ideation. Its own family, and checked before every other one.
+#:
+#: Split out because it is the single case where contacts arrive unprompted
+#: rather than behind a tap, and the pipeline needs to recognise it without
+#: pattern-matching on regex source. See `Decision.tags`.
+#:
+#: Contractions and their expansions both. "I don't want to be here" was caught
+#: and "I do not want to be here" was not -- the same sentence, one apostrophe
+#: apart, on the path where a miss costs the most.
+_SELF_HARM = _res(
+    r"\b(don'?t|do not) want to be (here|alive)\b",
+    r"\bend (it all|it|my life)\b|\bkill myself\b|\btake my own life\b",
+    r"\b(don'?t|do not) want to live\b|\bwant to die\b|\bbetter off without me\b",
+    r"\bno (point|reason) (in )?(living|going on|carrying on)\b",
+    r"\bhurt(ing)? myself\b|\bcut(ting)? myself\b",
+    r"\bnataka kufa\b|\bnimechoka na maisha\b",
+)
+
+#: **Contraceptive sabotage**, including removing a condom during sex. Split out
+#: of the coercion family because it is not pressure -- it is something already
+#: done to her without her consent, and it carries a pregnancy and HIV/STI
+#: exposure she does not yet know about. Urgent tier.
+_SABOTAGE = _res(
+    r"\b(took|takes|take|slipped|slips) (it|the condom) off\b",
+    r"\bremove[ds]? the condom\b|\bwithout (me knowing|telling me)\b",
+    r"\b(hid|hides|threw away|throws away|flushed)\b.{0,24}\b(my )?(pills?|"
+    r"contracepti\w+|injection)\b",
+    r"\bpoked holes?\b|\btampered with\b",
+)
+
+#: Which service route each safeguarding family draws contacts from.
+_TAG_BY_FAMILY = {
+    "harm": "sexual_violence",
+    "sabotage": "sexual_violence",
+    "reproductive coercion": "sexual_violence",
+    "third-party": "emotional_support",
+}
+
+#: **Detect broadly, escalate narrowly.**
+#:
+#: One safeguarding route, two severities. The distinction is not a taxonomy and
+#: it is not a second classifier -- it is which families fired.
+#:
+#: `urgent` means force, threat, assault, something already done to her, or
+#: danger to her life. She gets safety guidance and verified contacts put in
+#: front of her.
+#:
+#: Everything else is a *concern*: pressure, conditional consent, "he keeps
+#: asking", "he gets upset when I say no". Those are real coercion signals and
+#: they must be recognised as such -- but they are not emergencies, and treating
+#: them as one has two costs. It buries her in referrals for a conversation she
+#: wanted to have, and it turns a service that should be hers into a reporting
+#: mechanism pointed at her. Contacts are offered there, not pushed.
+_URGENT_FAMILIES = frozenset({"self-harm", "harm", "sabotage"})
 
 #: **Reproductive coercion.** A safeguarding category the previous build did not
 #: have and did not need, because contraception was out of scope there. Here it
@@ -179,13 +247,6 @@ _REPRODUCTIVE_COERCION = _res(
     r"\b(if|unless|or)\b",
     r"\b(unless|if) (i|you) (don'?t|do not|refuse)\b.{0,40}"
     r"\b(fail|leave|hurt|tell|beat)\b",
-
-    # 2 · contraceptive sabotage, including removing a condom during sex
-    r"\b(took|takes|take|slipped|slips) (it|the condom) off\b",
-    r"\bremove[ds]? the condom\b|\bwithout (me knowing|telling me)\b",
-    r"\b(hid|hides|threw away|throws away|flushed)\b.{0,24}\b(my )?(pills?|"
-    r"contracepti\w+|injection)\b",
-    r"\bpoked holes?\b|\btampered with\b",
 
     # 3 · pressure to stop, or not to start
     r"\b(stop|quit|come off) (taking |using )?(the )?(pill|family planning|"
@@ -385,14 +446,32 @@ def decide(message: str) -> Decision:
             SAFEGUARDING,
             "safeguarding · glossary risk tag",
             sorted(gloss.risk_tags),
+            tags=sorted(gloss.risk_tags),
             help_requested=asked_for_help,
         )
 
-    for name, family in (("harm", _HARM), ("reproductive coercion", _REPRODUCTIVE_COERCION),
+    # Self-harm first, and separately, because it is the one disclosure that
+    # gets contacts without being asked. It used to live inside `_HARM`, and the
+    # pipeline tested `"self_harm_risk" in decision.matched` -- but `matched`
+    # holds regex source strings, so that tag only ever appeared via the
+    # glossary. Every self-harm disclosure phrased in English therefore got the
+    # ordinary safeguarding reply instead of the urgent one, and nothing failed.
+    # A signal read but never set: the same defect as the previous build's
+    # `urgent` flag, running in the opposite direction.
+    matched = [m for v in variants for m in _hits(_SELF_HARM, v)]
+    if matched:
+        return Decision(SAFEGUARDING, "safeguarding · self-harm", matched,
+                        tags=["self_harm_risk"], urgent=True,
+                        help_requested=asked_for_help)
+
+    for name, family in (("harm", _HARM), ("sabotage", _SABOTAGE),
+                         ("reproductive coercion", _REPRODUCTIVE_COERCION),
                          ("third-party", _THIRD_PARTY)):
         matched = [m for v in variants for m in _hits(family, v)]
         if matched:
             return Decision(SAFEGUARDING, f"safeguarding · {name}", matched,
+                            tags=[_TAG_BY_FAMILY[name]],
+                            urgent=name in _URGENT_FAMILIES,
                             help_requested=asked_for_help)
 
     matched = _hits(_OUT_OF_SCOPE, text)
