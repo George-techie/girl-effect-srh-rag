@@ -69,6 +69,37 @@ MACHINERY = re.compile(
 )
 
 
+#: The one issue that means "nothing could be cited" and nothing worse. Named
+#: rather than spelled out at each use, because a caller comparing against a
+#: literal copy of this sentence is a bug waiting for someone to reword it.
+NO_CITATION = "no citation on a grounded health answer"
+
+#: Fragments identifying the *other* fatal problems. A draft carrying any of
+#: these is unsendable no matter what else is true of it.
+_OTHER_FATAL = (
+    "citation markers on a turn that had no source passages",
+    "citation markers pointing at passages",
+    "came from no source",
+    "claims lived experience",
+)
+
+
+def only_missing_citation(issues: list[str]) -> bool:
+    """Is the sole *fatal* problem that the draft could not cite anything?
+
+    Non-fatal issues -- dashes, length, machinery talk -- are ignored here on
+    purpose. They were being counted, and a draft that merely contained a dash
+    stopped qualifying for the conversational fall-through and was refused
+    instead. A punctuation rule must never be able to take an answer down; that
+    is the output judge's mistake, and it cost a girl an answer about being
+    frightened of becoming a young mother.
+    """
+    if NO_CITATION not in issues:
+        return False
+    return not any(fragment in issue
+                   for issue in issues for fragment in _OTHER_FATAL)
+
+
 def check(draft: str, *, n_passages: int, grounded: bool = True
           ) -> tuple[list[str], bool]:
     """Returns ``(issues, fatal)``."""
@@ -85,7 +116,7 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
 
     if grounded:
         if not markers:
-            issues.append("no citation on a grounded health answer")
+            issues.append(NO_CITATION)
             fatal = True
 
         invalid = sorted({m for m in markers if not 1 <= m <= n_passages})

@@ -43,6 +43,7 @@ from typing import Any
 from src import config
 from src import conversation as conversation_mod
 from src import observability
+from src import services
 from src.conversation import Conversation
 from src.prompt_files import loader
 from src.decision import input_validation, rules
@@ -93,6 +94,42 @@ def _cited_sources(draft: str, hits: list[retrieval.Hit]) -> list[dict[str, Any]
             "excerpt": hits[i - 1].text[:400],
         })
     return used
+
+
+
+#: Which service route a safeguarding turn should draw contacts from. Derived
+#: from what the rules already matched rather than from a second classifier.
+_ROUTE_BY_MATCH = (
+    ("self_harm", "self_harm_risk"),
+    ("reproductive coercion", "sexual_violence"),
+    ("harm", "sexual_violence"),
+)
+
+
+def _route_for(decision) -> str:
+    """The service route for a disclosure, defaulting to the broadest one."""
+    blob = (decision.reason + " " + " ".join(decision.matched)).lower()
+    for needle, route in _ROUTE_BY_MATCH:
+        if needle in blob:
+            return route
+    return "emotional_support"
+
+
+
+def _with_contacts(text: str, route: str, trace: dict[str, Any]) -> str:
+    """Append verified contacts for a route, if any person has verified any.
+
+    An empty table changes nothing: the approved text already names the *kind*
+    of person who helps, which is useful on its own and is what she gets today.
+    Nothing here is generated -- every character of a contact comes from a row
+    a named person signed off, with a date.
+    """
+    found = services.block(route)
+    if not found:
+        trace["services"] = f"none verified for {route}"
+        return text
+    trace["services"] = [s.service_id for s in services.for_route(route)]
+    return text + "\n\n" + found
 
 
 def answer(message: str, *, k: int | None = None,
@@ -187,7 +224,9 @@ def _answer(message: str, *, k: int | None = None,
             # tap: the previous build measured that failure, where a girl who
             # did not tap saw less than one who disclosed something less
             # dangerous and did.
-            return Reply(responses.SELF_HARM, decision.path, trace=trace)
+            return Reply(
+                _with_contacts(responses.SELF_HARM, "self_harm_risk", trace),
+                decision.path, trace=trace)
 
         if decision.help_requested:
             # She disclosed AND asked where to go, in one message. Holding the
@@ -197,14 +236,19 @@ def _answer(message: str, *, k: int | None = None,
             # twice. The acknowledgement still comes first and unchanged.
             trace["why"] += " · asked for help in the same message"
             return Reply(
-                responses.SAFEGUARDING + "\n\n" + responses.SAFEGUARDING_FOLLOWUP,
+                _with_contacts(
+                    responses.SAFEGUARDING + "\n\n"
+                    + responses.SAFEGUARDING_FOLLOWUP,
+                    _route_for(decision), trace),
                 decision.path, trace=trace,
             )
 
         # Support first, offer the option. She chooses whether to receive it,
         # which keeps the first message short enough to read while distressed.
         return Reply(responses.SAFEGUARDING, decision.path, trace=trace,
-                     followup=responses.SAFEGUARDING_FOLLOWUP)
+                     followup=_with_contacts(
+                         responses.SAFEGUARDING_FOLLOWUP,
+                         _route_for(decision), trace))
 
     if decision.path == rules.OUT_OF_SCOPE:
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
@@ -241,8 +285,10 @@ def _answer(message: str, *, k: int | None = None,
         trace["why"] += " · asking where to go after a disclosure"
         trace["disclosed_earlier"] = True
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
-        return Reply(responses.WHERE_TO_GO_AFTER_DISCLOSURE, decision.path,
-                     trace=trace)
+        return Reply(
+            _with_contacts(responses.WHERE_TO_GO_AFTER_DISCLOSURE,
+                           _route_for(decision), trace),
+            decision.path, trace=trace)
 
     # --- retrieve ------------------------------------------------------------
     # The query the encoder sees is not always the message. On factual and
@@ -363,7 +409,7 @@ def _answer(message: str, *, k: int | None = None,
         #
         # A fabricated marker, an invented phone number or a claim of lived
         # experience still blocks. Those are not vocabulary problems.
-        if issues == ["no citation on a grounded health answer"]:
+        if checks.only_missing_citation(issues):
             trace["fell_through"] = "grounded answer had nothing to cite"
             return _converse(message, decision, trace, started, history, language)
         return Reply(responses.BLOCKED, decision.path, trace=trace)
