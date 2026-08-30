@@ -408,6 +408,39 @@ def css() -> str:
 
   .stChatInput {{ max-width: 480px; margin: 0 auto; border-radius: 24px; }}
   .stChatInput textarea {{ font-size: 14.5px !important; }}
+
+  /* --- typing indicator ----------------------------------------------------
+     Three dots that rise in sequence. Deliberately slow — a fast bounce reads
+     as a loading spinner, a slow one reads as somebody thinking. */
+  .bubble.typing {{
+    display: inline-flex; align-items: center; gap: 5px;
+    padding-top: 16px; padding-bottom: 16px;
+  }}
+  .bubble.typing .dot {{
+    width: 7px; height: 7px; border-radius: 50%;
+    background: currentColor; opacity: .35;
+    animation: aunti-typing 1.25s ease-in-out infinite;
+  }}
+  .bubble.typing .dot:nth-child(2) {{ animation-delay: .18s; }}
+  .bubble.typing .dot:nth-child(3) {{ animation-delay: .36s; }}
+  @keyframes aunti-typing {{
+    0%, 70%, 100% {{ transform: translateY(0);    opacity: .3; }}
+    35%           {{ transform: translateY(-4px); opacity: .8; }}
+  }}
+
+  /* The cursor on a reply that is still arriving. */
+  .caret {{
+    display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+    background: currentColor; opacity: .55; vertical-align: -0.15em;
+    animation: aunti-caret 1s steps(2, start) infinite;
+  }}
+  @keyframes aunti-caret {{
+    0%, 50% {{ opacity: .55; }} 50.01%, 100% {{ opacity: 0; }}
+  }}
+
+  @media (prefers-reduced-motion: reduce) {{
+    .bubble.typing .dot, .caret {{ animation: none; opacity: .5; }}
+  }}
 </style>
 """
 
@@ -604,6 +637,33 @@ def bubble(
     return (
         f'<div class="row {side}">{avatar}'
         f'<div class="{classes}">{label}{body}</div></div>'
+    )
+
+
+def typing() -> str:
+    """Three dots, in her bubble, while the reply is being worked out.
+
+    A blank spinner says the page is busy. This says *someone is answering you*,
+    which is the same thing a person sees in every messaging app they use and
+    reads as presence rather than as loading. It matters most on the turns that
+    cannot stream: a grounded answer has to be generated and validated in full
+    before any of it is safe to show, and this is what fills that gap honestly.
+    """
+    return (
+        f'<div class="row bot"><div class="avatar">{PERSONA_AVATAR}</div>'
+        '<div class="bubble bot typing">'
+        '<span class="dot"></span><span class="dot"></span><span class="dot"></span>'
+        '</div></div>'
+    )
+
+
+def streaming_bubble(text: str) -> str:
+    """A partial reply, with a cursor, while it is still arriving."""
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    body = "".join(_block(p) for p in paragraphs)
+    return (
+        f'<div class="row bot"><div class="avatar">{PERSONA_AVATAR}</div>'
+        f'<div class="bubble bot">{body}<span class="caret"></span></div></div>'
     )
 
 

@@ -191,6 +191,66 @@ class LLMClient:
         call_log.record(response)
         return response
 
+    def stream(
+        self,
+        role: str,
+        messages: list[dict[str, str]],
+        *,
+        model: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ):
+        """Yield text deltas as they arrive. Returns the `LLMResponse` at the end.
+
+        A generator with a return value, so a caller can do::
+
+            text = yield from client.stream(...)      # inside a generator
+            # or
+            gen = client.stream(...); ... ; response = gen.value   # via _Streamed
+
+        No retry loop. `complete` can retry because nothing has been shown yet;
+        once the first token has reached her screen a retry would rewrite what
+        she is already reading, so a stream that fails must fail visibly and let
+        the caller fall back.
+        """
+        resolved = model or config.MODELS.get(role)
+        if resolved is None:
+            raise KeyError(f"No model registered for role {role!r}")
+
+        started = time.perf_counter()
+        chunks: list[str] = []
+        finish_reason = None
+
+        completion = self._client.chat.completions.create(
+            model=resolved,
+            messages=messages,
+            temperature=(config.CLASSIFIER_TEMPERATURE
+                         if temperature is None else temperature),
+            max_tokens=max_tokens or config.GENERATION_MAX_TOKENS,
+            stream=True,
+        )
+
+        for event in completion:
+            if not event.choices:
+                continue
+            choice = event.choices[0]
+            piece = getattr(choice.delta, "content", None)
+            if piece:
+                chunks.append(piece)
+                yield piece
+            if getattr(choice, "finish_reason", None):
+                finish_reason = choice.finish_reason
+
+        response = LLMResponse(
+            text="".join(chunks).strip(),
+            model=resolved,
+            role=role,
+            latency_ms=int((time.perf_counter() - started) * 1000),
+            finish_reason=finish_reason,
+        )
+        call_log.record(response)
+        return response
+
     def complete_json(
         self,
         role: str,

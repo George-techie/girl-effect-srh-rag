@@ -341,6 +341,125 @@ def _answer(message: str, *, k: int | None = None,
     )
 
 
+def answer_stream(message: str, *, k: int | None = None,
+                  conversation: Conversation | None = None,
+                  out: dict[str, Any] | None = None):
+    """Yield text deltas as they arrive, and put the finished `Reply` in `out`.
+
+    **Only conversational turns stream, and that is a safety decision.**
+
+    A grounded answer's fatal condition is *having no citation at all*, which is
+    only knowable once the answer is complete. Streaming one would put uncited
+    health claims on her screen and then discover they were uncited — which is
+    precisely what the grounded contract exists to prevent. So a factual or
+    access turn is generated, validated, and only then shown; the UI holds a
+    typing indicator meanwhile, which is honest about the wait rather than
+    hiding it.
+
+    Conversational turns can stream because their fatal conditions -- a citation
+    marker, an invented phone number -- are visible in partial text, so the
+    stream is checked as it accumulates and cut the moment one appears.
+
+    Turns answered from approved text never reach a model, so there is nothing
+    to stream and nothing to wait for: they arrive whole, in 0 ms.
+    """
+    sink = out if out is not None else {}
+    started = time.perf_counter()
+
+    checked = input_validation.validate(message)
+    decision = rules.decide(checked.text) if checked.ok else None
+
+    if not checked.ok or decision.path not in (rules.CHAT, rules.SUPPORT):
+        # Nothing safe to stream. Run it whole; the caller shows an indicator.
+        sink["reply"] = answer(message, k=k, conversation=conversation)
+        return
+
+    text = checked.text
+    trace: dict[str, Any] = {"path": decision.path, "why": decision.reason,
+                             "matched": decision.matched, "llm_calls": 0}
+    history = conversation.history_block() if conversation is not None else ""
+    if conversation is not None:
+        trace["turn"] = len(conversation.turns) // 2 + 1
+
+    prompt = loader.load("converse")
+    seriousness = SERIOUSNESS.get(decision.path, "personal")
+    accumulated: list[str] = []
+    cut = False
+
+    try:
+        stream = get_client().stream(
+            "generation",
+            prompt.messages(
+                language_label="", seriousness=seriousness,
+                context_block="", history_block=history, message=text,
+                situation=prompt.situation(SITUATION.get(decision.path, "explore"),
+                                           prompt.situation("explore")),
+            ),
+            temperature=config.GENERATION_TEMPERATURE,
+            max_tokens=config.CONVERSE_MAX_TOKENS,
+        )
+        while True:
+            try:
+                piece = next(stream)
+            except StopIteration as done:
+                response = done.value
+                break
+            accumulated.append(piece)
+            # Checked as it accumulates, not after. A citation marker or a
+            # phone-shaped string is fatal on this contract, and the point of
+            # catching it here is to stop before more of it is on her screen.
+            so_far = "".join(accumulated)
+            if checks.MARKER.search(so_far) or checks.PHONE.search(so_far):
+                cut = True
+                stream.close()
+                break
+            yield piece
+    except Exception as exc:  # noqa: BLE001
+        trace["error"] = f"{type(exc).__name__}: {exc}"
+        trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        sink["reply"] = Reply(responses.TECHNICAL, decision.path, trace=trace)
+        _record(sink["reply"], message, conversation)
+        return
+
+    trace.update({"llm_calls": 1, "seriousness": seriousness,
+                  "contract": "conversational", "streamed": not cut})
+
+    if cut:
+        # She saw a partial reply. Replacing it is the lesser harm: what was
+        # forming had a fabricated reference or a number in it.
+        trace["issues"] = ["stream cut: citation marker or phone number forming"]
+        trace["fatal"] = True
+        trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        sink["reply"] = Reply(responses.BLOCKED, decision.path, trace=trace)
+        _record(sink["reply"], message, conversation)
+        return
+
+    draft = response.text.strip()
+    trace["model"] = response.model
+    issues, fatal = checks.check(draft, n_passages=0, grounded=False)
+    trace["issues"], trace["fatal"] = issues, fatal
+    trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+
+    sink["reply"] = Reply(responses.BLOCKED if fatal else checks.strip_markers(draft),
+                          decision.path, trace=trace)
+    _record(sink["reply"], message, conversation)
+
+
+def _record(reply: Reply, message: str, conversation: Conversation | None) -> None:
+    """The bookkeeping `answer` does in its wrapper, for the streaming path."""
+    violations = observability.record(
+        trace=reply.trace, reply_path=reply.path, n_sources=len(reply.sources),
+        text=reply.text, message=message,
+        turn=(len(conversation.turns) // 2 + 1) if conversation else None,
+    )
+    if violations:
+        reply.trace["violations"] = [{"name": v.name, "detail": v.detail}
+                                     for v in violations]
+    if conversation is not None:
+        conversation.record_her(message, reply.path)
+        conversation.record_aunti(reply.text, reply.path)
+
+
 #: How gravely to speak, derived from the path rather than from a second model
 #: call. The previous build made this a separate axis for a measured reason: a
 #: model shown all four tone notes produces their average, the register that

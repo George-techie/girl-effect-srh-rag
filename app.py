@@ -178,9 +178,29 @@ message = typed or st.session_state.pop("pending", None)
 
 if message:
     st.session_state.messages.append({"role": "user", "text": message})
-    with st.spinner(" "):
-        reply = pipeline.answer(
-            message, conversation=st.session_state.conversation)
+
+    # Her message is drawn before the reply is asked for, so the thread does not
+    # sit empty while she waits. Then the dots, then whatever arrives.
+    with thread:
+        st.markdown(theme.bubble(message, "user"), unsafe_allow_html=True)
+        live = st.empty()
+        live.markdown(theme.typing(), unsafe_allow_html=True)
+
+        out: dict = {}
+        shown = ""
+        for delta in pipeline.answer_stream(
+            message, conversation=st.session_state.conversation, out=out
+        ):
+            # Conversational turns arrive a piece at a time. Grounded ones yield
+            # nothing here on purpose -- they have to be generated and validated
+            # whole before any of it is safe to show -- so the dots simply stay
+            # until the finished reply lands.
+            shown += delta
+            live.markdown(theme.streaming_bubble(shown), unsafe_allow_html=True)
+
+        live.empty()
+        reply = out["reply"]
+
     st.session_state.messages.append({
         "role": "bot",
         "text": reply.text,
