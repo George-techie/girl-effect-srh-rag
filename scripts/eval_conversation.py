@@ -134,10 +134,23 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--show", action="store_true")
     ap.add_argument("--journeys", type=Path, default=JOURNEYS)
+    ap.add_argument("--include-mixed", action="store_true",
+                    help="also score the mixed-intention messages as one-turn "
+                         "conversations, for a larger sample")
     args = ap.parse_args()
 
     data = json.loads(args.journeys.read_text(encoding="utf-8"))
     journeys = [j for j in data["journeys"] if not j["id"].startswith("_")]
+
+    if args.include_mixed:
+        # Real messy messages, scored one at a time. A journey of length one is
+        # still a conversation as far as every metric here is concerned, and it
+        # widens the sample where it is thinnest: mixed intention.
+        mixed = json.loads(
+            (ROOT / "evaluation" / "mixed_turns_v1.json").read_text(
+                encoding="utf-8"))["messages"]
+        journeys += [{"id": m["id"], "description": m["category"],
+                      "turns": [{"message": m["message"]}]} for m in mixed]
 
     rows: list[dict] = []
     for journey in journeys:

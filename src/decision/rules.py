@@ -391,7 +391,11 @@ _SUPPORT = _res(
     r"\bi('?m| am)\s+(?:\w+\s+){0,3}?(scared|afraid|frightened|worried|"
     r"ashamed|embarrassed|nervous|anxious|stressed|overwhelmed|lost|"
     r"stupid|confused|terrified|panicking)\b",
-    r"\bi feel\b|\bi'?m feeling\b|\bnaogopa\b|\bninaogopa\b",
+    # Same intervening-word problem as the intensifier above, found the same
+    # way. "I just feel so alone since everyone at school found out" did not
+    # match `\bi feel\b`, fell through to `factual`, and was told the sources
+    # did not cover it.
+    r"\bi (\w+ ){0,2}?feel\b|\bi'?m feeling\b|\bnaogopa\b|\bninaogopa\b",
     r"\bi (keep )?worry(ing)?\b|\bi don'?t know who to (talk|turn) to\b",
     r"\bwill (think|judge|say)\b.{0,30}\b(i'?m|me)\b|\bpeople will think\b",
     r"\bthey'?ll think\b|\beveryone (will|would) think\b",

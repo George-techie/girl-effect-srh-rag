@@ -511,3 +511,24 @@ situation the same line. The example now uses an unrelated subject and says
 explicitly that it shows the blend and never the wording. This is the second
 time in this project that a worked example has been copied over the rule it was
 illustrating; the first cost three wrong diagnoses.
+
+## D-23 · The evidence floor made "no hits" reachable, and nothing handled it
+
+**Decided.** A turn that reached `factual` only by default and retrieved nothing
+is answered conversationally, not with "I don't have anything in my sources".
+
+**Why.** Experiment 4's evidence floor drops clauses that retrieved nothing
+above the noise, so an empty result became a real outcome. It had been
+unreachable — retrieval always returned k rows however weak — so the branch
+that handled it was written for a case that never happened, and it refused her.
+
+*"Aki I just feel so alone since everyone at school found out about me and my
+sister barely talks to me now"* was told the sources did not cover it.
+
+Two defects behind one message, and the second was the older one: `\bi feel\b`
+does not match *"I just feel"*, so it never reached `support` in the first
+place. Same intervening-word bug as the intensifier list, found the same way,
+and fixed the same way.
+
+**Found by widening the evaluation sample from 23 turns to 38.** At 23 it did
+not appear.

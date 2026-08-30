@@ -374,6 +374,19 @@ def _answer(message: str, *, k: int | None = None,
         for h in hits
     ]
     if not hits:
+        # Empty is now a real outcome rather than an impossible one. Experiment
+        # 4's evidence floor drops clauses that retrieved nothing above the
+        # noise, so a message with no answerable question in it comes back with
+        # nothing at all -- which is correct, and used to be unreachable because
+        # retrieval always returned k rows however weak.
+        #
+        # A turn that only reached `factual` by default was never a lookup, so
+        # telling her the sources do not cover it answers a question she did not
+        # ask. *"Aki I just feel so alone since everyone at school found out"*
+        # got exactly that.
+        if decision.is_fallback:
+            trace["fell_through"] = "nothing retrievable, and never a lookup"
+            return _converse(message, decision, trace, started, history, language)
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
         return Reply(responses.NO_EVIDENCE, decision.path, trace=trace)
 
