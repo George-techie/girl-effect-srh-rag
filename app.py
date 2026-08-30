@@ -101,8 +101,8 @@ with thread:
         st.markdown(
             theme.welcome_card(
                 "<strong>Karibu 💛</strong> Ask me anything about contraception, "
-                "staying safe, or getting to a clinic — in "
-                "<strong>English, Swahili, or Sheng</strong>."
+                "staying safe, or getting to a clinic. "
+                "<strong>English, Swahili, or Sheng</strong>, whichever is easier."
             ),
             unsafe_allow_html=True,
         )
@@ -160,16 +160,23 @@ with thread:
 
 
 # --- starters ---------------------------------------------------------------
+# In their own slot so they can be cleared the instant she sends something.
+# Streamlit runs the script top to bottom, so these are drawn before the reply
+# is even asked for -- which left four suggestion buttons sitting underneath her
+# first answer while it was still arriving, suggesting things to ask instead of
+# the thing she had just asked.
+starters_slot = st.empty()
 if not st.session_state.messages:
-    st.markdown('<div class="starters"></div>', unsafe_allow_html=True)
-    for row in (0, 2):
-        cols = st.columns(2)
-        for offset in (0, 1):
-            i = row + offset
-            if cols[offset].button(STARTERS[i], key=f"s{i}",
-                                   use_container_width=True):
-                st.session_state.pending = STARTERS[i]
-                st.rerun()
+    with starters_slot.container():
+        st.markdown('<div class="starters"></div>', unsafe_allow_html=True)
+        for row in (0, 2):
+            cols = st.columns(2)
+            for offset in (0, 1):
+                i = row + offset
+                if cols[offset].button(STARTERS[i], key=f"s{i}",
+                                       use_container_width=True):
+                    st.session_state.pending = STARTERS[i]
+                    st.rerun()
 
 
 # --- input ------------------------------------------------------------------
@@ -177,6 +184,7 @@ typed = st.chat_input("Ask safely in English, Swahili, or Sheng…")
 message = typed or st.session_state.pop("pending", None)
 
 if message:
+    starters_slot.empty()
     st.session_state.messages.append({"role": "user", "text": message})
 
     # Her message is drawn before the reply is asked for, so the thread does not
