@@ -48,7 +48,7 @@ from src.conversation import Conversation
 from src.prompt_files import loader
 from src.decision import input_validation, rules
 from src.llm.client import get_client
-from src.rag import query_prep, retrieval
+from src.rag import query_prep, rescue, retrieval
 from src.safety import checks, responses
 
 INSUFFICIENT = "INSUFFICIENT_CONTEXT"
@@ -341,7 +341,32 @@ def _answer(message: str, *, k: int | None = None,
     if query.restated:
         trace["query_mappings"] = query.applied
 
-    hits = retrieval.search(query.text, k=k or config.RETRIEVAL_TOP_K)
+    # Clause-level retrieval. Her whole message still reaches the generator --
+    # the emotional half is most of why she wrote and a reply must not ignore it
+    # -- but it stops being used as the search query, where it drowned the
+    # health question it was wrapped around. Experiment 4.
+    hits, searched = retrieval.search_message(
+        query.text, k=k or config.RETRIEVAL_TOP_K)
+    if len(searched) > 1:
+        trace["clauses_searched"] = searched
+
+    # Third tier, and only when the first two came back measurably weak. The
+    # deterministic table handles clean questions for free; clause splitting
+    # handles mixed messages for free; this handles the rest, which is where
+    # her vocabulary and the corpus's have no overlap for a bi-encoder to find
+    # -- "i heard pills make someone anone" against "Do COCs cause women to
+    # gain or lose a lot of weight?".
+    #
+    # Safe to use a model here and nowhere else in retrieval: it writes a search
+    # string, never a word she reads. The kept result is the better of the two,
+    # compared rather than assumed.
+    attempt = rescue.maybe_rescue(hits, message, k=k or config.RETRIEVAL_TOP_K)
+    if attempt.used:
+        hits = attempt.hits
+        trace["rescued"] = {"query": attempt.query,
+                            "before": round(attempt.before or 0, 3),
+                            "after": round(attempt.after or 0, 3)}
+        trace["llm_calls"] = trace.get("llm_calls", 0) + 1
     trace["retrieved"] = [
         {"tag": h.metadata["citation_tag"], "page": h.metadata["page_pdf"],
          "section": h.metadata["section_title"], "similarity": round(h.similarity, 3),
@@ -383,7 +408,7 @@ def _answer(message: str, *, k: int | None = None,
         return Reply(responses.TECHNICAL, decision.path, trace=trace)
 
     draft = response.text.strip()
-    trace["llm_calls"] = 1
+    trace["llm_calls"] = trace.get("llm_calls", 0) + 1
     trace["model"] = response.model
     trace["contract"] = "grounded"
     trace["seriousness"] = SERIOUSNESS.get(decision.path, "personal")

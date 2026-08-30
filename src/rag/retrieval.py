@@ -24,11 +24,12 @@ outcomes framing the use case needs, and they are still not her voice.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any
 
 from src import config
-from src.rag import indexing
+from src.rag import indexing, query_prep
 
 
 @dataclass
@@ -103,3 +104,66 @@ def search(
     ]
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:k]
+
+
+#: Below this similarity the encoder has found nothing, not something weak.
+#: Set from the observed noise band rather than swept: the purely emotional
+#: control message tops out at 0.540 and genuine evidence sits at 0.57-0.71.
+EVIDENCE_FLOOR = float(os.getenv("EVIDENCE_FLOOR", "0.55"))
+
+
+def search_message(message: str, *, k: int | None = None,
+                   role_bonus: float = 0.0) -> tuple[list[Hit], list[str]]:
+    """Retrieve for a whole message by searching each clause separately.
+
+    A girl sends a message, not a query, and the message often carries several
+    intentions at once: a pill myth, her body, her boyfriend, another girl's
+    name, and how all of it makes her feel. Embedded as one vector those average
+    out, and the emotional material wins because there is more of it. Measured
+    on a real message, the whole-paragraph query returned passages about mood and
+    sex drive at 0.561 while the passage that answers her -- *"Do COCs cause
+    women to gain or lose a lot of weight?"* -- was nowhere in the top five.
+
+    So each clause is searched on its own and the results are pooled. **No
+    clause is classified and no word list decides which one is the health
+    question** -- the similarity scores do that, which is the whole point. A
+    clause about Shasha retrieves nothing above the noise and loses; a clause
+    about pills retrieves the pill passage and wins.
+
+    Returns the hits and the clauses that were searched, so a trace can show
+    which part of her message the evidence came from.
+
+    **Retrieval only.** The generator still receives her entire message. The
+    emotional half is not dropped from the conversation, only from the query.
+    """
+    k = k or config.RETRIEVAL_TOP_K
+    parts = query_prep.clauses(message)
+    if not parts:
+        return search(message, k=k, role_bonus=role_bonus), [message]
+
+    # The whole message stays in the pool. If it happens to be the best query,
+    # nothing is lost by splitting -- which is what makes this safe to always do.
+    pooled: dict[str, Hit] = {}
+    for part in [message, *parts]:
+        hits = search(part, k=k, role_bonus=role_bonus)
+        # A clause whose best match sits in the noise band has no evidence in
+        # this corpus, and its hits must not fill seats in the pool. Measured:
+        # the purely emotional control message tops out at 0.540, and the
+        # passage "I was raped and I am worried that no one will believe me"
+        # is a strong attractor for any distressed text -- it was arriving at
+        # 0.538-0.565 beside a question about the pill. Dropping the clause
+        # rather than the passage is the right cut, because the passage is fine
+        # and the clause is what had nothing to ask.
+        if not hits or hits[0].similarity < EVIDENCE_FLOOR:
+            continue
+        for hit in hits:
+            if hit.similarity < EVIDENCE_FLOOR:
+                continue
+            key = f"{hit.metadata.get('citation_tag')}#{hit.text[:60]}"
+            if key not in pooled or hit.score > pooled[key].score:
+                pooled[key] = hit
+
+    ranked = sorted(pooled.values(), key=lambda h: h.score, reverse=True)
+    # Returning fewer than k is a real answer. The grounded contract then
+    # declines to cite thin evidence, which is the behaviour it already has.
+    return ranked[:k], parts

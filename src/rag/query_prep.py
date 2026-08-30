@@ -61,6 +61,12 @@ _EXPANSIONS: tuple[tuple[str, str, str], ...] = (
     (r"\bmorning after\b|\bP2\b",
      "emergency contraceptive pills timing effectiveness",
      "extrapolated"),
+    # Reverted to what it was before a reviewer caught me widening it. Terms
+    # like `figure`, `slim` and `my shape` were added immediately after seeing
+    # one message that failed, which is the definition of fitting to the example
+    # in front of you. Tested against five phrasings written afterwards, the
+    # widened version fired on two. The general fix is clause-level retrieval,
+    # not a longer list.
     (r"\b(makes? you|make me) fat\b|\bgain weight\b",
      "weight change side effects correcting misunderstandings",
      "extrapolated"),
@@ -77,6 +83,28 @@ _EXPANSIONS: tuple[tuple[str, str, str], ...] = (
 
 _COMPILED = tuple((re.compile(p, re.IGNORECASE), add, kind)
                   for p, add, kind in _EXPANSIONS)
+
+
+#: Below this, a message is one thought and there is nothing to split.
+_CLAUSE_MIN_WORDS = 16
+
+#: A clause shorter than this carries no retrievable signal on its own.
+_CLAUSE_MIN_TOKENS = 3
+
+
+def clauses(message: str) -> list[str]:
+    """Split a message into the separate things she said.
+
+    Sentence boundaries, then comma-joined independent clauses, because girls
+    punctuate the way people text rather than the way documents are written.
+    Returns an empty list when there is nothing worth splitting, which the
+    caller reads as "search the message as it is".
+    """
+    if len(message.split()) < _CLAUSE_MIN_WORDS:
+        return []
+    parts = re.split(r"(?<=[.!?])\s+|\s*\n+\s*", message)
+    parts = [p.strip() for p in parts if len(p.split()) >= _CLAUSE_MIN_TOKENS]
+    return parts if len(parts) > 1 else []
 
 
 @dataclass(frozen=True)

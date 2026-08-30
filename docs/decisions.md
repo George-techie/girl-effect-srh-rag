@@ -354,3 +354,63 @@ read from the verified table like every other contact.
 sat in `services.csv`. Two copies, one authoritative, and no mechanism to keep
 them agreeing. Now there is one source, and the rule the rest of the system
 already follows — a contact is a table read, never text — has no exception.
+
+## D-17 · Retrieve from the clause, not the paragraph
+
+**Decided.** A multi-sentence message is split into clauses, each is searched
+separately, and the results are pooled by score. A clause whose best match sits
+below 0.55 contributes nothing.
+
+**Why.** A girl sends a message, not a query, and it carries several intentions
+at once. Embedded as one vector they average, and the emotional material wins
+because there is more of it. Measured on a real demo message: whole-paragraph
+retrieval returned mood and sex-drive passages at 0.561 while the passage that
+answers her was absent from the top five, so the generator correctly refused to
+cite anything and the fall-through rescued the turn as pure conversation. She
+was asked to choose between the pill question and the Shasha question she had
+already asked together.
+
+**No clause is classified.** There is no word list deciding which clause is the
+health question — the similarity scores do that. That is the whole point, and
+it is what a word list could never do: the first attempt at this problem *was*
+a word list, and tested on five phrasings written afterwards it fired on two.
+
+**The floor matters as much as the split.** Without it, emotional clauses still
+contributed weak hits that filled seats, including *"I was raped and I am
+worried that no one will believe me"* arriving beside a question about the pill.
+Dropping the clause is the right cut rather than blocking the passage — the
+passage is fine, the clause had nothing to ask.
+
+**Measured, Experiment 4**, 15 mixed messages, criteria fixed beforehand:
+wanted evidence 8→9 of 14, unwanted passages 4→3, the purely emotional control
+now retrieves nothing at all. Clean single-sentence questions are untouched
+(they do not split): Hit@5 0.926, MRR 0.883, unchanged.
+
+## D-18 · A query rewrite, but only when the free tiers have measurably failed
+
+**Decided.** Three tiers. The deterministic table runs first, clause splitting
+second, and a model call rewrites the query only when the pooled result is still
+below 0.60. The rewritten result is kept only if it actually scores better.
+
+**Why this reverses an earlier decision.** Experiment 3 concluded a string table
+beat a model rewriter and that a rewriter should not be built. That conclusion
+was over-generalised and a reviewer caught it: the table was measured on 31
+questions that were single-sentence, English and well formed, and real messages
+are none of those. On phrasings the table had not been written for it fired on
+two of five, and one miss was severe — *"nasikia sindano inakufanya unenepe"*
+retrieved a passage about rape at 0.538.
+
+**Why a model is safe here specifically.** It writes a search string and never a
+word she reads. The worst case is retrieving the wrong passages, and the
+grounded contract already declines to cite those. A rewriter cannot put a
+fabricated fact in her answer because it is not writing her answer.
+
+**Measured.** Of 15 mixed messages, 7 were still weak after the free tiers. The
+rewrite recovered 5 of them, including rewriting *"i heard pills make someone
+anone"* into the corpus's own section heading — *"Do COCs cause women to gain
+or lose a lot of weight?"* — taking 0.587 to 0.798. The purely emotional control
+returned NONE and was not rescued, which is correct.
+
+**What would reverse it.** A cheaper tier that closes the same gap. The rate to
+watch is how often it fires: on clean questions almost never, on mixed messages
+about half.

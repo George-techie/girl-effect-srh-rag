@@ -1,0 +1,116 @@
+{
+  "_about": "Mixed-intention messages: a health question and emotional or relational content in the same turn. This is how girls actually write, and it is the shape every other evaluation set in this repo avoids by using clean single-sentence questions.",
+  "_why": "One message embedded as one vector averages several intentions. The emotional material is usually the bulk of the text, so it dominates, and the health question is not what gets retrieved. Measured on M01: whole-message retrieval returned mood and sex-drive passages at 0.561 and the passage answering her was absent from the top five.",
+  "_labels": "want = a phrase that should appear in a retrieved section title. avoid = a section that must not be pulled in by the emotional half. Both are checked case-insensitively against section titles only.",
+  "_limitation": "Written by the same person who wrote the retriever, like every other set here. M01 is a real message from a reviewer's demo session; the rest are constructed to the same shape across the five categories the reviewer named.",
+
+  "messages": [
+    {
+      "id": "M01",
+      "category": "contraception + body image + relationship insecurity",
+      "message": "i heard pills make someone anone. My boyfriend loves my figure 8. Dont want to lose it as he might look elsewhere. I notice how they laugh alot with Shasha making me insecure. Anyway story for another day",
+      "want": ["weight"],
+      "avoid": ["raped", "sterilization", "vasectomy"],
+      "note": "the real one, from a demo session"
+    },
+    {
+      "id": "M02",
+      "category": "contraception + relationship insecurity",
+      "message": "So my friend told me the injection can stop your periods completely. My boyfriend already thinks I am hiding things from him and I dont want more drama at home. Is that true about the periods?",
+      "want": ["bleeding", "menstrual", "amenorrh", "period"],
+      "avoid": ["raped", "vasectomy"]
+    },
+    {
+      "id": "M03",
+      "category": "HIV + fear",
+      "message": "I am really scared because my cousin passed away from AIDS when I was small and nobody talked about it. Does a condom actually stop HIV or is that just what they tell us in school?",
+      "want": ["condom", "hiv"],
+      "avoid": ["sterilization", "vasectomy"]
+    },
+    {
+      "id": "M04",
+      "category": "clinic access + embarrassment",
+      "message": "There is a clinic near our estate but the nurse there knows my mother and I would die of shame. Do they have to tell your parents if you go for family planning?",
+      "want": ["consent", "confidential", "privacy", "adolescent"],
+      "avoid": ["raped", "vasectomy"]
+    },
+    {
+      "id": "M05",
+      "category": "pregnancy + school goals",
+      "message": "I want to finish form four and become a teacher, that is the whole plan. But I keep worrying because we were not careful last weekend. What can someone do after unprotected sex?",
+      "want": ["emergency"],
+      "avoid": ["sterilization", "vasectomy"]
+    },
+    {
+      "id": "M06",
+      "category": "side effects + relationship pressure",
+      "message": "My boyfriend says the implant will make me moody and then he will not want to be around me. Honestly I just want to know, does the implant change your mood?",
+      "want": ["mood", "side effect", "implant"],
+      "avoid": ["raped"]
+    },
+    {
+      "id": "M07",
+      "category": "contraception + family opinion",
+      "message": "My aunty says family planning is for married women only and she went on about it for an hour at the funeral. Can someone my age even get it?",
+      "want": ["adolescent", "young", "age", "eligib"],
+      "avoid": ["raped", "sterilization"]
+    },
+    {
+      "id": "M08",
+      "category": "fertility myth + future plans",
+      "message": "Nasikia watu wakisema family planning inaharibu mji wa mtoto. I want children one day, maybe three, after I finish college and get settled properly. Ni kweli ama ni uongo tu?",
+      "want": ["fertility", "return", "infertil", "misconception"],
+      "avoid": ["raped", "vasectomy"]
+    },
+    {
+      "id": "M09",
+      "category": "condoms + trust",
+      "message": "We have been together two years and he says condoms mean I do not trust him. Which is stronger anyway for stopping pregnancy, condoms or the pill?",
+      "want": ["condom", "effective"],
+      "avoid": ["raped", "sterilization"]
+    },
+    {
+      "id": "M10",
+      "category": "clinic access + cost worry",
+      "message": "Money is tight at home since my father lost his job and I cannot ask anyone for bus fare. Where do people go to get family planning?",
+      "want": ["service", "facilit", "communit", "provider"],
+      "avoid": ["raped", "vasectomy"]
+    },
+    {
+      "id": "M11",
+      "category": "side effects + peer talk",
+      "message": "The girls at school keep saying the coil moves around inside you and can get lost. They say it like it is a fact. Is there any truth to it?",
+      "want": ["iud", "intrauterine", "misconception", "side effect"],
+      "avoid": ["raped"]
+    },
+    {
+      "id": "M12",
+      "category": "starting sex + readiness + protection",
+      "message": "We have decided we are ready and I want it to be special and not something I regret. What should we actually have sorted out before, in terms of protection?",
+      "want": ["condom", "protect", "sti", "hiv"],
+      "avoid": ["raped", "sterilization"]
+    },
+    {
+      "id": "M13",
+      "category": "emergency + shame",
+      "message": "I feel so stupid even asking this and I have deleted the message twice. If the condom broke, how long do you have to take the morning after pill?",
+      "want": ["emergency", "pill"],
+      "avoid": ["raped", "vasectomy"]
+    },
+    {
+      "id": "M14",
+      "category": "HIV testing + partner",
+      "message": "He got upset last time I even mentioned testing, said I was accusing him of something. Can couples get tested for HIV together?",
+      "want": ["test", "couple", "hiv"],
+      "avoid": ["sterilization"]
+    },
+    {
+      "id": "M15",
+      "category": "pure emotional, no health question",
+      "message": "Aki I just feel so alone since everyone at school found out about me and my sister barely talks to me now. Anyway. Story for another day I guess.",
+      "want": [],
+      "avoid": ["raped", "sterilization", "vasectomy"],
+      "note": "the control. There is nothing to retrieve, and nothing alarming should be pulled in."
+    }
+  ]
+}
