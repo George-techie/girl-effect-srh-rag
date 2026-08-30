@@ -1,0 +1,315 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Trusted Aunti — Build Report</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm; }
+  :root {
+    --plum:#5B2340; --teal:#0E7A86; --rust:#C04B2F; --green:#2E7D4F;
+    --ink:#1B1714; --muted:#6E655E; --rule:#E2DCD6; --wash:#FAF8F6;
+  }
+  * { box-sizing:border-box; }
+  body {
+    font:11pt/1.55 "Charter","Georgia",serif; color:var(--ink);
+    margin:0; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  h1 { font-size:23pt; line-height:1.15; color:var(--plum); margin:0 0 4pt; letter-spacing:-.4pt; }
+  .sub { font-size:11.5pt; color:var(--muted); margin:0 0 3pt; }
+  .meta { font:8.5pt/1.5 "SF Mono",Consolas,monospace; color:var(--muted);
+          border-top:1px solid var(--rule); padding-top:6pt; margin-top:10pt; }
+  h2 { font-size:13pt; color:var(--teal); margin:20pt 0 6pt;
+       padding-bottom:3pt; border-bottom:1.5px solid var(--teal); page-break-after:avoid; }
+  h3 { font-size:11pt; color:var(--plum); margin:13pt 0 4pt; page-break-after:avoid; }
+  p { margin:0 0 7pt; }
+  ul { margin:0 0 8pt; padding-left:16pt; }
+  li { margin-bottom:3pt; }
+  table { width:100%; border-collapse:collapse; margin:6pt 0 10pt;
+          font-size:9pt; page-break-inside:avoid; }
+  th { text-align:left; font-weight:700; color:var(--plum); font-size:8pt;
+       text-transform:uppercase; letter-spacing:.4pt;
+       border-bottom:1.2px solid var(--plum); padding:4pt 6pt 3pt; }
+  td { padding:3.5pt 6pt; border-bottom:.5px solid var(--rule); vertical-align:top; }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums;
+               font-family:"SF Mono",Consolas,monospace; font-size:8.5pt; }
+  .good { color:var(--green); font-weight:700; }
+  .bad  { color:var(--rust);  font-weight:700; }
+  .quote { border-left:2.5px solid var(--rust); padding:5pt 0 5pt 10pt;
+           margin:8pt 0; color:var(--ink); background:var(--wash); font-size:10pt; }
+  .quote em { color:var(--muted); }
+  .note { font-size:9pt; color:var(--muted); font-style:italic; margin:5pt 0 9pt; }
+  code { font-family:"SF Mono",Consolas,monospace; font-size:9pt; background:var(--wash);
+         padding:.5pt 3pt; border-radius:2px; }
+  .kpi { display:flex; gap:8pt; margin:8pt 0 12pt; }
+  .kpi div { flex:1; background:var(--wash); border:1px solid var(--rule);
+             border-radius:3px; padding:7pt 8pt; }
+  .kpi b { display:block; font:700 17pt/1 "SF Mono",Consolas,monospace; color:var(--plum); }
+  .kpi span { font-size:7.8pt; color:var(--muted); text-transform:uppercase; letter-spacing:.3pt; }
+  .brk { page-break-before:always; }
+  footer { margin-top:14pt; border-top:1px solid var(--rule); padding-top:5pt;
+           font-size:8pt; color:var(--muted); }
+</style>
+
+<h1>Trusted Aunti</h1>
+<p class="sub">A safety-aware assistant for adolescent girls in Kenya: contraception,
+sexual health, staying safe, and getting to a service.</p>
+<p class="sub"><strong>Build report — the refined version.</strong></p>
+<p class="meta">
+  github.com/George-techie/girl-effect-srh-rag &nbsp;·&nbsp; 166 tests &nbsp;·&nbsp;
+  8 governed sources, 1,693 chunks &nbsp;·&nbsp; 8 verified services across 8 routes
+</p>
+
+<h2>What the brief asked for</h2>
+<p>The previous submission was assessed as <em>overengineered in places</em>, with a
+request to see what a more refined version focused on delivery of the use case
+would look like. The scope also narrowed: <strong>sexual and reproductive health,
+centred on contraception and family planning</strong>, plus the empowerment
+outcomes that follow. Mental health and menstruation left the topic list.</p>
+
+<p>This build is the answer to both. Same solution philosophy. Every component
+either justified by a measurement or deleted. <strong>Refined does not mean
+smaller</strong> — two components were added during the work, each because
+something measurable failed without them.</p>
+
+<div class="kpi">
+  <div><b>$0.0109</b><span>cost per turn</span></div>
+  <div><b>52/52</b><span>routing accuracy</span></div>
+  <div><b>1.000</b><span>safeguarding recall &amp; precision</span></div>
+  <div><b>24/24</b><span>grounded answers citing</span></div>
+</div>
+
+<h2>Performance against the previous build</h2>
+<p>All previous figures below are read from that project's own recorded
+evaluation runs of 4 August 2026, 51 cases each, not reconstructed.</p>
+
+<table>
+  <tr>
+    <th>Configuration</th><th class="n">Acc.</th><th class="n">Unsafe</th>
+    <th class="n">Unhelpful</th><th class="n">Calls/turn</th>
+    <th class="n">Tokens/turn</th><th class="n">Cost/turn</th><th class="n">Median latency</th>
+  </tr>
+  <tr><td>A — no safeguarding layer</td><td class="n">0.784</td>
+      <td class="n bad">7</td><td class="n">1</td><td class="n">0.98</td>
+      <td class="n">3,938</td><td class="n">—</td><td class="n">5,476 ms</td></tr>
+  <tr><td>B — safeguarding, no evidence judge</td><td class="n good">0.882</td>
+      <td class="n">0</td><td class="n">5</td><td class="n">2.65</td>
+      <td class="n">3,848</td><td class="n">—</td><td class="n">7,058 ms</td></tr>
+  <tr><td>C — B plus the LLM evidence judge</td><td class="n bad">0.745</td>
+      <td class="n">0</td><td class="n bad">12</td><td class="n">3.53</td>
+      <td class="n">6,838</td><td class="n">—</td><td class="n">7,030 ms</td></tr>
+  <tr><td>B+ — full profile, five model roles</td><td class="n">0.843</td>
+      <td class="n">1</td><td class="n">6</td><td class="n bad">3.78</td>
+      <td class="n bad">8,599</td><td class="n bad">$0.0189</td><td class="n bad">12,410 ms</td></tr>
+  <tr style="background:#FAF8F6"><td><strong>This build</strong></td><td class="n">52/52 †</td><td class="n">—</td>
+      <td class="n">—</td><td class="n good">0.69</td>
+      <td class="n good">4,946</td><td class="n good">$0.0109</td><td class="n good">3,536 ms</td></tr>
+</table>
+<p class="note">† Not the same measure. The previous action accuracy was scored by an LLM judge
+over 51 cases against a different scope and corpus; this build's 52/52 is
+deterministic routing accuracy. The columns that <em>are</em> directly comparable are
+calls, tokens, cost and latency — all measured over 51 and 52 cases respectively,
+priced with the same OpenRouter table.</p>
+
+<div class="kpi">
+  <div><b>5.5×</b><span>fewer model calls per turn</span></div>
+  <div><b>1.7×</b><span>fewer tokens per turn</span></div>
+  <div><b>42%</b><span>lower cost per turn</span></div>
+  <div><b>38%</b><span>of turns need no model</span></div>
+</div>
+
+<h3>What that comparison does and does not support</h3>
+<p><strong>Cost and consumption are the robust numbers.</strong> They are properties
+of the architecture and do not move with network conditions.
+<strong>0.69 model calls per turn against 3.78</strong> — a 5.5× reduction — and
+<strong>4,946 tokens per turn against 8,599</strong>, which prices at
+<strong>$0.0109 per turn against $0.0189</strong>. Twenty of the fifty-two messages
+reached no model at all, and those are the turns where it matters most: every
+safeguarding reply is assembled from approved text and verified table rows in
+<strong>0 ms</strong>.</p>
+
+<p class="note">Per-turn call rate varies with the mix of questions. On the 52-message decision
+set, which is deliberately heavy in safeguarding and out-of-scope cases, it is
+0.69. On the 38-turn conversation set, which is mostly questions, it is 1.03.
+Both are reported rather than the flattering one.</p>
+
+<p><strong>Latency is a weaker claim and is presented as one.</strong> The previous
+project's own two runs of the identical System B recorded 3,993 ms and 7,058 ms —
+a 3,065 ms spread from provider variance alone. Against B+ the improvement is
+large and consistent with removing most of the model calls; against B it is
+inside the noise. The defensible statement is that this build does the same work
+in roughly one call instead of four, and latency followed.</p>
+
+<p>The two accuracy columns are not directly comparable: the previous action
+accuracy was scored by an LLM judge over 51 cases against a different scope and
+a different corpus. This build's equivalent is 52/52 on deterministic routing,
+measured differently and reported separately below.</p>
+
+<h3>The ablation that shaped this build</h3>
+<p>The clearest finding in the previous project's own data is what the evidence
+judge cost. Comparing B with C, which differ only by that component:</p>
+<ul>
+  <li>Action accuracy <strong>0.882 → 0.745</strong>, a drop of 13.7 points</li>
+  <li>Unhelpful refusals <strong>5 → 12</strong>, more than doubled</li>
+  <li>Unsafe actions <strong>0 → 0</strong>. It prevented nothing in that run</li>
+</ul>
+<p>A component that refuses seven more girls and prevents no additional harm is
+not a safety feature. That single comparison is the strongest argument in this
+project for deletion over addition, and it came from the previous build's own
+measurements rather than from taste.</p>
+
+<h2 class="brk">Architecture</h2>
+<p><code>validate → safeguarding screen → route → resolve* → prepare* → retrieve → generate → check</code>
+<br><span class="note">* conditional. Neither is a universal stage.</span></p>
+
+<p><strong>Only generation uses a hosted LLM.</strong> Routing, safeguarding, resolution,
+query preparation and validation are deterministic rules. Embeddings run locally
+on <code>bge-m3</code>, so no question leaves the machine to be encoded and there
+is no per-query embedding cost.</p>
+
+<p><strong>The safeguarding screen is a gate, not a route.</strong> It runs first on
+every message, and when it fires nothing downstream executes: no retrieval, no
+model call, no validator. That ordering is the single most important decision in
+the build, because retrieval cannot decline — a deliberately out-of-scope
+question was measured retrieving at 0.668, above most in-scope ones.</p>
+
+<h3>Two output contracts, chosen by provenance</h3>
+<table>
+  <tr><th></th><th>Grounded</th><th>Conversational</th></tr>
+  <tr><td>Used for</td><td>factual, access</td><td>greetings, support, her ambitions</td></tr>
+  <tr><td>Safe because</td><td>every claim carries a citation</td><td>it makes no claim at all</td></tr>
+  <tr><td>Blocked on</td><td>an uncited claim</td><td>a citation marker with no passage</td></tr>
+</table>
+<p>Which contract applies is decided by which path produced the turn, never
+inferred from whether citations happen to be present.</p>
+
+<h3>Detect broadly, escalate narrowly</h3>
+<p>One safeguarding route, two severities, implemented as one boolean.
+<strong>Urgent</strong> — force, threat, assault, contraceptive sabotage, self-harm —
+puts verified contacts in front of her. A <strong>concern</strong> — pressure,
+conditional consent, <em>"he keeps asking"</em> — is recognised as safeguarding and
+answered as a conversation, with contacts offered rather than pushed. Treating
+every coercion signal as an emergency both reads as being passed on when she came
+to talk, and at scale buries the services in cases that were never emergencies.
+Nothing contacts anyone on her behalf.</p>
+
+<h2>Evaluation</h2>
+<p>Five sets, 159 labelled items, each with criteria fixed before the run.</p>
+
+<h3>1 · Decision layer — 52 messages</h3>
+<table>
+  <tr><th>Metric</th><th class="n">Result</th><th>Note</th></tr>
+  <tr><td>Overall accuracy</td><td class="n good">52/52</td><td>1.000</td></tr>
+  <tr><td>Safeguarding recall</td><td class="n good">12/12</td><td>1.000</td></tr>
+  <tr><td>Safeguarding precision</td><td class="n good">12/12</td><td>1.000</td></tr>
+  <tr><td>Contrast pairs</td><td class="n good">6/6</td><td>same surface form, different path</td></tr>
+</table>
+
+<h3>2 · Retrieval — 31 questions, tagged by Theory-of-Change driver</h3>
+<table>
+  <tr><th>Metric</th><th class="n">Natural</th><th class="n">Prepared</th><th class="n">Oracle</th></tr>
+  <tr><td>Adequate@5 — a passage that <em>answers</em> her</td><td class="n">0.880</td><td class="n good">0.960</td><td class="n">1.000</td></tr>
+  <tr><td>Hit@5</td><td class="n">0.926</td><td class="n">0.963</td><td class="n">0.926</td></tr>
+  <tr><td>MRR</td><td class="n">0.883</td><td class="n">0.920</td><td class="n">0.864</td></tr>
+  <tr><td>Agency drivers, mean MRR</td><td class="n">0.611</td><td class="n good">0.750</td><td class="n">0.889</td></tr>
+</table>
+<p class="note">Gold labels are source-level, so Hit@5 is an optimistic upper bound and is
+reported as one. Questions are tagged by the eight behavioural drivers rather
+than generic RAG categories, because knowledge is one driver of eight: this
+retriever scored knowledge MRR 1.000 while self-identity sat at 0.417.</p>
+
+<h3>3 · Multi-turn — 4 journeys, 23 turns</h3>
+<p>Forbidden passages <strong>1 → 0</strong>. Before conversation state existed,
+<em>"and does it hurt?"</em> asked after a question about the implant retrieved
+<strong>female sterilization</strong>, and <em>"where can I go?"</em> after a coercion
+disclosure retrieved <strong>BTL</strong>, which is permanent. Path accuracy 21/23;
+the two disagreements are disputed labels, ours, left uncorrected and documented.</p>
+
+<h3>4 · Mixed-intention messages — 15 messages</h3>
+<p>Wanted evidence <strong>8 → 9</strong> of 14, unwanted passages <strong>4 → 3</strong>,
+and a purely emotional control that now retrieves nothing at all. Clause-level
+retrieval, with no word list deciding which clause is the health question — the
+similarity scores do that.</p>
+
+<h3>5 · Conversation quality — 19 journeys, 38 turns</h3>
+<table>
+  <tr><th>Property</th><th class="n">Result</th></tr>
+  <tr><td>Grounded turns that cite a source</td><td class="n good">24/24 · 100%</td></tr>
+  <tr><td>Reply matches her register</td><td class="n good">38/38 · 100%</td></tr>
+  <tr><td>Usable reply, not a refusal</td><td class="n good">38/38 · 100%</td></tr>
+  <tr><td>Free of a deferral</td><td class="n good">38/38 · 100%</td></tr>
+  <tr><td>Free of machinery talk</td><td class="n">37/38 · 97%</td></tr>
+  <tr><td>Free of a passive standing offer</td><td class="n">36/37 · 97%</td></tr>
+  <tr><td>Gives her somewhere to go next</td><td class="n">32/37 · 86%</td></tr>
+</table>
+<p><strong>There is no LLM judge, and warmth is not measured.</strong> Every property
+above is defined in advance and checkable by reading the text, so the score means
+the same thing on every run and any row can be verified by hand. Warmth cannot be
+measured honestly, and the previous build used a judge for exactly that — it
+refused a girl's compliment, twice.</p>
+
+<h2 class="brk">Getting her to a service</h2>
+<p>The Theory of Change runs behavioural drivers → intent → <strong>service access</strong>
+→ behaviour change. A system that answers every question well and never gets her
+to a service has done the easy half.</p>
+<table>
+  <tr><th>Her turn</th><th>What she gets</th></tr>
+  <tr><td>"Where can I get family planning near me?"</td><td>the cited answer, plus Marie Stopes and One2One with numbers</td></tr>
+  <tr><td>"Where can I go for an HIV test?"</td><td>routed to the HIV/STI rows, off her words</td></tr>
+  <tr><td>discloses coercion, then "where can I go?"</td><td>the help pathway, <strong>0 model calls</strong></td></tr>
+  <tr><td>self-harm risk</td><td>crisis lines in front of her, not behind a tap</td></tr>
+  <tr><td>pressure without force</td><td>contacts offered behind the tap, not pushed</td></tr>
+</table>
+<p>Contacts are read from a verified table and <strong>never generated</strong>. No
+corpus chunk contains a phone number, so a number in generated text came from the
+model's memory, and the validator treats that as fatal. A row reaches a girl only
+once it carries a source, a checker and a date.</p>
+
+<h2>What the work actually found</h2>
+<p>Every defect below was found during this build. Several were invisible to the
+evaluation sets and surfaced only when a person typed a real sentence into the
+demo — which is the strongest argument in this report for user testing.</p>
+<table>
+  <tr><th>Defect</th><th>Why it mattered</th></tr>
+  <tr><td>Self-harm detected by a flag nothing set</td>
+      <td>The pipeline tested a tag against a list of regex source strings. Every
+      self-harm disclosure phrased in English received the ordinary safeguarding
+      reply instead of the urgent one with crisis numbers. Nothing errored.</td></tr>
+  <tr><td>The phone check fired on page numbers</td>
+      <td>Fatal, so an otherwise correct cited answer mentioning "p. 116" would
+      have been refused. Found by verifying a claim written in the README.</td></tr>
+  <tr><td>A 48-word message classified as small talk</td>
+      <td>It opened with "thanks". Her HIV question never reached the corpus.</td></tr>
+  <tr><td>Support turns held to the grounded contract</td>
+      <td>The corpus has no answer to "I'm scared". It returned a passage about
+      rape at 0.627 to a girl who said she was nervous about the clinic.</td></tr>
+  <tr><td>A word list fitted to one failing example</td>
+      <td>Tested on five phrasings written afterwards it fired on two, and one
+      miss retrieved a passage about rape. Replaced with clause-level retrieval.</td></tr>
+</table>
+
+<h2>Known limitations</h2>
+<ul>
+  <li><strong>All five evaluation sets were written in-house.</strong> They are a
+  regression harness and a design instrument, not evidence about real girls.</li>
+  <li><strong>78% of the corpus is provider guidance</strong> — 1,326 clinical chunks
+  against 58 written for a young reader. The facts are right; the intended reader
+  is a clinician.</li>
+  <li><strong>Asking in Kiswahili costs 0.062 similarity</strong>, measured over five
+  matched pairs. Direct translation is handled; idiomatic Sheng is harder.</li>
+  <li><strong>Continuity sits at 86%</strong>, the weakest conversation metric and the
+  most recently added.</li>
+  <li><strong>Two multi-turn labels are disputed</strong>, ours, and left standing rather
+  than corrected after seeing the result.</li>
+</ul>
+
+<h2>What was deliberately not built</h2>
+<p>No LLM evidence judge, no output judge, no turn planner, no model-based query
+rewriter as a first resort, no conversation summariser, no entity tracker, no
+per-girl profile, no external monitoring vendor. Observability is a JSONL file
+holding operational fields only — no message text, no identifier for her —
+because an event log for a safeguarding product, kept by default, is a
+surveillance database with a dashboard on it.</p>
+
+<footer>
+  Trusted Aunti · build report · figures from the project's own evaluation runs.
+  Previous-build numbers: <code>evaluation/results/three_system_v2.json</code> and
+  <code>system_bplus.json</code>, 4 August 2026, 51 cases each.
+</footer>
