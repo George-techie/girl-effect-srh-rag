@@ -53,6 +53,17 @@ LIVED = re.compile(
 )
 
 
+#: Promising to answer instead of answering. On a grounded turn the passages are
+#: already in the prompt, so "I can look into that if you want" is the system
+#: offering to fetch what it is holding.
+DEFERRAL = re.compile(
+    r"\bi (can|could|will|would) (look (it |that )?up|look into|check|find out|"
+    r"go through|dig into)\b"
+    r"|\blet me (look|check|find)\b"
+    r"|\bi can (tell you more|share more)\b.{0,20}\bif you want\b",
+    re.IGNORECASE,
+)
+
 #: A dash used as punctuation: em, en, or a spaced hyphen doing the same job.
 #: Not a hyphen inside a word, and not a bullet at the start of a line.
 DASH = re.compile(r"[—–]|(?<=\s)-(?=\s)")
@@ -143,6 +154,16 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
         # output judge's mistake all over again. This exists so "the prompt says
         # not to" can be checked instead of believed.
         issues.append(f"{dashes} dash(es) used as punctuation")
+
+    deferral = DEFERRAL.search(draft)
+    if deferral and grounded:
+        # It is holding the passages and offering to go and find them. Recorded
+        # rather than fatal, because the reply is still warm and still hers --
+        # but it answered by promising to answer, which on a mixed message is
+        # how the factual half quietly disappears. Measured on the real one:
+        # top similarity 0.798, the right passage retrieved, zero citations.
+        issues.append(f"offers to look up what it already has: "
+                      f"{deferral.group(0)!r}")
 
     machinery = MACHINERY.search(draft)
     if machinery:
