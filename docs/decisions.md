@@ -445,3 +445,40 @@ and opens the door to whether he accepts a no. Girl Effect's Theory of Change
 runs through self-efficacy and negotiation, not knowledge alone. A system that
 answers perfectly and closes every thread is optimising for factual Q&A and
 against the outcome.
+
+## D-20 · Small talk has to actually be small
+
+**Decided.** The chat family is only consulted on messages of 12 words or
+fewer.
+
+**Why.** The chat patterns are anchored to the start of the message, so any
+message *beginning* with a pleasantry matched however long it ran. A girl wrote
+48 words: she thanked us for the support, said she had been isolated because he
+was her only source of comfort, and then asked directly about HIV risks and
+signs. The word "thanks" routed all of it to small talk. It never reached the
+corpus, so the one question in it went unanswered, and what she got back was an
+offer to go and look — for a topic the corpus covers well and cites three
+passages on.
+
+A greeting, a thanks and a goodbye are short by nature. Past that length she is
+saying something, and whatever she opened with was manners.
+
+**How it was found.** By pulling the event before touching the prompt. The
+reviewer's three hypotheses were sticky safeguarding, a generation failure, and
+weak retrieval; the trace said `path=chat, retrieved=0`, which was none of them.
+Thirty seconds of reading beat three plausible theories, which is the second
+time in this build that has been true.
+
+## D-21 · Safeguarding is context, not a mode
+
+**Decided.** A disclosure changes tone and the service route available. It never
+changes which path the *next* message takes.
+
+**Why.** `rules.decide` takes a string and nothing else, so this is true by
+construction — but it is exactly the kind of property that quietly stops being
+true, and the cost is specific: a girl who discloses that a partner removed a
+condom and then asks what HIV risks and signs are needs a grounded, cited
+answer, not a third helpline. Both things are true of the same conversation and
+neither cancels the other.
+
+Pinned by a test rather than left as an argument.

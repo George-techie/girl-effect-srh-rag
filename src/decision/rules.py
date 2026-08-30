@@ -335,6 +335,11 @@ _ACCESS = _res(
 #: to retrieve and nothing to cite -- and the grounded contract, which requires
 #: a citation, blocks the reply for having none. "hello aunti" reaching a
 #: fallback that says "I had trouble putting that answer together" is that bug.
+#: Longest a message can be and still be only small talk. A greeting, a thanks
+#: and a goodbye are short by nature; anything longer is a message that happens
+#: to begin politely.
+_CHAT_MAX_WORDS = 12
+
 _CHAT = _res(
     r"^\s*(hi|hey|hello|hallo|niaje|sasa|mambo|habari|jambo|yo)\b",
     r"^\s*(good (morning|afternoon|evening))\b",
@@ -493,7 +498,18 @@ def decide(message: str) -> Decision:
     # Chat before support. A greeting is short and warm and contains none of
     # the feeling words support looks for, but "asante sana" was matching
     # support's thanks pattern and being answered under the grounded contract.
-    matched = _hits(_CHAT, text)
+    #
+    # **Small talk has to actually be small.** The chat patterns are anchored to
+    # the start of the message, so any message *beginning* with a pleasantry
+    # matched however long it ran. A girl wrote 48 words -- she opened with
+    # "thanks for the willingness to give me support", told us she had been
+    # isolated, and then asked directly about HIV risks and signs -- and the
+    # word "thanks" routed the whole thing to small talk. It never reached the
+    # corpus, so the one question in it went unanswered.
+    #
+    # A greeting, a thanks and a goodbye are short by nature. Past this length
+    # she is saying something, and whatever she opened with was manners.
+    matched = _hits(_CHAT, text) if len(text.split()) <= _CHAT_MAX_WORDS else []
     if matched:
         return Decision(CHAT, "greeting or small talk", matched)
 

@@ -325,3 +325,55 @@ class TestIntensifiersDoNotDecideWhetherSheIsHeard:
             ("I want to be a doctor one day", rules.CHAT),
         ]:
             assert rules.decide(message).path == expected, message
+
+
+class TestSmallTalkHasToBeSmall:
+    """A girl wrote 48 words: she thanked us, said she had been isolated, and
+    asked directly about HIV risks and signs. It routed to `chat`, never
+    reached the corpus, and the one question in it went unanswered.
+
+    The chat patterns are anchored to the start of the message, so anything
+    *beginning* with a pleasantry matched however long it ran.
+    """
+
+    LONG_OPENING_WITH_THANKS = (
+        "thanks for the willingness to give me support. at that time i was just "
+        "isolated because he was my only source of comfort. could it be that i "
+        "contacted HIV during that time. so tell me more about HIV its risks, "
+        "signs, just information i should know right."
+    )
+
+    def test_a_long_message_that_opens_politely_is_not_small_talk(self):
+        assert rules.decide(self.LONG_OPENING_WITH_THANKS).path != rules.CHAT
+
+    def test_it_reaches_the_corpus(self):
+        assert rules.decide(self.LONG_OPENING_WITH_THANKS).retrieves is True
+
+    @pytest.mark.parametrize("message", [
+        "hello", "niaje", "hi aunti", "asante sana", "thanks aunti", "bye",
+        "who are you", "what can you do", "good morning",
+        "thank you so much aunti",
+    ])
+    def test_real_small_talk_still_is(self, message):
+        assert rules.decide(message).path == rules.CHAT, message
+
+
+class TestSafeguardingIsNotSticky:
+    """Context, not a mode. A disclosure changes tone and the service route it
+    can offer; it must not turn every later turn into emotional support.
+
+    `rules.decide` takes a string and nothing else, so this is true by
+    construction -- but it is the kind of property that quietly stops being true,
+    and it is the difference between answering her HIV question and handing her
+    a helpline for the third time."""
+
+    def test_an_explicit_question_after_a_disclosure_still_retrieves(self):
+        disclosure = ("my previous boyfriend would remove his condom without me "
+                      "knowing. he said he wants to feel the real thing.")
+        question = ("could it be that i contacted HIV during that time. tell me "
+                    "more about HIV its risks and signs, just information i "
+                    "should know.")
+        assert rules.decide(disclosure).path == rules.SAFEGUARDING
+        after = rules.decide(question)
+        assert after.path != rules.SAFEGUARDING
+        assert after.retrieves is True
