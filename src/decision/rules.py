@@ -311,8 +311,20 @@ _ASPIRATION = _res(
 #: material, the restatement retrieves policy literature.
 _SUPPORT = _res(
     # "i am" as well as "i'm". She types both, and only one was matched.
-    r"\bi('?m| am) (so |really |very )?(scared|afraid|frightened|worried|"
-    r"ashamed|embarrassed|nervous|anxious about|stupid|confused)\b",
+    #
+    # The intensifier used to be a fixed list -- `(so |really |very )?` -- which
+    # caught "i am so scared" and missed "i am just super scared", "i am super
+    # scared" and "im just so worried". A girl wrote *"what if i get pregnant
+    # and i become a young mother. i am just super scared"* and it fell through
+    # to `factual`, was held to a contract requiring a citation for a feeling,
+    # and was refused. Two words of intensifier decided whether she was heard.
+    #
+    # Any few words now sit between "I am" and the feeling. Over-matching here
+    # costs a warm reply where a factual one would also have worked; under-
+    # matching costs her the answer entirely, and those are not comparable.
+    r"\bi('?m| am)\s+(?:\w+\s+){0,3}?(scared|afraid|frightened|worried|"
+    r"ashamed|embarrassed|nervous|anxious|stressed|overwhelmed|lost|"
+    r"stupid|confused|terrified|panicking)\b",
     r"\bi feel\b|\bi'?m feeling\b|\bnaogopa\b|\bninaogopa\b",
     r"\bi (keep )?worry(ing)?\b|\bi don'?t know who to (talk|turn) to\b",
     r"\bwill (think|judge|say)\b.{0,30}\b(i'?m|me)\b|\bpeople will think\b",

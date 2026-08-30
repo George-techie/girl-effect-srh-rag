@@ -231,3 +231,38 @@ class TestHelpRequest:
 
         did_not_ask = pipeline.answer("My boyfriend forced me.")
         assert did_not_ask.followup is not None, "support first, offer the option"
+
+
+class TestIntensifiersDoNotDecideWhetherSheIsHeard:
+    """A girl wrote "what if i get pregnant and i become a young mother. i am
+    just super scared" and was refused.
+
+    The support pattern's intensifier was a fixed list -- so, really, very --
+    so "just super scared" matched nothing, fell through to `factual`, was held
+    to a contract requiring a citation for a feeling, and blocked. Two words
+    decided whether she was heard.
+    """
+
+    def test_any_intensifier_reaches_support(self):
+        for message in [
+            "i am just super scared",
+            "i am super scared",
+            "im just so worried",
+            "i am kind of nervous",
+            "im a bit embarrassed",
+            "i am completely overwhelmed",
+            "i am so scared",
+        ]:
+            assert rules.decide(message).path == rules.SUPPORT, message
+
+    def test_it_did_not_swallow_the_other_paths(self):
+        """Over-matching costs a warm reply where a factual one would do.
+        Under-matching costs her the answer. But neither may eat safeguarding."""
+        for message, expected in [
+            ("Does the implant hurt", rules.FACTUAL),
+            ("Where can I get the pill", rules.ACCESS),
+            ("my boyfriend says if I really loved him I would not use anything",
+             rules.SAFEGUARDING),
+            ("I want to be a doctor one day", rules.CHAT),
+        ]:
+            assert rules.decide(message).path == expected, message
