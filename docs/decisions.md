@@ -482,3 +482,32 @@ answer, not a third helpline. Both things are true of the same conversation and
 neither cancels the other.
 
 Pinned by a test rather than left as an argument.
+
+## D-22 · Code-switching is a count, not a share
+
+**Decided.** Two Kiswahili or Sheng markers in a message put it in the mixed
+register, regardless of how long the message is.
+
+**Why.** The detector scored share only, so a deliberate switch diluted as the
+message grew. *"but pia nataka kumaliza shule before i start engaging in sex
+stuff at this point in my life"* scored **0.027** against a 0.12 threshold and
+was answered in flat English. She had switched on purpose, and the reply told
+her without saying so that it had not noticed. One marker can be a name or a
+coincidence; two in one message is someone writing the way she talks.
+
+The marker list also gained the function words it should have had from the
+start — `pia`, `tu`, `bado`, `kwanza`, `kumaliza`, `shule`. Those are exactly
+the words a girl drops into an English sentence, and every one was missing.
+
+**Matching means proportions.** The first fix produced near-full Kiswahili in
+reply to a mostly-English message, which is the same failure pointing the other
+way. The note now asks for her ratio, with a floor: mostly English gets a reply
+that is mostly English **and contains at least one Kiswahili clause**, because a
+reply with none has quietly declined to switch back.
+
+**A worked example nearly shipped a canned response.** Two runs in three opened
+with the example sentence verbatim, which would have handed every girl in that
+situation the same line. The example now uses an unrelated subject and says
+explicitly that it shows the blend and never the wording. This is the second
+time in this project that a worked example has been copied over the rule it was
+illustrating; the first cost three wrong diagnoses.

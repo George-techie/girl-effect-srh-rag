@@ -46,6 +46,14 @@ _SWAHILI = frozenset({
     # contraception and relationships.
     "mpenzi", "mchumba", "kondom", "mimba", "kuzuia", "uzazi", "ngono",
     "kufanya", "wanakaa", "wanafanya", "anataka", "nataka", "sitaki",
+    # More function words, which is what the list was always meant to be. These
+    # are the ones a girl drops into an otherwise English sentence -- "but pia
+    # nataka kumaliza shule" -- and every one of them was missing.
+    "pia", "tu", "bado", "kwanza", "halafu", "kisha", "ili", "labda",
+    "lazima", "naweza", "siwezi", "ndiyo", "hapana", "kweli", "uongo",
+    "tafadhali", "naomba", "kuhusu", "kwenda", "kumaliza", "kusoma",
+    "shule", "kazi", "nyumbani", "maisha", "ngumu", "rahisi", "haki",
+    "niko", "uko", "yuko", "tuko", "hawa", "wale", "zangu", "yetu",
 })
 
 #: Sheng is characterised less by a fixed lexicon than by code-switching and by
@@ -78,13 +86,24 @@ def detect(text: str) -> str:
     sheng = sum(1 for t in tokens if t in _SHENG)
     borrowed = len(_BORROWED_VERB.findall(text))
 
-    share = (swahili + sheng + borrowed) / len(tokens)
+    count = swahili + sheng + borrowed
+    share = count / len(tokens)
 
     # Borrowed-verb morphology is the strongest signal, so it decides on its own.
     if borrowed or (sheng and share >= 0.12):
         return SHENG_CODE_SWITCH
     if share >= 0.45:
         return KISWAHILI
-    if share >= 0.12:
+
+    # **Count as well as share, and this is the fix that mattered.** Share alone
+    # dilutes as a message gets longer, so a girl who writes thirty words of
+    # English and one deliberate Swahili clause -- "but pia nataka kumaliza
+    # shule before i start engaging in sex stuff" -- scored 0.027 and was
+    # answered in flat English. She had switched register on purpose, and the
+    # reply told her, without saying so, that it had not noticed.
+    #
+    # Two markers is the bar. One can be a name or a coincidence; two in the
+    # same message is someone writing the way she talks.
+    if share >= 0.12 or count >= 2:
         return MIXED
     return KENYAN_ENGLISH
