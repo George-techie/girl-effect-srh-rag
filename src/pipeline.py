@@ -459,6 +459,40 @@ def _answer(message: str, *, k: int | None = None,
         # A fabricated marker, an invented phone number or a claim of lived
         # experience still blocks. Those are not vocabulary problems.
         if checks.only_missing_citation(issues):
+            # Two different situations arrive here and only one of them is
+            # "there was nothing to cite".
+            #
+            # If retrieval came back *strong* and the model still cited nothing,
+            # the evidence was there and the generation failed. Measured at
+            # temperature 0.3: the same message cited 4 times out of 5 and on the
+            # fifth produced a warm reply that quietly dropped the factual half.
+            # Falling straight through hides that, because a conversational
+            # reply looks fine -- it just answers less than it could have.
+            #
+            # So it is retried once, with the omission named. Only a second
+            # failure is treated as evidence that there was nothing to say.
+            strong = bool(hits) and hits[0].similarity >= rescue.WEAK_BELOW
+            if strong and not trace.get("retried"):
+                trace["retried"] = True
+                retry = _generate_grounded(
+                    message, decision, hits, history, language,
+                    insist=True,
+                )
+                if retry is not None:
+                    redo, fatal_again = retry
+                    if not fatal_again:
+                        trace["llm_calls"] = trace.get("llm_calls", 0) + 1
+                        trace["contract"] = "grounded"
+                        trace["latency_ms"] = int(
+                            (time.perf_counter() - started) * 1000)
+                        return Reply(
+                            text=checks.strip_markers(redo),
+                            path=decision.path,
+                            sources=_cited_sources(redo, hits),
+                            trace=trace,
+                        )
+                    trace["llm_calls"] = trace.get("llm_calls", 0) + 1
+
             trace["fell_through"] = "grounded answer had nothing to cite"
             return _converse(message, decision, trace, started, history, language)
         return Reply(responses.BLOCKED, decision.path, trace=trace)
@@ -645,3 +679,47 @@ def _converse(message: str, decision, trace: dict, started: float,
     if fatal:
         return Reply(responses.BLOCKED, decision.path, trace=trace)
     return Reply(checks.strip_markers(draft), decision.path, trace=trace)
+
+
+#: Appended only on a retry. Names the exact omission rather than repeating the
+#: whole contract, because the model already had the contract and followed every
+#: other part of it.
+INSIST = (
+    "\n\nYour previous attempt answered without citing anything. The passages "
+    "above do contain material relevant to her question. Answer it now, and put "
+    "the [S...] tag at the end of every sentence that states a fact from them. "
+    "Keep the warmth and the acknowledgement exactly as you had them."
+)
+
+
+def _generate_grounded(message, decision, hits, history, language,
+                       *, insist: bool = False):
+    """One grounded generation. Returns ``(draft, fatal)`` or None on error.
+
+    Split out so the retry path is the same code as the first attempt, rather
+    than a second copy that can drift away from it.
+    """
+    prompt = loader.load("answer")
+    question = message + (INSIST if insist else "")
+    try:
+        response = get_client().complete(
+            "generation",
+            prompt.messages(
+                language_label=language,
+                seriousness=SERIOUSNESS.get(decision.path, "personal"),
+                context_block="",
+                history_block=history,
+                context=_context(hits),
+                question=question,
+            ),
+            temperature=config.GENERATION_TEMPERATURE,
+            max_tokens=config.GENERATION_MAX_TOKENS,
+        )
+    except Exception:  # noqa: BLE001
+        return None
+
+    draft = response.text.strip()
+    if draft.upper().startswith(INSUFFICIENT):
+        return draft, True
+    _issues, fatal = checks.check(draft, n_passages=len(hits))
+    return draft, fatal
