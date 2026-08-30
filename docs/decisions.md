@@ -414,3 +414,34 @@ returned NONE and was not rescued, which is correct.
 **What would reverse it.** A cheaper tier that closes the same gap. The rate to
 watch is how often it fires: on clean questions almost never, on mixed messages
 about half.
+
+## D-19 · Conversation continuity: a standing offer is not a follow-up
+
+**Decided.** After she shares a feeling, a goal, a relationship or anything
+about her life, the reply ends with **one specific question built from something
+she has already said** — not with a standing offer, and never with a menu.
+
+**Why.** The answers were correct and the conversation was going nowhere.
+*"Whenever you're ready to talk about it"* and *"we can talk about your
+relationship or anything else"* are warm and completely passive: they hand the
+conversation back and leave her to do the work of restarting it. She came here
+rather than the other way round.
+
+**The distinction that made it work.** *Deflecting a topic is not ending a
+conversation.* She wrote *"Anyway, story for another day"* about the thing
+plainly bothering her, and the system agreed with her and closed the thread.
+But a girl who genuinely does not want to discuss something does not mention it.
+Naming it gently and asking one specific question is how she finds out it is
+allowed. A real goodbye is still received and not questioned.
+
+**Measured** over four runs at temperature 0.3 on the turn that failed:
+1/3 ended on a specific question before, 4/4 after, and *"thanks aunti, i am
+good now, bye"* still ends cleanly with no question attached.
+
+**Why it matters beyond tone.** The question the rule produces —
+*"How do you think he'll take it if you tell him that's where your head is
+at?"* — reaches back three turns to the boyfriend, leaves the decision with her,
+and opens the door to whether he accepts a no. Girl Effect's Theory of Change
+runs through self-efficacy and negotiation, not knowledge alone. A system that
+answers perfectly and closes every thread is optimising for factual Q&A and
+against the outcome.
