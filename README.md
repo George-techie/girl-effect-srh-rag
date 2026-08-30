@@ -291,6 +291,41 @@ measures the tuning, not the layer.
 
 ---
 
+### Experiment 4 — clause-level retrieval · **adopted**
+
+A girl sends a message, not a query, and it carries several intentions at once.
+Embedded as one vector they average, and the emotional material wins because
+there is more of it. Each clause is now searched separately and the results
+pooled by score; a clause whose best match sits below 0.55 contributes nothing.
+**No word list decides which clause is the health question — the scores do.**
+
+15 mixed-intention messages: wanted evidence **8 → 9** of 14, unwanted passages
+**4 → 3**, and a purely emotional control that now retrieves nothing at all.
+
+### Experiment 5 — conversation quality · **no judge**
+
+19 journeys, 38 turns, scored on properties defined in advance and checkable by
+reading the text.
+
+```
+grounded turns that cite a source     24/24   100%
+reply matches her register            38/38   100%
+usable reply, not a refusal           38/38   100%
+free of a deferral                    38/38   100%
+free of machinery talk                37/38    97%
+free of a passive standing offer      36/37    97%
+gives her somewhere to go next        32/37    86%
+model calls per turn                   1.03  ·  median latency 7.3 s
+```
+
+**Warmth is not on that list**, because it cannot be measured honestly. The
+previous build used an LLM judge for exactly that and it refused a girl's
+compliment, twice.
+
+Widening this from 23 turns to 38 immediately found two defects: an empty
+retrieval result that had become reachable for the first time, and `i feel`
+failing to match *"I just feel"*.
+
 ## Multi-turn, because she arrives with a conversation
 
 A girl does not send a query. She moves — contraception, what she wants to be,
@@ -391,6 +426,40 @@ that fragments are failing to resolve. You cannot learn who said what.
 
 ---
 
+## Getting her to a service, which is the point
+
+Girl Effect's Theory of Change runs behavioural drivers → intent → **service
+access** → behaviour change. Knowledge is one driver of eight. A system that
+answers every question beautifully and never gets her to a service has done the
+easy half and stopped.
+
+**Eight verified services, covering all eight routes.** Each has a source, a
+checker and a date. A row without those sits in the file and reaches nobody,
+which is a mechanism rather than a formality: a directory whose column says
+`verified_at` is worthless if the dates in it were invented.
+
+| Her turn | What she gets |
+|---|---|
+| *"Where can I get family planning near me?"* | the cited answer, **plus Marie Stopes and One2One with numbers** |
+| *"Where can I go for an HIV test?"* | routed to `hiv_sti` rows, off her words |
+| discloses coercion, then *"where can I go?"* | the help pathway, **0 model calls** |
+| self-harm risk | Befrienders and Red Cross **in front of her**, not behind a tap |
+| pressure, no force | contacts **offered** behind the tap, not pushed |
+
+Contacts are read from the table and **never generated**. No corpus chunk
+contains a phone number, so a number in generated text came from the model's
+memory — and the validator treats that as fatal.
+
+```bash
+python scripts/check_services.py     # what she gets on every route
+```
+
+This was missing while everything around it looked finished: `_with_contacts`
+was wired into the safeguarding paths only, so an access question returned a
+correct, cited explanation of what kind of provider exists and **no number to
+call**, while the rows sat in the table unused. It is now covered by tests that
+assert a real contact string reaches her.
+
 ## What is known to be wrong
 
 **The phone-number check was firing on page numbers.** Run over the corpus, the
@@ -409,12 +478,11 @@ README was true, and it was not.
 **Recall@5 fell 0.012 under query preparation.** One question's worth, inside the
 noise of 31. Reported because it moved.
 
-**Two service contacts are `unverified` and the system will not surface them.**
-They were carried over from the previous build with no source, date or checker.
-A table whose column says `verified_at` is worthless if the dates in it were
-invented, so they stay unverified and unreachable until a person confirms them.
-The schema, the fillable Word document and the guidance are all in place:
-[`data/services/`](data/services/).
+**The evaluation sets were all written in-house.** Five sets, 159 labelled
+items, and every one authored by the same people who wrote the rules. That makes
+them a regression harness and a design instrument, not evidence about real
+girls. The three most serious defects found this week came from a person typing
+real sentences into the demo, not from any of these files.
 
 **78% of corpus chunks are provider guidance** — 1,326 clinical against 58
 youth-facing. The facts are right; the reader they were written for is a
@@ -442,7 +510,7 @@ streamlit run app.py                                # the demo
 ```
 
 ```bash
-python -m pytest -q                                 # 120 tests
+python -m pytest -q                                 # 166 tests
 python scripts/eval_decision.py                     # 52/52
 python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
 python scripts/eval_retrieval.py --compare-prepared # Experiment 3

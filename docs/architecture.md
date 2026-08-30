@@ -272,21 +272,22 @@ flowchart LR
     DB[("ChromaDB<br/>cosine")]:::free
     TAG["citation tag · page ·<br/>section · document role"]:::free
 
-    SVC[("Service directory<br/><b>unverified</b>")]:::bad
+    SVC[("Verified service table<br/><b>8 services · 8 routes</b>")]:::local
 
     PDF --> CH --> DB
     CH --> TAG
     DB -.->|"top-5 passages"| OUT["Generation"]:::model
     TAG -.->|"source labels built from<br/>metadata, never written<br/>by the model"| OUT
-    SVC -.->|"gated: nothing surfaces<br/>until a person verifies it"| OUT
+    SVC -.->|"read, never generated"| OUT
 
     classDef src fill:#5B2340,stroke:#5B2340,color:#fff,font-weight:bold
     classDef free fill:#E8F4F3,stroke:#0E7A86,color:#123
     classDef model fill:#FFF4D6,stroke:#B8860B,color:#123,font-weight:bold
     classDef bad fill:#FBEAE4,stroke:#C04B2F,color:#123
+    classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
 ```
 
-**Zero of the 1,693 chunks contains a phone number**, so any number in a
+**No corpus chunk contains a phone number**, so any number in a
 generated answer is invented by definition — and the validator treats a
 phone-shaped string as fatal. Contacts are a table read, never generated, and
 the table is gated on human verification.

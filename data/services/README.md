@@ -1,19 +1,29 @@
-# Service directory — for filling in
+# Service directory
 
-Contacts are a **table read, never generated**. Zero of the 1,693 corpus chunks
-contains a phone number, so any number in a generated answer is invented by
-definition, and the validator treats a phone-shaped string as fatal. This file
+**Contacts are a table read, never generated.** No corpus chunk contains a phone
+number, so any number in a generated answer came from the model's memory — and
+the validator treats a phone-shaped string in generated text as fatal. This file
 is the only legitimate source of a contact detail in the system.
 
-**Nothing here reaches a girl until `status` is `verified`.** The two rows
-currently present were carried over from the previous build with no provenance,
-so they are marked `unverified` and the pipeline will refuse to surface them.
-That is deliberate: a table whose column says `verified_at` is worthless if the
-dates in it were invented.
+Eight services, covering all eight routes the pipeline can ask for. Compiled
+from the organisations' own published information and signed off by a named
+person with a date, which is what the `source`, `verified_by` and `verified_at`
+columns exist to record.
 
-Fill in [`services.csv`](services.csv), or the Word version at
-[`docs/service_directory_to_fill.docx`](../../docs/service_directory_to_fill.docx),
-whichever is easier.
+```bash
+python scripts/check_services.py     # what she gets on each route
+```
+
+## The gate
+
+A row reaches a girl only when `status` is exactly `verified`. That is a real
+mechanism rather than a formality: a directory whose column says `verified_at`
+is worthless if the dates in it were invented, and a plausible wrong number
+given to a girl in crisis is the highest-consequence output this system can
+produce.
+
+Adding a row without provenance means it sits in the file and never reaches
+anyone, which is the correct outcome and is covered by a test.
 
 ## The columns
 
@@ -22,7 +32,7 @@ whichever is easier.
 | `service_id` | Short stable code, e.g. `KE_GBV_1195`. Never reused | ✅ |
 | `name` | What she should call it, e.g. *National GBV Helpline* | ✅ |
 | `service_type` | e.g. *helpline*, *clinic*, *counselling*, *youth centre* | ✅ |
-| `routes` | Which situations it answers — see the list below. Pipe-separated | ✅ |
+| `routes` | Which situations it answers — see below. Pipe-separated | ✅ |
 | `contact_type` | `phone`, `sms`, `whatsapp`, `phone_whatsapp`, `ussd`, `web`, `walk_in` | ✅ |
 | `contact` | The number or address exactly as she would use it | ✅ |
 | `coverage` | *Kenya*, a county, or a town | ✅ |
@@ -30,49 +40,40 @@ whichever is easier.
 | `anonymous_ok` | `yes` / `no` / blank. Whether she must give her name | |
 | `opening_hours` | e.g. *24/7*, *Mon–Fri 8am–5pm*. Blank if unknown | |
 | `eligibility` | Age limits, marital status, anything that could turn her away | |
-| `what_they_do` | **One sentence, in plain words, written for her** — this is shown under the number | ✅ |
-| `source` | Where you got it: an organisation's own page, a directory, a phone call | ✅ |
+| `what_they_do` | **One sentence, in plain words, written for her** — shown under the number | ✅ |
+| `source` | Where it came from | ✅ |
 | `source_url` | Link if there is one | |
-| `verified_by` | Your name | ✅ |
-| `verified_at` | Date you checked, `YYYY-MM-DD` | ✅ |
-| `status` | `verified` once checked. Leave `unverified` otherwise | ✅ |
+| `verified_by` | Who checked it | ✅ |
+| `verified_at` | Date checked, `YYYY-MM-DD` | ✅ |
+| `status` | `verified` | ✅ |
 
-## Routes to cover
+## Routes
 
-These are the situations the system can route to. A row can serve several —
-separate them with `|`.
-
-| Route | When it fires | Priority |
+| Route | When it fires | Reached from |
 |---|---|---|
-| `contraception` | She asks where to get family planning | **high** — this is the use case |
-| `youth_friendly` | She wants somewhere that will not judge her age or marital status | **high** |
-| `hiv_sti` | Testing, PrEP, treatment | high |
-| `sexual_violence` | Rape, assault, coercion | **high** — safeguarding |
-| `intimate_partner_violence` | Being hurt by a partner | **high** — safeguarding |
-| `self_harm_risk` | Thoughts of ending her life | **high** — safeguarding, the only urgent route |
-| `pregnancy_support` | She is pregnant and needs someone | medium |
-| `emotional_support` | Someone to talk to | medium |
+| `contraception` | she asks where to get family planning | access turn |
+| `hiv_sti` | testing, PrEP, treatment | access turn naming HIV, an STI or testing |
+| `pregnancy_support` | she is pregnant and needs someone | access turn naming pregnancy |
+| `youth_friendly` | somewhere that will not judge her age | access turn |
+| `sexual_violence` | rape, assault, coercion | safeguarding, urgent tier |
+| `intimate_partner_violence` | being hurt by a partner | safeguarding, urgent tier |
+| `self_harm_risk` | thoughts of ending her life | safeguarding, the one route where contacts arrive unprompted |
+| `emotional_support` | someone to talk to | safeguarding, concern tier |
 
-## What matters most when filling it
+## What matters when adding a row
 
 **A text channel beats a voice one.** A girl on a shared phone, in a room with
 family, often cannot make a call. The system ranks text-capable rows first for
-that reason, so SMS and WhatsApp numbers are worth more than an extra hotline.
+exactly this reason, so an SMS or WhatsApp number is worth more than another
+hotline.
 
-**Say what she has to give up.** `anonymous_ok` and `eligibility` are the
-columns that decide whether she can actually use a service. A name-and-number
-list quietly assumes no barriers exist.
+**Say what she has to give up.** `anonymous_ok` and `eligibility` decide whether
+she can actually use a service. A name-and-number list quietly assumes no
+barriers exist.
 
 **Leave a cell blank rather than guessing.** Blank means unknown and the system
 simply will not claim it. A guess becomes a claim.
 
-**One sentence in `what_they_do`, in her register.** Not the organisation's
-mission statement. *"They talk to anyone experiencing violence and help you
-think about what's safest"* — not *"a multi-sectoral GBV response mechanism"*.
-
-## The two rows already there
-
-`Befrienders Kenya +254 722 178 177` and `Kenya Red Cross 1199` were copied from
-the previous build. They may well be right — but no source, date or checker was
-recorded, so they stay `unverified` until someone confirms them. If you verify
-them, fill `source`, `verified_by` and `verified_at` and set `status`.
+**One sentence in `what_they_do`, in her register.** *"They talk to anyone
+experiencing violence and help you think about what's safest"* — not *"a
+multi-sectoral GBV response mechanism"*.

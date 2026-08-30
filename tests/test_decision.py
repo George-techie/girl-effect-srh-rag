@@ -169,14 +169,27 @@ class TestPatternIntegrity:
     disclosures route to `factual` with no error anywhere.
     """
 
-    def test_no_control_characters_in_the_rule_source(self):
+    def test_no_control_characters_in_any_source_file(self):
+        """Widened after it happened a sixth time, in a file this test did not
+        cover.
+
+        It guarded rules.py alone. So when the same heredoc turned four word
+        boundaries into backspace bytes inside pipeline.py, the suite stayed
+        green and the access router quietly matched "prep" inside "prepare" and
+        "test" inside "latest". A guard that covers one file is a guard against
+        one file's version of the mistake.
+        """
         from pathlib import Path
 
-        import src.decision.rules as mod
-
-        source = Path(mod.__file__).read_text(encoding="utf-8")
-        bad = {c for c in source if ord(c) < 32 and c not in "\n\t"}
-        assert not bad, f"control characters in rules.py: {[hex(ord(c)) for c in bad]}"
+        root = Path(__file__).resolve().parents[1] / "src"
+        offenders = {}
+        for path in sorted(root.rglob("*.py")):
+            source = path.read_text(encoding="utf-8")
+            bad = {c for c in source if ord(c) < 32 and c not in "\n\t"}
+            if bad:
+                offenders[str(path.relative_to(root))] = [
+                    hex(ord(c)) for c in bad]
+        assert not offenders, f"control characters in source: {offenders}"
 
     def test_every_safety_pattern_matches_something(self):
         """A pattern that can never fire is worse than no pattern: it reads as

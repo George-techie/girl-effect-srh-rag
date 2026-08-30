@@ -124,7 +124,7 @@ def main() -> int:
             cell.width = Inches(width)
             run = cell.paragraphs[0].add_run(record.get(key, "") or "")
             run.font.size = Pt(8.5)
-            if key == "status" and (record.get(key) or "").strip() == "unverified":
+            if key == "status" and (record.get(key) or "").strip() != "verified":
                 run.font.color.rgb = RUST
                 run.bold = True
 
@@ -135,13 +135,12 @@ def main() -> int:
 
     # --- the note about the two existing rows --------------------------------
     doc.add_paragraph()
-    para(doc, "About the two rows already filled in", 12, True, RUST, 4)
+    para(doc, "Adding a service", 12, True, RUST, 4)
     para(doc,
-         "Befrienders Kenya and Kenya Red Cross were carried over from the "
-         "previous build. They may well be correct — but no source, date or "
-         "checker was ever recorded, so they are marked unverified and the "
-         "system will not surface them. If you confirm them, fill in Source, "
-         "Checked by and Date, and change Status to verified.",
+         "A row reaches a girl only once Source, Checked by and Date are filled "
+         "in and Status reads verified. Anything short of that sits in the file "
+         "and reaches nobody, which is deliberate: a directory whose column says "
+         "verified_at is worthless if the dates in it were invented.",
          10, False, None, 10)
 
     para(doc, "Priority order, if time is short: sexual_violence and "

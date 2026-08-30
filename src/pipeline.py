@@ -36,6 +36,7 @@ What is deliberately not here, and why, with the measurement in each case:
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -121,6 +122,25 @@ def _route_for(decision) -> str:
             return tag
     return "emotional_support"
 
+
+
+
+#: Which service route an access question should draw contacts from. Read off
+#: her words, deterministically, because "where can I get tested" and "where can
+#: I get the pill" need different rows and a second classifier would be a model
+#: call to answer a question a regex answers.
+_ACCESS_ROUTE = (
+    (re.compile(r"\b(hiv|sti|std|test(ed|ing)?|prep)\b", re.I), "hiv_sti"),
+    (re.compile(r"\b(pregnan\w+|antenatal|keep the baby|abortion)\b", re.I),
+     "pregnancy_support"),
+)
+
+
+def _access_route(message: str) -> str:
+    for pattern, route in _ACCESS_ROUTE:
+        if pattern.search(message):
+            return route
+    return "contraception"
 
 
 def _with_contacts(text: str, route: str, trace: dict[str, Any]) -> str:
@@ -510,8 +530,21 @@ def _answer(message: str, *, k: int | None = None,
             return _converse(message, decision, trace, started, history, language)
         return Reply(responses.BLOCKED, decision.path, trace=trace)
 
+    # **The service handoff.** Girl Effect's Theory of Change ends at service
+    # access, and an access turn that explains what kind of provider exists and
+    # then stops has done the easy half. The corpus can say a community health
+    # worker can give her pills; only the table can say which number to call.
+    #
+    # Appended after the answer rather than woven into it, because the model
+    # must never write a contact -- these rows are read, and the validator
+    # treats a generated phone number as fatal.
+    answer_text = checks.strip_markers(draft)
+    if decision.path == rules.ACCESS:
+        answer_text = _with_contacts(
+            answer_text, _access_route(message), trace)
+
     return Reply(
-        text=checks.strip_markers(draft),
+        text=answer_text,
         path=decision.path,
         sources=_cited_sources(draft, hits),
         trace=trace,
