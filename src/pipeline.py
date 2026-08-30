@@ -215,7 +215,13 @@ def _answer(message: str, *, k: int | None = None,
     #
     # Safe for the opposite reason to a grounded answer: that one is safe
     # because every claim is cited, this one because it makes no claim at all.
-    if decision.path == rules.CHAT:
+    # Support joins chat here, and for the same reason rather than a similar
+    # one: neither has anything to cite. A greeting makes no claim; a girl
+    # saying she is frightened is not asking for a fact. Grounding support
+    # turns retrieved somebody else's situation at 0.55-0.63 -- see
+    # `Decision.grounded` for what came back -- and blocked the answer when it
+    # could not cite it.
+    if decision.path in (rules.CHAT, rules.SUPPORT):
         return _converse(message, decision, trace, started, history)
 
     # She disclosed earlier, and has now asked where to go without naming a

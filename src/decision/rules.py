@@ -63,9 +63,10 @@ class Decision:
     def retrieves(self) -> bool:
         """Does this turn actually reach the corpus?
 
-        Chat has nothing to look up, out-of-scope must not look, and
-        safeguarding is answered entirely from approved text -- the pipeline
-        returns before the encoder is touched.
+        Chat has nothing to look up, out-of-scope must not look, safeguarding
+        is answered entirely from approved text, and support retrieves material
+        about somebody else's situation -- see `grounded` for the measurement.
+        Not searching those turns is also why they are fast.
 
         Safeguarding was missing from this list while the pipeline returned
         early anyway, so the property and the code disagreed and nothing
@@ -74,14 +75,32 @@ class Decision:
         question about the implant. Harmless there, because the query was
         discarded — but a property that lies is only ever harmless by accident.
         """
-        return self.path not in (OUT_OF_SCOPE, CHAT, SAFEGUARDING)
+        return self.path not in (OUT_OF_SCOPE, CHAT, SAFEGUARDING, SUPPORT)
 
     @property
     def grounded(self) -> bool:
         """Whether the reply must cite. The contract is chosen by which path
         produced it, never inferred from whether citations happen to be there --
-        an uncited grounded answer would otherwise validate itself."""
-        return self.path in (FACTUAL, ACCESS, SUPPORT)
+        an uncited grounded answer would otherwise validate itself.
+
+        **Support is not grounded, and that was measured.** A support turn is
+        about how she feels, and the corpus has no answer to "I'm scared" -- it
+        has clinical guidance. Asked to ground those turns it returned, at
+        similarities of 0.55-0.63:
+
+            "I am so scared someone will see me at the clinic"
+                -> "I was raped and I am worried that no one will believe me"
+            "worried about starting sex, want to focus on becoming a nurse"
+                -> "I'm not ready to become a father"
+
+        Requiring a citation there forces one of two failures: cite that at her,
+        or cite nothing and be blocked. The second is what happened -- a girl
+        described two years with her boyfriend, her fear, and her dream of
+        nursing, and got "I had trouble putting that answer together."
+
+        So support takes the conversational contract, which is safe for the
+        opposite reason to a grounded one: it makes no claim at all."""
+        return self.path in (FACTUAL, ACCESS)
 
 
 def _res(*patterns: str) -> tuple[re.Pattern[str], ...]:
