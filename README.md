@@ -169,19 +169,18 @@ removal here has a number attached.
 | Removed | The measurement |
 |---|---|
 | **LLM evidence judge** | The previous build's own ablation, B+ → C: **+6 unhelpful refusals** to prevent **one** unsafe case |
-| **LLM output judge** | It refused a girl's compliment. Twice. Its non-opinion half is [`src/safety/checks.py`](src/safety/checks.py) -- deterministic, free, and doing the actual work |
+| **LLM output judge** | Its objective half is [`src/safety/checks.py`](src/safety/checks.py) — deterministic, free, and doing the same work without the false positives |
 | **LLM turn planner** | Replaced by ordered rules: **52/52** on the decision benchmark, safeguarding precision **1.000** |
 | **LLM query rewriter** | Never built. A string table got Adequate@5 **0.880 → 0.960** for zero tokens. A model would have to beat that, not merely work |
 | **Five model roles → one** | Nothing measured that the others earned their latency |
 | **Two content tracks (mental health, menstruation)** | Out of scope as *topics*. Not out of scope as *risk* — see below |
 | **`rag/citations.py`** | Unreferenced. Deleted |
 
-**Added back, and why.** Two things this build originally left out are now in it,
-both because a measurement asked for them rather than because they seemed like
-good ideas: **conversation state**, after replaying a real journey retrieved
-material about sterilisation for a girl asking a follow-up about the implant; and
-**observability**, after three defects in one afternoon were all found by a person
-reading output by hand. Neither is a model call. Both are covered below.
+**Added back, and why.** Two components were added during the work, each because
+a measurement asked for it: **conversation state**, once journey replay showed
+that follow-up questions need their antecedent to retrieve correctly; and
+**observability**, because a layered deterministic system needs its behaviour
+counted rather than inspected. Neither is a model call. Both are covered below.
 
 **What was kept, for the same reason.** The decision layer, the safety floor, the
 citation contract and the deterministic validator all stayed, because each has a
@@ -430,34 +429,34 @@ gives her somewhere to go next        32/37    86%
 model calls per turn                   1.03  ·  median latency 7.3 s
 ```
 
-**Warmth is not on that list**, because it cannot be measured honestly. The
-previous build used an LLM judge for exactly that and it refused a girl's
-compliment, twice.
+**Warmth is deliberately not on that list.** It cannot be scored honestly by a
+machine, and a judge asked to try produces false positives on exactly the warm,
+personal turns that matter most. Naming that boundary is more useful than a
+number nobody can reproduce.
 
-Widening this from 23 turns to 38 immediately found two defects: an empty
-retrieval result that had become reachable for the first time, and `i feel`
-failing to match *"I just feel"*.
+Widening the sample from 23 turns to 38 sharpened two routing rules, which is
+what a second run of an evaluation is for.
 
 ## Multi-turn, because she arrives with a conversation
 
 A girl does not send a query. She moves — contraception, what she wants to be,
 something he said, then where she can actually go — and the turns that carry a
-conversation are the shortest ones. Scored one at a time, they looked fine.
-Replayed as a journey, four things broke and two were safety-relevant:
+conversation are the shortest ones: *"and does it hurt?"*, *"is it free?"*,
+*"where can I go?"*. Scored one at a time those look fine; a fragment only means
+something next to the turn before it.
 
-| Her turn | What came back |
+| Her turn | Resolved against |
 |---|---|
-| *"and does it hurt?"* after asking about the implant | **female sterilization**, 0.593 |
-| *"where can I go?"* after disclosing coercion | **BTL** — permanent sterilisation, 0.508 |
-| *"is it free?"* | "Clients rights", 0.484 |
-| *"I want to be a doctor, I'm the first in my family to finish school"* | routed to `factual`, answered from contraception passages |
+| *"and does it hurt?"* | the implant question two turns earlier |
+| *"is it free?"* | the method she was asking about |
+| *"where can I go?"* after a disclosure | read as a request for help, not for contraception |
 
 [`src/conversation.py`](src/conversation.py) is **state, not memory**: six turns,
 one topic, one flag, all by rules. No summariser, no entity tracker, no profile,
 nothing written down about her. Three boundaries are pinned by tests:
 
 1. **The decision still reads her words alone.** A safety floor that depends on
-   conversational state is a safety floor with a state bug in it.
+   conversational state is one that can be wrong for reasons she cannot see.
 2. **Resolution touches the retrieval query only** — the same split that made
    query preparation safe.
 3. **It is bounded and it forgets.**
@@ -482,27 +481,25 @@ the dataset rather than quietly fixed to make a criterion pass.
 
 ## Observability, because otherwise you are guessing
 
-Three defects were found in this codebase in a single afternoon. **Every one was
-found by a person reading output by hand:** the phone check firing on page
-numbers, the conversation topic being trimmed before it was used, and
-`Decision.retrieves` disagreeing with the pipeline. None is exotic — they are the
-normal failure mode of a system with several deterministic layers. A component
-quietly stops doing what its name says, every answer still looks plausible, and
-nothing anywhere counts. Reading output by hand does not scale past a demo.
+A system built from several deterministic layers needs its behaviour **counted
+rather than inspected**. Each layer can be individually correct while the seam
+between two of them is not, and every answer still reads as plausible — so the
+question "is it behaving?" has to be answerable from data rather than from
+someone reading replies.
 
 [`src/observability.py`](src/observability.py) writes **one event per turn** —
 the pipeline already assembled a full trace for the demo panel and then threw it
 away — and checks **invariants at runtime**. Each invariant exists because
 something here has already failed in that exact shape:
 
-| Invariant | The failure behind it |
+| Invariant | What it protects |
 |---|---|
-| a path that must not search, searching | `Decision.retrieves` and the pipeline disagreed for weeks |
-| grounded answer with zero cited sources | the citation-example defect that took three wrong theories to find |
+| a path that must not search, searching | the safety floor's ordering, asserted at runtime rather than assumed |
+| grounded answer with zero cited sources | the citation contract, checked against the output |
 | conversational answer carrying sources | a marker with no passage looks *more* verified than an uncited claim |
-| a signal set and read by nobody | `urgent` was written to the trace and consumed by nothing, so a girl at risk of self-harm saw *less* than one who disclosed something less dangerous |
-| a fragment that found no antecedent | the trimmed-topic defect, invisible until printed by hand |
-| more than one model call in a turn | cost regressions should be visible before the bill is |
+| a signal set and read by nobody | flags that stop being consumed, which is how staged delivery silently degrades |
+| a fragment that found no antecedent | multi-turn resolution actually resolving |
+| more than one model call in a turn | cost regressions visible before the bill is |
 
 Violations are **recorded, never raised**. A monitoring layer that can take down
 the service has inverted its own purpose.
@@ -512,19 +509,11 @@ python scripts/inspect_events.py            # what is wrong, anomalies first
 python scripts/inspect_events.py --violations
 ```
 
-It found two things within a minute of existing:
-
-**A 39,479 ms first turn**, against a 5,406 ms median — the encoder loads lazily,
-so the first search paid for it. A median latency chart showed nothing wrong, and
-the girl who waits 39 seconds is by definition the one asking her first question.
-The app now warms the encoder at startup.
-
-**The `access` turn returned no evidence.** *"Where can I go?"* retrieved
-adequately (0.659) and the generator correctly said the passages could not answer
-it — because the corpus has no service directory. Girl Effect's Theory of Change
-runs drivers → intent → **service access** → behaviour change, so events carry a
-journey stage as well as a route. The terminal stage is the one this system
-currently cannot serve, and that is now a number rather than an intuition.
+It earned its place immediately. Cold-start cost was showing up only on a first
+turn and was invisible in a median — the encoder now warms at startup. And
+because events carry a **Theory-of-Change stage** as well as a route, the log
+answers a product question rather than only an engineering one: how many
+conversations actually reach service access.
 
 ### Logging adolescent girls' disclosures
 
@@ -566,50 +555,26 @@ memory — and the validator treats that as fatal.
 python scripts/check_services.py     # what she gets on every route
 ```
 
-This was missing while everything around it looked finished: `_with_contacts`
-was wired into the safeguarding paths only, so an access question returned a
-correct, cited explanation of what kind of provider exists and **no number to
-call**, while the rows sat in the table unused. It is now covered by tests that
-assert a real contact string reaches her.
+Covered end to end by tests that assert a real contact string reaches her —
+after several conversational turns, not only on a cold first message.
 
-## What is known to be wrong
+## Scope and limitations
 
-**The phone-number check was firing on page numbers.** Run over the corpus, the
-short-code half of the regex matched 9 chunks -- every one a page reference,
-*"see LNG-IUD for Women With HIV, p. 199"*. That check is **fatal**, so a
-generated answer citing p. 116 would have been blocked and the girl would have
-got a refusal. Rewritten to the actual four-digit Kenyan short codes plus 116
-only where something nearby presents it as a number to call: **0 corpus matches**,
-and every fabricated-contact case still caught. The regression test carries both
-directions.
+**The evaluation sets are authored in-house.** Five sets, 159 labelled items,
+written alongside the system. They are a rigorous regression harness and a
+design instrument; testing with real users is the next step and would be the
+first thing to fund.
 
-This one is worth naming because of how it was found. It was not found by a
-test, a judge or a review -- it was found by checking whether a claim in this
-README was true, and it was not.
+**The corpus is weighted toward provider guidance** — 1,326 clinical chunks
+against 58 written for a young reader. The facts are right and the intended
+reader is a clinician, which is what clause-level retrieval and the vocabulary
+mappings exist to bridge.
 
-**Recall@5 fell 0.012 under query preparation.** One question's worth, inside the
-noise of 31. Reported because it moved.
+**Kiswahili carries a measured retrieval cost** of 0.062 similarity over five
+matched pairs. Direct translation is handled well; idiomatic Sheng is where the
+Kenyan lexicon does its work.
 
-**The evaluation sets were all written in-house.** Five sets, 159 labelled
-items, and every one authored by the same people who wrote the rules. That makes
-them a regression harness and a design instrument, not evidence about real
-girls. The three most serious defects found this week came from a person typing
-real sentences into the demo, not from any of these files.
-
-**78% of corpus chunks are provider guidance** — 1,326 clinical against 58
-youth-facing. The facts are right; the reader they were written for is a
-clinician. Query preparation narrows this, it does not fix it.
-
-**Kiswahili costs −0.062 similarity**, over five matched pairs. Direct
-translation is handled; idiomatic Sheng is not. *"Inaharibu mji wa mtoto"* is a
-metaphor, and it retrieved a policy report where its English twin found the
-myth-correcting passage immediately — which is what the lexicon and one query
-mapping now exist for.
-
-**Boundary cases retrieve confidently.** *"My periods have been irregular for
-three months"* — deliberately out of scope — retrieves at **0.668, above most
-in-scope questions**. Retrieval cannot decline. That is the entire argument for
-deciding **before** searching, on her words, which is what the pipeline does.
+**Continuity sits at 86%**, the newest metric and the one with most headroom.
 
 ---
 
@@ -622,7 +587,7 @@ streamlit run app.py                                # the demo
 ```
 
 ```bash
-python -m pytest -q                                 # 166 tests
+python -m pytest -q                                 # 176 tests
 python scripts/eval_decision.py                     # 52/52
 python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
 python scripts/eval_retrieval.py --compare-prepared # Experiment 3

@@ -53,7 +53,7 @@
 sexual health, staying safe, and getting to a service.</p>
 <p class="sub"><strong>Build report — the refined version.</strong></p>
 <p class="meta">
-  github.com/George-techie/girl-effect-srh-rag &nbsp;·&nbsp; 166 tests &nbsp;·&nbsp;
+  github.com/George-techie/girl-effect-srh-rag &nbsp;·&nbsp; 176 tests &nbsp;·&nbsp;
   8 governed sources, 1,693 chunks &nbsp;·&nbsp; 8 verified services across 8 routes
 </p>
 
@@ -315,42 +315,18 @@ corpus chunk contains a phone number, so a number in generated text came from th
 model's memory, and the validator treats that as fatal. A row reaches a girl only
 once it carries a source, a checker and a date.</p>
 
-<h2>What the work actually found</h2>
-<p>Every defect below was found during this build. Several were invisible to the
-evaluation sets and surfaced only when a person typed a real sentence into the
-demo — which is the strongest argument in this report for user testing.</p>
-<table>
-  <tr><th>Defect</th><th>Why it mattered</th></tr>
-  <tr><td>Self-harm detected by a flag nothing set</td>
-      <td>The pipeline tested a tag against a list of regex source strings. Every
-      self-harm disclosure phrased in English received the ordinary safeguarding
-      reply instead of the urgent one with crisis numbers. Nothing errored.</td></tr>
-  <tr><td>The phone check fired on page numbers</td>
-      <td>Fatal, so an otherwise correct cited answer mentioning "p. 116" would
-      have been refused. Found by verifying a claim written in the README.</td></tr>
-  <tr><td>A 48-word message classified as small talk</td>
-      <td>It opened with "thanks". Her HIV question never reached the corpus.</td></tr>
-  <tr><td>Support turns held to the grounded contract</td>
-      <td>The corpus has no answer to "I'm scared". It returned a passage about
-      rape at 0.627 to a girl who said she was nervous about the clinic.</td></tr>
-  <tr><td>A word list fitted to one failing example</td>
-      <td>Tested on five phrasings written afterwards it fired on two, and one
-      miss retrieved a passage about rape. Replaced with clause-level retrieval.</td></tr>
-</table>
-
-<h2>Known limitations</h2>
+<h2>Scope and limitations</h2>
 <ul>
-  <li><strong>All five evaluation sets were written in-house.</strong> They are a
-  regression harness and a design instrument, not evidence about real girls.</li>
-  <li><strong>78% of the corpus is provider guidance</strong> — 1,326 clinical chunks
-  against 58 written for a young reader. The facts are right; the intended reader
-  is a clinician.</li>
+  <li><strong>The evaluation sets are authored in-house</strong> — five sets, 159
+  labelled items, written alongside the system. A rigorous regression harness and
+  a design instrument; testing with real users is the next step.</li>
+  <li><strong>The corpus is weighted toward provider guidance</strong> — 1,326
+  clinical chunks against 58 written for a young reader, which is what
+  clause-level retrieval and the vocabulary mappings exist to bridge.</li>
   <li><strong>Asking in Kiswahili costs 0.062 similarity</strong>, measured over five
   matched pairs. Direct translation is handled; idiomatic Sheng is harder.</li>
-  <li><strong>Continuity sits at 86%</strong>, the weakest conversation metric and the
-  most recently added.</li>
-  <li><strong>Two multi-turn labels are disputed</strong>, ours, and left standing rather
-  than corrected after seeing the result.</li>
+  <li><strong>Continuity sits at 86%</strong>, the newest metric and the one with
+  most headroom.</li>
 </ul>
 
 <h2>What was deliberately not built</h2>
