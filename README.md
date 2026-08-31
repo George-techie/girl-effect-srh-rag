@@ -155,6 +155,12 @@ Five more diagrams in **[`docs/architecture.md`](docs/architecture.md)**: build
 time versus run time, why the safety floor runs before retrieval, the two output
 contracts, where the evidence comes from, and what each component had to prove.
 
+**Full write-up:** [`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)
+— the brief, the architecture, all five evaluations, the cost comparison against
+the previous build, and what is known to be wrong.
+
+---
+
 ## What was removed, and what it cost to find out
 
 Removing things is the easy half. Knowing which ones is the work, so every
@@ -162,7 +168,7 @@ removal here has a number attached.
 
 | Removed | The measurement |
 |---|---|
-| **LLM evidence judge** | The previous build's own ablation: it bought **+6 unhelpful refusals** to prevent one unsafe case, inside a variance floor of ~3 in 51 |
+| **LLM evidence judge** | The previous build's own ablation: accuracy **0.882 → 0.745**, unhelpful refusals **5 → 12**, unsafe cases prevented: **none** |
 | **LLM output judge** | It refused a girl's compliment. Twice. Its non-opinion half is [`src/safety/checks.py`](src/safety/checks.py) -- deterministic, free, and doing the actual work |
 | **LLM turn planner** | Replaced by ordered rules: **52/52** on the decision benchmark, safeguarding precision **1.000** |
 | **LLM query rewriter** | Never built. A string table got Adequate@5 **0.880 → 0.960** for zero tokens. A model would have to beat that, not merely work |
@@ -227,6 +233,50 @@ path her message took, so a warm greeting followed by a flatter answer reads as
 the service losing interest in her.
 
 ---
+
+## What it costs, against the build it replaces
+
+The previous project recorded its own evaluation runs on 4 August 2026, 51 cases
+each. These figures are read from those files, priced with the same OpenRouter
+table, and reproduced by `python scripts/eval_cost.py` over 52 cases.
+
+| Configuration | Acc. | Unsafe | Unhelpful | Calls/turn | Tokens/turn | Cost/turn | Median latency |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| A — no safeguarding layer | 0.784 | **7** | 1 | 0.98 | 3,938 | — | 5,476 ms |
+| B — safeguarding, no evidence judge | **0.882** | 0 | 5 | 2.65 | 3,848 | — | 7,058 ms |
+| C — B plus the LLM evidence judge | 0.745 | 0 | **12** | 3.53 | 6,838 | — | 7,030 ms |
+| B+ — full profile, five model roles | 0.843 | 1 | 6 | **3.78** | **8,599** | **$0.0189** | **12,410 ms** |
+| **This build** | 52/52 † | — | — | **0.69** | **4,946** | **$0.0109** | **3,536 ms** |
+
+**Against B+: 5.5× fewer model calls, 1.7× fewer tokens, 42% lower cost per
+turn.** Twenty of the fifty-two messages reached no model at all, and those are
+the turns where it matters most — every safeguarding reply is assembled from
+approved text and verified table rows in **0 ms**.
+
+† Not the same measure. The previous accuracy was scored by an LLM judge over a
+different scope and corpus; 52/52 here is deterministic routing accuracy. The
+comparable columns are calls, tokens, cost and latency.
+
+**The call rate depends on the question mix** — 0.69 on the decision set, which
+is heavy in safeguarding and out-of-scope cases, and 1.03 on the conversation
+set, which is mostly questions. Both are reported rather than the flattering one.
+
+**Latency is the weakest claim here.** The previous project's own two runs of
+the *identical* System B recorded 3,993 ms and 7,058 ms — a 3,065 ms spread from
+provider variance alone. The defensible statement is that this build does the
+same work in roughly one call instead of four, and latency followed.
+
+### The ablation that shaped this build
+
+Comparing B with C, which differ only by the LLM evidence judge:
+
+- action accuracy **0.882 → 0.745**
+- unhelpful refusals **5 → 12**
+- unsafe actions **0 → 0** — it prevented nothing in that run
+
+A component that refuses seven more girls and prevents no additional harm is not
+a safety feature. That comparison came from the previous build's own numbers,
+and it is the strongest argument in this project for deletion over addition.
 
 ## What is measured
 
@@ -515,6 +565,9 @@ python scripts/eval_decision.py                     # 52/52
 python scripts/eval_retrieval.py                    # Hit@5, MRR, by driver
 python scripts/eval_retrieval.py --compare-prepared # Experiment 3
 python scripts/eval_multiturn.py                    # four journeys, 23 turns
+python scripts/eval_conversation.py --include-mixed  # Experiment 5, costs calls
+python scripts/eval_cost.py                         # tokens and cost, costs calls
+python scripts/check_services.py                    # what she gets on each route
 python scripts/inspect_events.py                    # read the event log
 ```
 
