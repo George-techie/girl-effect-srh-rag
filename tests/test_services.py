@@ -153,3 +153,34 @@ class TestWhereQuestionsAlwaysReachAService:
         contacts = [s.contact for s in services.for_route("contraception")]
         assert any(c_ in reply.text for c_ in contacts), \
             "an access turn ended without a number she can call"
+
+
+class TestListRendering:
+    """A numbered list must number. Models put a blank line between items, which
+    is correct markdown and was being read as separate paragraphs -- each became
+    its own <ol>, so a three-item list rendered as 1. 1. 1.
+    """
+
+    REPLY = (
+        "There are a few options worth thinking about:\n\n"
+        "1. **Condoms.** The only method that protects against both.\n\n"
+        "2. **Pills, injections, implants or IUDs.** Safe for young people.\n\n"
+        "3. **Spermicides.** Among the least effective on their own.\n\n"
+        "Would it help to talk through how to bring it up with him?"
+    )
+
+    def test_items_separated_by_blank_lines_are_one_list(self):
+        from src.ui import theme
+        html = theme.bubble(self.REPLY)
+        assert html.count("<ol>") == 1, "the list restarted its numbering"
+        assert html.count("<li>") == 3
+
+    def test_the_lead_in_and_closing_stay_paragraphs(self):
+        from src.ui import theme
+        html = theme.bubble(self.REPLY)
+        assert html.count("<p>") == 2
+
+    def test_a_reply_with_no_list_is_untouched(self):
+        from src.ui import theme
+        html = theme.bubble("One thought.\n\nAnd another one.")
+        assert "<ol>" not in html and html.count("<p>") == 2

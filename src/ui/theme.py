@@ -560,6 +560,29 @@ _BOLD = re.compile(r"\*\*(\S.*?)\*\*", re.S)
 _ITEM = re.compile(r"^\s*(?:\d+[.)]|[-•*])\s+(.*)$")
 
 
+def _paragraphs(text: str) -> list[str]:
+    """Split into blocks, keeping a numbered list together as one block.
+
+    Models put a blank line between list items, which is correct markdown and
+    was being read here as three separate paragraphs. Each became its own
+    ``<ol>``, so a three-item list rendered as **1. 1. 1.** — she sees the
+    system cannot count, in the middle of an answer about contraception.
+
+    Consecutive item blocks are merged so the list is numbered once.
+    """
+    blocks = [p.strip() for p in text.split("\n\n") if p.strip()]
+    merged: list[str] = []
+    for block in blocks:
+        starts_item = bool(_ITEM.match(block.splitlines()[0]))
+        previous_ends_item = bool(
+            merged and _ITEM.match(merged[-1].splitlines()[-1]))
+        if starts_item and previous_ends_item:
+            merged[-1] += "\n" + block
+        else:
+            merged.append(block)
+    return merged
+
+
 def _inline(text: str) -> str:
     """Escape, then honour the one piece of markdown the system actually emits.
 
@@ -628,7 +651,7 @@ def bubble(
     else:
         label = ""
 
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    paragraphs = _paragraphs(text)
     body = "".join(_block(p) for p in paragraphs)
     # Her face beside her words. Without it a reply is text from a system; with
     # it there is someone at the other end, which is the whole point of naming
@@ -659,7 +682,7 @@ def typing() -> str:
 
 def streaming_bubble(text: str) -> str:
     """A partial reply, with a cursor, while it is still arriving."""
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    paragraphs = _paragraphs(text)
     body = "".join(_block(p) for p in paragraphs)
     return (
         f'<div class="row bot"><div class="avatar">{PERSONA_AVATAR}</div>'
