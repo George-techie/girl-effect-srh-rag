@@ -168,7 +168,7 @@ removal here has a number attached.
 
 | Removed | The measurement |
 |---|---|
-| **LLM evidence judge** | The previous build's own ablation: accuracy **0.882 → 0.745**, unhelpful refusals **5 → 12**, unsafe cases prevented: **none** |
+| **LLM evidence judge** | The previous build's own ablation, B+ → C: **+6 unhelpful refusals** to prevent **one** unsafe case |
 | **LLM output judge** | It refused a girl's compliment. Twice. Its non-opinion half is [`src/safety/checks.py`](src/safety/checks.py) -- deterministic, free, and doing the actual work |
 | **LLM turn planner** | Replaced by ordered rules: **52/52** on the decision benchmark, safeguarding precision **1.000** |
 | **LLM query rewriter** | Never built. A string table got Adequate@5 **0.880 → 0.960** for zero tokens. A model would have to beat that, not merely work |
@@ -279,17 +279,70 @@ same work in roughly one call instead of four, and latency followed.
 
 Comparing B with C, which differ only by the LLM evidence judge:
 
-- action accuracy **0.882 → 0.745**
-- unhelpful refusals **5 → 12**
-- unsafe actions **0 → 0** — it prevented nothing in that run
+| Step | Adds | Cost in unhelpful refusals | Unsafe prevented |
+|---|---|--:|--:|
+| B → B+ | output validator | **+1** | — |
+| B+ → C | LLM evidence judge | **+6** | 1 |
 
-A component that refuses seven more girls and prevents no additional harm is not
-a safety feature. That comparison came from the previous build's own numbers,
-and it is the strongest argument in this project for deletion over addition.
+The output validator is effectively free; the evidence judge costs six times
+that for one prevented case. So this build keeps deterministic output validation
+and drops the judge — which is the previous project's own recommendation, not a
+new one.
+
+## Evaluation, against the system it replaces
+
+The previous build shipped **System D** — its full configuration plus a
+conversation layer. D itself was never scored, so the closest benchmarked
+configuration is **System C** (full, including the LLM evidence judge), from
+that project's own recorded runs of 4 August 2026, 51 cases.
+
+Blank cells are honest: the previous build did not measure that dimension.
+
+| | Metric | Previous (System C) | This build | What it tells us |
+|---|---|:--:|:--:|---|
+| **Safeguarded** | Safeguarding recall | 1.000 | **12/12** | known disclosures detected |
+| | Safeguarding precision | — | **12/12** | no unnecessary escalation |
+| | Unsafe actions | 0 | — | |
+| **Accurate** | Retrieval Adequate@5 | — | **0.960** | the evidence can actually answer her |
+| | Grounded turns citing | — | **24/24** | factual answers stayed grounded |
+| | Routing accuracy | 0.766 macro F1 | **52/52** | |
+| **Reliable** | **Unusable outcomes** | **12/51** | **3/52 · 5.8%** | turns where she gets nothing useful\* |
+| | Multi-turn path accuracy | — | **21/23** | context survives a conversation |
+| | Forbidden retrievals | — | **0/23** | context stopped pulling wrong evidence |
+| **Resonant** | Register match | — | **38/38** | answered in the language she wrote in |
+| | Natural continuation | — | **32/37 · 86%** | the reply gives her somewhere to go |
+| | Standing offers avoided | — | **36/37** | fewer "I'm here if you need anything" dead ends |
+| | Deferrals avoided | — | **38/38** | never asks permission to answer what she asked |
+| **Cost** | LLM calls per turn | 3.53 | **0.69** | |
+| | Tokens per turn | 6,838 | **4,946** | |
+| | Median latency | 7,030 ms | **3,536 ms** | |
+
+**\* Not an exact like-for-like.** System C's *unhelpful actions* were scored by
+an LLM judge; this build counts deterministically. The three break down as
+**1 validator block + 2 no-evidence + 0 provider errors**. The eight correct
+out-of-scope declines are excluded, because declining a question the service
+deliberately does not cover is intended behaviour, not a refusal. Treat the
+comparison as directional.
+
+### Why the unusable rate is the number to look at
+
+System C had **zero unsafe actions** and **twelve unhelpful ones**. It looks
+excellent on safety and is a poor product, because a system that refuses
+everything is perfectly safe.
+
+> **Safety is not usefulness**, and measuring only one of them is how you ship
+> the other.
+
+The previous build's own component analysis isolates the cost precisely: adding
+the output validator cost **+1** unhelpful refusal, and adding the LLM evidence
+judge on top cost **+6** more while preventing **one** unsafe case. That is why
+this build keeps deterministic output validation and does not have an evidence
+judge — a distinction that only exists because that project built System B+ to
+separate the two.
 
 ## What is measured
 
-Four evaluations, each with criteria fixed **before** the run. Full write-ups in
+Five evaluations, each with criteria fixed **before** the run. Full write-ups in
 [`evaluation/`](evaluation/).
 
 ### Decision layer — 52 messages

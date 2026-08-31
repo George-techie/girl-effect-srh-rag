@@ -148,18 +148,65 @@ accuracy was scored by an LLM judge over 51 cases against a different scope and
 a different corpus. This build's equivalent is 52/52 on deterministic routing,
 measured differently and reported separately below.</p>
 
-<h3>The ablation that shaped this build</h3>
-<p>The clearest finding in the previous project's own data is what the evidence
-judge cost. Comparing B with C, which differ only by that component:</p>
-<ul>
-  <li>Action accuracy <strong>0.882 → 0.745</strong>, a drop of 13.7 points</li>
-  <li>Unhelpful refusals <strong>5 → 12</strong>, more than doubled</li>
-  <li>Unsafe actions <strong>0 → 0</strong>. It prevented nothing in that run</li>
-</ul>
-<p>A component that refuses seven more girls and prevents no additional harm is
-not a safety feature. That single comparison is the strongest argument in this
-project for deletion over addition, and it came from the previous build's own
-measurements rather than from taste.</p>
+<h3>Evaluation, by dimension</h3>
+<p>The previous build shipped <strong>System D</strong> — its full configuration
+plus a conversation layer. D itself was never scored, so the closest benchmarked
+configuration is <strong>System C</strong>. Blank cells are honest: that build
+did not measure the dimension.</p>
+
+<table>
+  <tr><th></th><th>Metric</th><th class="n">System C</th><th class="n">This build</th><th>What it tells us</th></tr>
+  <tr><td rowspan="2"><strong>Safeguarded</strong></td><td>Safeguarding recall</td>
+      <td class="n">1.000</td><td class="n good">12/12</td><td>known disclosures detected</td></tr>
+  <tr><td>Safeguarding precision</td><td class="n">—</td><td class="n good">12/12</td>
+      <td>no unnecessary escalation</td></tr>
+  <tr><td rowspan="3"><strong>Accurate</strong></td><td>Retrieval Adequate@5</td>
+      <td class="n">—</td><td class="n good">0.960</td><td>the evidence can actually answer her</td></tr>
+  <tr><td>Grounded turns citing</td><td class="n">—</td><td class="n good">24/24</td>
+      <td>factual answers stayed grounded</td></tr>
+  <tr><td>Routing accuracy</td><td class="n">0.766 F1</td><td class="n good">52/52</td><td></td></tr>
+  <tr><td rowspan="3"><strong>Reliable</strong></td><td><strong>Unusable outcomes</strong></td>
+      <td class="n bad">12/51</td><td class="n good">3/52 · 5.8%</td>
+      <td>turns where she gets nothing useful *</td></tr>
+  <tr><td>Multi-turn path accuracy</td><td class="n">—</td><td class="n">21/23</td>
+      <td>context survives a conversation</td></tr>
+  <tr><td>Forbidden retrievals</td><td class="n">—</td><td class="n good">0/23</td>
+      <td>context stopped pulling wrong evidence</td></tr>
+  <tr><td rowspan="4"><strong>Resonant</strong></td><td>Register match</td>
+      <td class="n">—</td><td class="n good">38/38</td><td>answered in the language she wrote in</td></tr>
+  <tr><td>Natural continuation</td><td class="n">—</td><td class="n">32/37 · 86%</td>
+      <td>the reply gives her somewhere to go</td></tr>
+  <tr><td>Standing offers avoided</td><td class="n">—</td><td class="n">36/37</td>
+      <td>fewer dead-ending replies</td></tr>
+  <tr><td>Deferrals avoided</td><td class="n">—</td><td class="n good">38/38</td>
+      <td>never asks permission to answer what she asked</td></tr>
+  <tr><td rowspan="3"><strong>Cost</strong></td><td>LLM calls per turn</td>
+      <td class="n">3.53</td><td class="n good">0.69</td><td></td></tr>
+  <tr><td>Tokens per turn</td><td class="n">6,838</td><td class="n good">4,946</td><td></td></tr>
+  <tr><td>Median latency</td><td class="n">7,030 ms</td><td class="n good">3,536 ms</td><td></td></tr>
+</table>
+<p class="note">* Not like-for-like. System C's unhelpful actions were LLM-judged; this build
+counts deterministically, and the three break down as <strong>1 validator block +
+2 no-evidence + 0 provider errors</strong>. The eight correct out-of-scope declines
+are excluded, because declining a question outside the service boundary is
+intended behaviour. Directional, not a precise percentage improvement.</p>
+
+<h3>Why the unusable rate is the number to look at</h3>
+<p>System C recorded <strong>zero unsafe actions and twelve unhelpful ones</strong>.
+It looks excellent on safety and is a poor product, because a system that refuses
+everything is perfectly safe.</p>
+<div class="quote"><strong>Safety is not usefulness</strong>, and measuring only
+one of them is how you ship the other.</div>
+<p>The previous build's own component analysis isolates the cost precisely,
+because it built System B+ specifically to separate the two additions:</p>
+<table>
+  <tr><th>Step</th><th>Adds</th><th class="n">Cost in unhelpful refusals</th><th class="n">Unsafe prevented</th></tr>
+  <tr><td>B → B+</td><td>output validator</td><td class="n">+1</td><td class="n">—</td></tr>
+  <tr><td>B+ → C</td><td>LLM evidence judge</td><td class="n bad">+6</td><td class="n">1</td></tr>
+</table>
+<p>The output validator is effectively free; the judge costs six times that for
+one prevented case. So this build keeps deterministic output validation and drops
+the judge — which is that project's own recommendation, not a new one.</p>
 
 <h2 class="brk">Architecture</h2>
 <p><code>validate → safeguarding screen → route → resolve* → prepare* → retrieve → generate → check</code>
