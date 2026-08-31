@@ -139,3 +139,19 @@ WHERE_TO_GO_AFTER_DISCLOSURE = (
     "You don't have to explain it as well as you just did to me. Saying "
     "\"someone is pressuring me\" is enough to start."
 )
+
+
+#: An access question the corpus cannot answer, which is most of them once she
+#: asks *where* rather than *what*. No document in the corpus knows what is near
+#: her; the verified table does, and this is the sentence that hands over to it.
+#:
+#: The failure this replaces: "I don't have anything solid enough in my sources
+#: to answer that properly" — returned to a girl asking where to get the implant,
+#: while Marie Stopes and One2One sat verified in the table two lines away. The
+#: Theory of Change ends at service access, and that turn is where it ended.
+ACCESS_HANDOFF = (
+    "I can't tell you which clinic is nearest to you, and I'd rather say that "
+    "than guess.\n\n"
+    "What I can give you is people who will know, and who are used to talking "
+    "to girls your age:"
+)

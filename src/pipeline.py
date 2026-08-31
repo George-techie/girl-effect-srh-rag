@@ -408,6 +408,12 @@ def _answer(message: str, *, k: int | None = None,
             trace["fell_through"] = "nothing retrievable, and never a lookup"
             return _converse(message, decision, trace, started, history, language)
         trace["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        if decision.path == rules.ACCESS:
+            trace["handed_off"] = True
+            return Reply(
+                _with_contacts(responses.ACCESS_HANDOFF,
+                               _access_route(message), trace),
+                decision.path, trace=trace)
         return Reply(responses.NO_EVIDENCE, decision.path, trace=trace)
 
     # --- generate ------------------------------------------------------------
@@ -466,6 +472,19 @@ def _answer(message: str, *, k: int | None = None,
         if decision.is_fallback:
             trace["fell_through"] = "not a lookup; nothing matched but the default"
             return _converse(message, decision, trace, started, history, language)
+
+        # **An access question the corpus cannot answer is not a dead end.**
+        # No document knows what is near her; the verified table does, and
+        # "where can I go" is exactly the question it exists to answer. This
+        # used to return "I don't have anything solid enough in my sources" to
+        # a girl asking where to get an implant, with Marie Stopes and One2One
+        # verified and two lines away.
+        if decision.path == rules.ACCESS:
+            trace["handed_off"] = True
+            return Reply(
+                _with_contacts(responses.ACCESS_HANDOFF,
+                               _access_route(message), trace),
+                decision.path, trace=trace)
 
         return Reply(responses.NO_EVIDENCE, decision.path, trace=trace)
 

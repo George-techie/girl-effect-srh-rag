@@ -318,7 +318,16 @@ _METHOD_ATTRIBUTED = _res(
 
 # --- 3 · access --------------------------------------------------------------
 _ACCESS = _res(
-    r"\bwhere (can|do) i (get|go|find)\b|\bnaweza pata\b.{0,30}\bwapi\b",
+    # Intervening words allowed, for the third time in this file. She writes
+    # "where can i actually go to get it", "where do i even go", "where can i
+    # just get them" -- and the fixed form matched none of them, so an access
+    # question became `factual`, never reached the service table, and was
+    # answered with "I don't have the clinic list in front of me". The whole
+    # Theory of Change ends at this turn.
+    r"\bwhere (can|do|could|should|would) (i|we|a girl|someone)\b"
+    r"(\s+\w+){0,3}?\s+(get|go|find|buy|access)\b",
+    r"\bwhere (to|do you) (get|go|find|buy)\b",
+    r"\bnaweza pata\b.{0,30}\bwapi\b|\bnaenda wapi\b|\bnipate wapi\b",
     r"\bwhere.{0,30}\b(clinic|chemist|pharmacy|hospital|get condoms)\b",
     r"\bwithout (my )?(parents?|mum|mother|dad|father|guardian)\b",
     r"\b(parental|parents?'?) (consent|permission|agreeing|knowing)\b",

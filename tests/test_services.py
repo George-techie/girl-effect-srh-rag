@@ -103,3 +103,53 @@ class TestSafeguardingReachesAService:
         assert any(c in reply.followup for c in contacts)
         assert not any(c in reply.text for c in contacts), \
             "contacts belong behind the tap on a concern, not in the opening"
+
+
+class TestWhereQuestionsAlwaysReachAService:
+    """The Theory of Change ends at service access, so "where can I go" must
+    never be a dead end. Two bugs conspired to make it one.
+
+    First the routing: `where (can|do) i (get|go|find)` is a fixed form, and she
+    writes "where can i ACTUALLY go to get it". That became `factual`, so the
+    service table was never consulted.
+
+    Then the handoff: even routed correctly, the corpus cannot answer *where* --
+    no document knows what is near her -- so the turn returned "I don't have
+    anything solid enough in my sources" while Marie Stopes and One2One sat
+    verified in the table two lines away.
+    """
+
+    @pytest.mark.parametrize("message", [
+        "okay so where can i actually go to get it?",
+        "where can i go to get it",
+        "where do i even go for this",
+        "where can i just get them",
+        "where should i go to get the pill",
+        "where can we find condoms",
+        "where to get family planning",
+    ])
+    def test_however_she_phrases_it_the_turn_is_access(self, message):
+        assert rules.decide(message).path == rules.ACCESS, message
+
+    @pytest.mark.parametrize("message", [
+        "where does the implant go in your arm",
+        "where did you get that idea",
+    ])
+    def test_a_where_that_is_not_about_going_somewhere_is_not_access(self, message):
+        assert rules.decide(message).path != rules.ACCESS, message
+
+    def test_a_where_question_reaches_a_contact_even_after_other_turns(self):
+        """The real shape: she talks first, then asks where."""
+        from src.conversation import Conversation
+
+        c = Conversation()
+        c.record_her("does the implant stop you having children later", "factual")
+        c.record_aunti("(answer about fertility returning)", "factual")
+
+        reply = pipeline.answer("okay so where can i actually go to get it?",
+                                conversation=c)
+        assert reply.path == rules.ACCESS
+        assert reply.trace.get("services"), "no service reached her"
+        contacts = [s.contact for s in services.for_route("contraception")]
+        assert any(c_ in reply.text for c_ in contacts), \
+            "an access turn ended without a number she can call"
