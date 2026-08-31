@@ -287,10 +287,10 @@ flowchart LR
     classDef local fill:#E6F2E8,stroke:#2E7D4F,color:#123
 ```
 
-**No corpus chunk contains a phone number**, so any number in a
-generated answer is invented by definition — and the validator treats a
-phone-shaped string as fatal. Contacts are a table read, never generated, and
-the table is gated on human verification.
+**No corpus chunk contains a phone number**, so any number in a generated
+answer would be invented by definition — and the validator treats a phone-shaped
+string as fatal. Contacts come from the verified table instead: eight services
+across eight routes, each carrying a source, a checker and a date.
 
 ---
 

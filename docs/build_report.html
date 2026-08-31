@@ -244,7 +244,7 @@ to talk, and at scale buries the services in cases that were never emergencies.
 Nothing contacts anyone on her behalf.</p>
 
 <h2>Evaluation</h2>
-<p>Five sets, 159 labelled items, each with criteria fixed before the run.</p>
+<p>Five evaluations over 121 labelled items, each with criteria fixed before the run.</p>
 
 <h3>1 · Decision layer — 52 messages</h3>
 <table>
@@ -292,11 +292,12 @@ similarity scores do that.</p>
   <tr><td>Free of a passive standing offer</td><td class="n">36/37 · 97%</td></tr>
   <tr><td>Gives her somewhere to go next</td><td class="n">32/37 · 86%</td></tr>
 </table>
-<p><strong>There is no LLM judge, and warmth is not measured.</strong> Every property
-above is defined in advance and checkable by reading the text, so the score means
-the same thing on every run and any row can be verified by hand. Warmth cannot be
-measured honestly, and the previous build used a judge for exactly that — it
-refused a girl's compliment, twice.</p>
+<p><strong>There is no LLM judge, and warmth is deliberately not measured.</strong>
+Every property above is defined in advance and checkable by reading the text, so
+the score means the same thing on every run and any row can be verified by hand.
+Warmth cannot be scored honestly by a machine — a judge asked to try produces
+false positives on exactly the warm, personal turns that matter most — and naming
+that boundary is more useful than a number nobody can reproduce.</p>
 
 <h2 class="brk">Getting her to a service</h2>
 <p>The Theory of Change runs behavioural drivers → intent → <strong>service access</strong>
@@ -317,8 +318,8 @@ once it carries a source, a checker and a date.</p>
 
 <h2>Scope and limitations</h2>
 <ul>
-  <li><strong>The evaluation sets are authored in-house</strong> — five sets, 159
-  labelled items, written alongside the system. A rigorous regression harness and
+  <li><strong>The evaluation sets are authored in-house</strong> — 121 labelled
+  messages and questions across four sets, written alongside the system. A rigorous regression harness and
   a design instrument; testing with real users is the next step.</li>
   <li><strong>The corpus is weighted toward provider guidance</strong> — 1,326
   clinical chunks against 58 written for a young reader, which is what
