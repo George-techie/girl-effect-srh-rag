@@ -68,7 +68,7 @@ Diagrams and the reasoning behind each choice:
 | **Accurate** | routing accuracy | 0.766 F1 | **52/52** |
 | | retrieval Adequate@5 | — | **0.960** |
 | | grounded turns citing | — | **24/24** |
-| **Reliable** | **unusable outcomes** | **12/51** | **3/52 · 5.8%** † |
+| **Reliable** | **unusable outcomes** | **12/51 · 23.5%** | **3/52 · 5.8%** † |
 | | forbidden retrievals | — | **0/23** |
 | **Resonant** | register match | — | **38/38** |
 | | natural continuation | — | **32/37 · 86%** |
