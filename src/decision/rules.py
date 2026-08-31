@@ -379,6 +379,22 @@ _ASPIRATION = _res(
     r"\bi want (a career|a better life|to make something of myself)\b",
 )
 
+#: An explicit request for information, however it is wrapped. Deliberately
+#: narrow: she has to actually ask, not merely mention a topic. A girl saying
+#: she is frightened is support; a girl saying she is frightened *and asking
+#: what happens at the clinic* has asked a question, and the answer is the
+#: reassurance.
+_ASKING = _res(
+    r"\btell me (what|how|about|more)\b|\bcan you tell me\b",
+    r"\bwhat (happens|do they do|will they do|should i expect|to expect)\b",
+    r"\bwhat (is|are) (it|they|the)\b.{0,30}\b(like|process)\b",
+    r"\bhow (does|do) (it|they|this) (work|go)\b",
+    r"\bwalk me through\b|\bexplain\b|\btalk me through\b",
+    r"\bwhat do they ask\b|\bwhat will they ask\b",
+    r"\bis it true\b|\bni kweli\b",
+    r"\bwhat are my options\b|\bwhat can i (use|do|take)\b",
+)
+
 # --- 5 · support -------------------------------------------------------------
 #: Feeling rather than question. Checked before `factual` because a girl saying
 #: she is frightened has not asked for information, and Experiment 2 measured
@@ -539,6 +555,20 @@ def decide(message: str) -> Decision:
 
     matched = _hits(_SUPPORT, text)
     if matched:
+        # **An explicit request for information wins over the feeling around
+        # it**, because the grounded contract can do both and the conversational
+        # one cannot. A grounded answer opens with an acknowledgement and then
+        # answers, cited; a conversational reply can only acknowledge, and on a
+        # turn like *"yes please tell me what happens, i am actually very
+        # scared"* that means the question she asked is never answered.
+        #
+        # This is the turn where intent becomes action -- she is frightened and
+        # asking what a clinic visit involves anyway -- so losing it costs more
+        # than any routing error in the set.
+        asking = _hits(_ASKING, text)
+        if asking:
+            return Decision(FACTUAL, "asked a question inside a feeling",
+                            matched + asking, help_requested=asked_for_help)
         return Decision(SUPPORT, "support", matched, help_requested=asked_for_help)
 
     return Decision(FACTUAL, "no other family matched — treated as factual",

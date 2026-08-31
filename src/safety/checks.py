@@ -75,7 +75,10 @@ DASH = re.compile(r"[—–]|(?<=\s)-(?=\s)")
 MACHINERY = re.compile(
     r"\b(the |these |those |my )?passages?\b"
     r"|\bknowledge base\b|\bretrieved\b|\bthe context i (have|was given)\b"
-    r"|\bthe documents? i\b|\bmy (source|document)s?\b",
+    r"|\bthe documents? i\b|\b(my|the) (source|document)s?\b"
+    # "I don't have the sources with me right now" — machinery talk and, on a
+    # grounded turn, untrue: the passages are in the prompt.
+    r"|\b(don'?t|do not) have the sources\b|\bsources with me\b",
     re.IGNORECASE,
 )
 

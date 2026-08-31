@@ -143,6 +143,48 @@ def _access_route(message: str) -> str:
     return "contraception"
 
 
+
+#: Topics where the useful next step is a real service rather than more
+#: explanation: testing, a clinic visit, actually obtaining a method.
+_ACTIONABLE = re.compile(
+    r"\b(test|tested|testing|hiv|sti|std|prep|screen\w*)\b"
+    r"|\b(clinic|facility|appointment|visit|go there|going there)\b"
+    r"|\b(get|start|begin|use) (the |an |a )?(pill|implant|injection|iud|"
+    r"coil|condom|contracepti\w+|family planning)\b",
+    re.IGNORECASE,
+)
+
+#: Asking what a thing involves, which is what a girl does when she is weighing
+#: whether to actually go. Shares its intent with rules._ASKING but is kept here
+#: because it decides presentation, not routing.
+_WEIGHING_IT_UP = re.compile(
+    r"\btell me (what|how|about|more)\b|\bwhat (happens|to expect|should i expect)\b"
+    r"|\bhow (does|do) (it|they|this) (work|go)\b|\bwalk me through\b"
+    r"|\bwhat (do|will) they (ask|do)\b|\bis it (painful|safe|free|private)\b"
+    r"|\bcan i just (walk|go)\b|\bdo i need\b",
+    re.IGNORECASE,
+)
+
+
+def _ready_to_act(message: str, topic: str | None = None) -> bool:
+    """Is she weighing up an actual visit rather than asking a general question?
+
+    Girl Effect's Theory of Change runs drivers -> **intent** -> service access.
+    This is the intent stage in a sentence: a girl who asks what happens at a
+    test has already half-decided to go, and answering only with an explanation
+    leaves her exactly where she started.
+
+    Both halves are required. "Does the implant hurt" is curiosity and gets no
+    contact list, because appending a helpline to every factual answer is noise,
+    and noise teaches her to skip the end of every message.
+    """
+    # The asking has to be in *this* message -- she is weighing it up now. The
+    # topic may sit in the conversation: "yes please tell me what happens" comes
+    # a turn after the one that established it was an HIV test.
+    subject = f"{message} {topic or ''}"
+    return bool(_ACTIONABLE.search(subject) and _WEIGHING_IT_UP.search(message))
+
+
 def _with_contacts(text: str, route: str, trace: dict[str, Any]) -> str:
     """Append verified contacts for a route, if any person has verified any.
 
@@ -558,9 +600,16 @@ def _answer(message: str, *, k: int | None = None,
     # must never write a contact -- these rows are read, and the validator
     # treats a generated phone number as fatal.
     answer_text = checks.strip_markers(draft)
-    if decision.path == rules.ACCESS:
+    if decision.path == rules.ACCESS or _ready_to_act(
+            message, conversation.topic if conversation else None):
+        # An access question, or a factual one asked by a girl who is clearly
+        # weighing up going. The Theory of Change ends at service access, and
+        # this is the turn where an explanation either becomes a visit or does
+        # not.
         answer_text = _with_contacts(
-            answer_text, _access_route(message), trace)
+            answer_text,
+            _access_route(f"{message} {conversation.topic if conversation else ''}"),
+            trace)
 
     return Reply(
         text=answer_text,

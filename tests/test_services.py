@@ -184,3 +184,50 @@ class TestListRendering:
         from src.ui import theme
         html = theme.bubble("One thought.\n\nAnd another one.")
         assert "<ol>" not in html and html.count("<p>") == 2
+
+
+class TestIntentBecomesAccess:
+    """Girl Effect's Theory of Change runs drivers -> **intent** -> service
+    access. A girl asking what happens at a test has already half-decided to go,
+    and answering with an explanation alone leaves her where she started.
+
+    The turn that prompted this: "yes please tell me what happens, i am actually
+    very scared if i even see that sign" -- asked one turn after establishing it
+    was about HIV. It returned a warm, cited answer and no way to act on it.
+    """
+
+    def test_asking_what_happens_about_testing_reaches_a_service(self):
+        c = Conversation()
+        c.record_her("could i have gotten HIV from that", "factual")
+        c.record_aunti("(testing is the only way to know)", "factual")
+
+        reply = pipeline.answer(
+            "yes please tell me what happens, i am actually very scared",
+            conversation=c)
+        assert reply.trace.get("services"), "she asked, and got no way to act"
+        contacts = [s.contact for s in services.for_route("hiv_sti")]
+        assert any(x in reply.text for x in contacts)
+
+    def test_the_topic_may_come_from_the_conversation(self):
+        """The asking is in this message; the subject was established earlier."""
+        assert pipeline._ready_to_act(
+            "yes please tell me what happens", "could i have gotten HIV")
+        assert not pipeline._ready_to_act("yes please tell me what happens", None)
+
+    @pytest.mark.parametrize("message", [
+        "what happens when i go for an HIV test",
+        "can i just walk into a clinic and get the pill",
+        "what do they ask at the clinic before testing",
+    ])
+    def test_weighing_up_a_visit_counts(self, message):
+        assert pipeline._ready_to_act(message)
+
+    @pytest.mark.parametrize("message", [
+        "Does the implant hurt?",
+        "does family planning make you infertile",
+        "i am so scared someone will see me",
+    ])
+    def test_curiosity_and_feeling_alone_do_not(self, message):
+        """Appending a helpline to every factual answer is noise, and noise is
+        how she learns to skip the end of every message."""
+        assert not pipeline._ready_to_act(message)
