@@ -246,7 +246,7 @@ table, and reproduced by `python scripts/eval_cost.py` over 52 cases.
 | B — safeguarding, no evidence judge | **0.882** | 0 | 5 | 2.65 | 3,848 | — | 7,058 ms |
 | C — B plus the LLM evidence judge | 0.745 | 0 | **12** | 3.53 | 6,838 | — | 7,030 ms |
 | B+ — full profile, five model roles | 0.843 | 1 | 6 | **3.78** | **8,599** | **$0.0189** | **12,410 ms** |
-| **This build** | 52/52 † | — | — | **0.69** | **4,946** | **$0.0109** | **3,536 ms** |
+| **This build** | 52/52 † | — | **3** | **0.69** | **4,946** | **$0.0109** | **3,536 ms** |
 
 **Against B+: 5.5× fewer model calls, 1.7× fewer tokens, 42% lower cost per
 turn.** Twenty of the fifty-two messages reached no model at all, and those are
@@ -256,6 +256,15 @@ approved text and verified table rows in **0 ms**.
 † Not the same measure. The previous accuracy was scored by an LLM judge over a
 different scope and corpus; 52/52 here is deterministic routing accuracy. The
 comparable columns are calls, tokens, cost and latency.
+
+**On the refusal column.** The previous build's "unhelpful actions" were scored
+by an LLM judge; this build's 3 are counted deterministically — a reply that was
+blocked by the validator, or that found no evidence, or that hit a provider
+error. Not the same instrument, so read it as the same order of magnitude rather
+than a precise ranking. The eight out-of-scope declines are excluded: declining
+a question the service deliberately does not cover is correct behaviour, not a
+refusal.
+
 
 **The call rate depends on the question mix** — 0.69 on the decision set, which
 is heavy in safeguarding and out-of-scope cases, and 1.03 on the conversation

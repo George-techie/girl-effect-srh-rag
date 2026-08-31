@@ -99,7 +99,7 @@ evaluation runs of 4 August 2026, 51 cases each, not reconstructed.</p>
       <td class="n">1</td><td class="n">6</td><td class="n bad">3.78</td>
       <td class="n bad">8,599</td><td class="n bad">$0.0189</td><td class="n bad">12,410 ms</td></tr>
   <tr style="background:#FAF8F6"><td><strong>This build</strong></td><td class="n">52/52 †</td><td class="n">—</td>
-      <td class="n">—</td><td class="n good">0.69</td>
+      <td class="n good">3</td><td class="n good">0.69</td>
       <td class="n good">4,946</td><td class="n good">$0.0109</td><td class="n good">3,536 ms</td></tr>
 </table>
 <p class="note">† Not the same measure. The previous action accuracy was scored by an LLM judge
@@ -107,6 +107,12 @@ over 51 cases against a different scope and corpus; this build's 52/52 is
 deterministic routing accuracy. The columns that <em>are</em> directly comparable are
 calls, tokens, cost and latency — all measured over 51 and 52 cases respectively,
 priced with the same OpenRouter table.</p>
+<p class="note">On the refusal column: the previous build's "unhelpful actions" were scored by an
+LLM judge; this build's 3 are counted deterministically — blocked by the
+validator, no evidence found, or a provider error. Not the same instrument, so
+read it as the same order of magnitude rather than a precise ranking. The eight
+out-of-scope declines are excluded, because declining a question the service
+deliberately does not cover is correct behaviour rather than a refusal.</p>
 
 <div class="kpi">
   <div><b>5.5×</b><span>fewer model calls per turn</span></div>
