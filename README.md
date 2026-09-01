@@ -115,11 +115,58 @@ python scripts/eval_retrieval.py --compare-prepared  # retrieval
 python scripts/eval_multiturn.py                     # conversations
 python scripts/eval_mixed.py                         # mixed-intention messages
 python scripts/eval_conversation.py --include-mixed  # conversation quality
+python scripts/eval_toc.py                           # Theory-of-Change journeys
 python scripts/eval_cost.py                          # tokens and cost
 ```
 
 **Full write-up:**
 **[`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)**
+
+---
+
+## Two journeys, end to end
+
+Girl Effect's Theory of Change runs **behavioural drivers → intent → service
+access → behaviour change**. Knowledge is one driver of eight, so a system can
+answer every question correctly and never move a girl toward a service. Two
+conversations are scored against it on every run.
+
+```bash
+python scripts/eval_toc.py --show
+```
+
+**A girl worried after unprotected sex, reaching HIV testing:**
+
+| She writes | Driver | Stage reached | |
+|---|---|---|:--:|
+| *"niaje aunti"* | rapport | rapport | |
+| *"my friend says you can tell if someone has HIV by looking at them"* | knowledge | knowledge | 2 cited |
+| *"we didnt use protection last month and i keep thinking about it"* | perceived risk | knowledge | |
+| *"i should get tested but i am scared what they will say about me"* | self-efficacy | confidence | |
+| *"tell me what actually happens when you go for an HIV test"* | **intent** | knowledge | 3 cited **+ contacts** |
+| *"where can i actually go for one?"* | **service access** | service access | **+ contacts** |
+| *"asante sana aunti, i will text them tomorrow"* | behaviour change | rapport | |
+
+> *"That fear is real, and it's probably the biggest thing standing between you
+> and getting tested, not the testing itself. A lot of girls worry more about
+> being judged than about the result. What are you imagining they'll say?"*
+
+**A girl held back by a myth and by family norms, reaching family planning** —
+answered in the register she wrote in:
+
+> **She:** *"watu wanasema family planning inaharibu mji wa mtoto. is that true?"*
+>
+> **Aunti:** *"Hiyo si kweli, na ni one of those misconceptions zinazoenea sana.
+> Family planning haiharibu mji wa mtoto (uterus) au uwezo wa kupata mtoto
+> baadaye. Njia nyingi za contraception ni reversible, meaning fertility inarudi
+> haraka baada ya kuacha kutumia."*
+
+Across both journeys, 14 turns: **stage reached as intended 14/14 · citation
+where required 14/14 · refusals 0/14**, and each ends with a number she can text.
+
+**An access question never ends in a refusal.** The answer to *"where can I go"*
+lives in the verified table rather than in generated text, so the table can
+answer it alone whatever happens to the draft.
 
 ---
 
