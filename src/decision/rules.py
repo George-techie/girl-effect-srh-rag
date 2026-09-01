@@ -355,6 +355,16 @@ _CHAT = _res(
     r"\bhello aunti\b|\bhi aunti\b|\bhey aunti\b|\baunti\?*$",
     r"^\s*(thanks|thank you|asante|nashukuru)\b|\bthank you\b\s*[.!]?\s*$",
     r"^\s*(bye|goodbye|kwaheri|later|ok|okay|sawa)\s*[.!]?\s*$",
+    # She says she is going to do it. The Theory of Change's last stage arrives
+    # as a short sentence -- "sawa, nitaenda this weekend", "poa, i'll call
+    # them" -- and it is not a question. Answering it with a cited paragraph
+    # talks over the moment the whole conversation was for.
+    #
+    # Safe only because the chat family is gated to twelve words: a long message
+    # that happens to open with "sawa" is not a goodbye.
+    r"^\s*(sawa|poa|haya|nzuri|asante|thanks)\b.{0,60}"
+    r"\b(nitaenda|nitajaribu|nitawapigia|nitatext|i'?ll go|i will go|"
+    r"i'?ll call|i will call|i'?ll text|i will text|i'?ll try|i will try)\b",
     r"\bwho are you\b|\bwhat (can|do) you (do|help with)\b|\bwewe ni nani\b",
     r"^\s*\w{1,12}\s*[?!.]?\s*$",
 )

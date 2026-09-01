@@ -231,3 +231,29 @@ class TestIntentBecomesAccess:
         """Appending a helpline to every factual answer is noise, and noise is
         how she learns to skip the end of every message."""
         assert not pipeline._ready_to_act(message)
+
+
+class TestAnAccessQuestionNeverRefuses:
+    """The Theory of Change's terminus must not be left to chance.
+
+    "where can i actually go for one?" refused on one run and succeeded on the
+    next, at the single turn the whole conversation exists to reach. Whatever
+    goes wrong with a generated draft, the answer to "where can I go" lives in
+    the verified table rather than in the text, so the table can answer alone.
+    """
+
+    @pytest.mark.parametrize("message", [
+        "where can i actually go for one?",
+        "where can i get it near me?",
+        "where do i even go for family planning",
+    ])
+    def test_it_always_ends_with_a_contact(self, message):
+        from src.safety import responses
+
+        reply = pipeline.answer(message, conversation=Conversation())
+        assert reply.text not in (
+            responses.BLOCKED, responses.NO_EVIDENCE, responses.TECHNICAL), \
+            "an access question refused"
+        assert reply.trace.get("services"), message
+        contacts = [s.contact for s in services._load()]
+        assert any(c in reply.text for c in contacts), message

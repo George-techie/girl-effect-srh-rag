@@ -589,6 +589,21 @@ def _answer(message: str, *, k: int | None = None,
 
             trace["fell_through"] = "grounded answer had nothing to cite"
             return _converse(message, decision, trace, started, history, language)
+
+        # **An access question never ends in a refusal.** Whatever went wrong
+        # with the draft, the answer to "where can I go" lives in the verified
+        # table rather than in the generated text, so the table can answer it
+        # alone. This turn is the Theory of Change's terminus and it must not be
+        # left to chance: the same question refused on one run and succeeded on
+        # the next, which is not a property a demo -- or a girl -- can rely on.
+        if decision.path == rules.ACCESS:
+            trace["handed_off"] = True
+            trace["handed_off_after"] = "draft rejected"
+            return Reply(
+                _with_contacts(responses.ACCESS_HANDOFF,
+                               _access_route(message), trace),
+                decision.path, trace=trace)
+
         return Reply(responses.BLOCKED, decision.path, trace=trace)
 
     # **The service handoff.** Girl Effect's Theory of Change ends at service

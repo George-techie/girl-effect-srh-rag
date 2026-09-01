@@ -64,6 +64,18 @@ DEFERRAL = re.compile(
     re.IGNORECASE,
 )
 
+#: Disclaiming contacts it is about to be given. Verified rows are appended
+#: underneath the answer, so "I can't give you a number" lands directly above
+#: the number she asked for and reads as the service contradicting itself.
+NO_CONTACTS_CLAIM = re.compile(
+    r"\b(can\'?t|cannot|do not|don\'?t) (give|share|provide|name|tell) you\b"
+    r"[^.\n]{0,40}\b(number|contact|clinic|name|list)\b"
+    r"|\b(don\'?t|do not) have (a |the )?(list|number|contact|specific clinic)"
+    r"|\bheld separately\b|\bno access to (it|that|them)\b"
+    r"|\bcan\'?t (name|point you to)\b",
+    re.IGNORECASE,
+)
+
 #: A dash used as punctuation: em, en, or a spaced hyphen doing the same job.
 #: Not a hyphen inside a word, and not a bullet at the start of a line.
 DASH = re.compile(r"[—–]|(?<=\s)-(?=\s)")
@@ -167,6 +179,11 @@ def check(draft: str, *, n_passages: int, grounded: bool = True
         # top similarity 0.798, the right passage retrieved, zero citations.
         issues.append(f"offers to look up what it already has: "
                       f"{deferral.group(0)!r}")
+
+    disclaimer = NO_CONTACTS_CLAIM.search(draft)
+    if disclaimer:
+        issues.append(f"disclaims contacts it is about to be given: "
+                      f"{disclaimer.group(0)!r}")
 
     machinery = MACHINERY.search(draft)
     if machinery:

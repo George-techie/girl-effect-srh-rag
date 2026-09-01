@@ -1,0 +1,121 @@
+{
+  "_about": "Two conversations traced against Girl Effect's Theory of Change: behavioural drivers → intent → service access → behaviour change. Each turn declares the stage it should reach and whether a verified contact should be in the reply.",
+  "_why": "Knowledge is one driver of eight. A system can answer every question correctly and still never move a girl toward a service, and no retrieval metric would show it. These journeys are the end-to-end check that the product does the thing it exists to do.",
+  "_stages": "rapport · knowledge · confidence · service_access — from src/observability.STAGE, so the score and the event log agree.",
+  "journeys": [
+    {
+      "id": "TOC_HIV",
+      "goal": "A girl worried after unprotected sex reaches HIV testing.",
+      "turns": [
+        {
+          "message": "niaje aunti",
+          "driver": "rapport",
+          "stage": "rapport",
+          "expect_contact": false,
+          "note": "she arrives"
+        },
+        {
+          "message": "my friend says you can tell if someone has HIV just by looking at them. is that true?",
+          "driver": "knowledge",
+          "stage": "knowledge",
+          "expect_contact": false,
+          "must_cite": true,
+          "note": "a myth that stops girls testing"
+        },
+        {
+          "message": "we didnt use protection last month and i keep thinking about it",
+          "driver": "perceived_risk",
+          "stage": "any",
+          "expect_contact": false,
+          "note": "she names her own risk. Both stages are defensible: it reads as disclosure and as a question about risk, and the reply answers the risk with citations. Marked any rather than forced either way."
+        },
+        {
+          "message": "i think i should get tested but i am scared of what they will say about me",
+          "driver": "self_efficacy",
+          "stage": "any",
+          "expect_contact": false,
+          "note": "intent forming, blocked by anticipated stigma"
+        },
+        {
+          "message": "okay tell me what actually happens when you go for an HIV test",
+          "driver": "intent",
+          "stage": "any",
+          "expect_contact": true,
+          "must_cite": true,
+          "note": "the conversion turn: she is weighing up going"
+        },
+        {
+          "message": "where can i actually go for one?",
+          "driver": "service_access",
+          "stage": "service_access",
+          "expect_contact": true,
+          "note": "the Theory of Change terminus"
+        },
+        {
+          "message": "asante sana aunti, i will text them tomorrow",
+          "driver": "behaviour_change",
+          "stage": "rapport",
+          "expect_contact": false,
+          "note": "she states an intention to act"
+        }
+      ]
+    },
+    {
+      "id": "TOC_CONTRACEPTION",
+      "goal": "A girl held back by a myth and by family norms reaches family planning.",
+      "turns": [
+        {
+          "message": "hi aunti",
+          "driver": "rapport",
+          "stage": "rapport",
+          "expect_contact": false
+        },
+        {
+          "message": "watu wanasema family planning inaharibu mji wa mtoto. is that true?",
+          "driver": "attitude",
+          "stage": "knowledge",
+          "expect_contact": false,
+          "must_cite": true,
+          "note": "the myth this corpus exists to correct, in her own register"
+        },
+        {
+          "message": "my mum would kill me if she found out i was even asking about this",
+          "driver": "social_norms",
+          "stage": "confidence",
+          "expect_contact": false,
+          "note": "the barrier is social, not informational"
+        },
+        {
+          "message": "can i even get family planning at my age without my parents agreeing?",
+          "driver": "perceived_control",
+          "stage": "service_access",
+          "expect_contact": true,
+          "must_cite": true,
+          "note": "the measured vocabulary gap: her words against 'informed consent for adolescents'"
+        },
+        {
+          "message": "okay so what happens at the clinic when you go for family planning?",
+          "driver": "intent",
+          "stage": "any",
+          "expect_contact": true,
+          "must_cite": true,
+          "note": "the conversion turn"
+        },
+        {
+          "message": "where can i get it near me?",
+          "driver": "service_access",
+          "stage": "service_access",
+          "expect_contact": true,
+          "note": "the terminus"
+        },
+        {
+          "message": "sawa, nitaenda this weekend",
+          "driver": "behaviour_change",
+          "stage": "rapport",
+          "expect_contact": false,
+          "note": "she states an intention to act, in her own register"
+        }
+      ]
+    }
+  ]
+}
