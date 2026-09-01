@@ -1,14 +1,41 @@
 # Trusted Aunti
 
-A safety-aware assistant for adolescent girls in Kenya. It answers questions
-about **contraception, sexual health and staying safe**, recognises when a girl
-is disclosing harm, and gets her to a real service.
+**A safety-aware assistant for adolescent girls in Kenya.** It answers questions
+about contraception, sexual health and staying safe, recognises when a girl is
+disclosing harm, and gets her to a real service.
+
+> **The product question:** can a trusted conversation help a girl move from
+> uncertainty to a safe next action?
+
+`Grounded` · `Private` · `Safeguarded` · `Useful`
 
 ```bash
 pip install -r requirements.txt
 python scripts/ingest.py       # build the index, once
 streamlit run app.py           # the demo
 ```
+
+**Full write-up:** [`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)
+· **Diagrams:** [`docs/architecture.md`](docs/architecture.md)
+· **Every decision and what would reverse it:** [`docs/decisions.md`](docs/decisions.md)
+
+---
+
+## Contents
+
+| | |
+|---|---|
+| [What it does](#what-it-does) | six real turns and what each produces |
+| [What changed, and why](#what-changed-and-why) | the refinement, as a product experiment |
+| [How it works](#how-it-works) | eight steps, one hosted model call |
+| [Two journeys, end to end](#two-journeys-end-to-end) | the Theory of Change, as transcripts |
+| [How it is evaluated](#how-it-is-evaluated) | five tests, and why not one score |
+| [What it scores](#what-it-scores) | against the build it replaces |
+| [Getting her to a service](#getting-her-to-a-service) | the verified table |
+| [The three decisions that shaped it](#the-three-decisions-that-shaped-it) | |
+| [What next](#what-next) | girls, clinicians, services |
+| [Scope and limitations](#scope-and-limitations) | |
+| [Layout](#layout) | where everything lives |
 
 ---
 
@@ -30,6 +57,29 @@ wrote in.
 safeguarding, retrieval and validation are deterministic rules, and embeddings
 run locally. Every safeguarding reply is assembled without a model at all, which
 is why it arrives instantly.
+
+---
+
+## What changed, and why
+
+The feedback was that the previous submission was *overengineered in places*.
+The question that produced this build was not **"how do I make it smaller?"** but
+**"which parts actually earn their place?"**
+
+| | Previous shipped build | This build |
+|---|---|---|
+| **Model roles** | 5 — classification, evidence, generation, judging | **1** — generation only |
+| **LLM judges** | 2 — evidence and output | **0** — rules for routing, safeguarding, validation |
+| **Content tracks** | 4 — broader health and life skills | **8 governed documents** — contraception, sexual health, service access |
+| **Unusable outcomes** | 12 / 51 | **3 / 52** |
+
+**What did not change:** a universal safety floor · grounded factual answers ·
+verified services · youth-facing conversation.
+
+Two components were *added* during the work, each because a measurement asked
+for it: **conversation state**, once journey replay showed follow-up questions
+need their antecedent to retrieve correctly, and **observability**, because a
+layered deterministic system needs its behaviour counted rather than inspected.
 
 ---
 
@@ -57,70 +107,6 @@ treats one as fatal.
 Diagrams and the reasoning behind each choice:
 **[`docs/architecture.md`](docs/architecture.md)** ·
 **[`docs/decisions.md`](docs/decisions.md)**
-
----
-
-## What it scores
-
-| | Metric | Previous build | This build |
-|---|---|:--:|:--:|
-| **Safeguarded** | safeguarding recall | 1.000 | **1.000** · 12/12 |
-| | safeguarding precision | 0.800 | **1.000** · 12/12 |
-| | invented contact details | 0 / 132 | **0** |
-| **Accurate** | grounded answers with no citation | 0 / 39 | **0 shipped** † |
-| | mean citations per answer | 2.46 | **2.61** |
-| | routing accuracy | 0.766 F1 | **52/52** |
-| | retrieval Adequate@5 | — | **0.960** |
-| **Reliable** | **unusable outcomes** | 12/51 · 23.5% | **3/52 · 5.8%** ‡ |
-| | latency p50 / p95 | 14.2 s / 22.8 s | **5.2 s / 14.8 s** |
-| | errors | 0 | **0** |
-| | forbidden retrievals | — | **0/23** |
-| **Resonant** | tone and inclusion | 4.61 / 5 | *reviewer scored* |
-| | Kenyan register | 4.00 / 5 | *reviewer scored* |
-| | conversation | 4.06 / 5 | *reviewer scored* |
-| | register match, measured | — | **38/38** |
-| | natural continuation | — | **32/37 · 86%** |
-| | deferrals avoided | — | **38/38** |
-| **Cost** | LLM calls per turn | 3.53 | **0.69** |
-| | tokens per turn | 6,838 | **4,946** |
-| | cost per turn | $0.0189 | **$0.0109** |
-
-† One draft was blocked by the validator for having no citation, so nothing
-uncited reached a girl. ‡ 1 validator block, 2 no-evidence, 0 provider errors;
-correct out-of-scope declines excluded.
-
-**The resonance rows are the honest gap.** The previous build ran a designed
-human review — 132 responses, two models side by side and unlabelled, four
-reviewers, one sheet per dimension. Those scores are people's judgement and this
-build has no equivalent; its resonance rows are deterministic proxies, which
-measure whether a property holds, not whether a reply is good. Reproducing that
-review is the single most valuable next step.
-
-**Safety is not usefulness.** The previous configuration recorded zero unsafe
-actions alongside a 23.5% unusable rate. Excellent on safety, and a poor product,
-because a system that refuses everything is perfectly safe. That build's own
-review put it plainly: *"Service hallucination protection works. Service
-fulfilment does not."* — zero invented numbers across 132 responses, and it still
-would not hand over a helpline when asked for one. This build attaches verified
-contacts on every route that should carry them.
-
-Objective figures come from that project's recorded runs — `objective_v1.json`
-for the 66-response evaluation and the four-system comparison for routing and
-cost. Where an instrument differs, the row is directional rather than exact.
-
-```bash
-python -m pytest -q                                  # 176 tests
-python scripts/eval_decision.py                      # routing and safeguarding
-python scripts/eval_retrieval.py --compare-prepared  # retrieval
-python scripts/eval_multiturn.py                     # conversations
-python scripts/eval_mixed.py                         # mixed-intention messages
-python scripts/eval_conversation.py --include-mixed  # conversation quality
-python scripts/eval_toc.py                           # Theory-of-Change journeys
-python scripts/eval_cost.py                          # tokens and cost
-```
-
-**Full write-up:**
-**[`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)**
 
 ---
 
@@ -233,6 +219,109 @@ answer it alone whatever happens to the draft.
 
 ---
 
+## How it is evaluated
+
+Different failure modes need different tests, not one flattering chatbot score.
+
+| | Test | Asks | Measures |
+|---|---|---|---|
+| 1 | **Decision** · 52 messages | did it choose the right action? | route · safeguarding · contrast pairs |
+| 2 | **Retrieval** · 31 questions | is the evidence answerable? | Adequate@5 · MRR · ToC drivers |
+| 3 | **Multi-turn** · 23 turns | do follow-ups stay safe? | path accuracy · forbidden passages |
+| 4 | **Mixed intent** · 15 messages | are feelings and facts separated? | wanted vs unwanted evidence |
+| 5 | **Conversation** · 38 turns | is the final reply usable? | grounding · continuation · calls |
+
+Together they cover **Safeguarded · Accurate · Reliable · Resonant**.
+
+**Resonance here uses deterministic proxies.** Warmth, trust and cultural
+authenticity still need human and youth review — the previous build ran exactly
+that, and reproducing it is the most valuable next step.
+
+```bash
+python -m pytest -q                                  # 190 tests
+python scripts/eval_decision.py                      # 1 · routing and safeguarding
+python scripts/eval_retrieval.py --compare-prepared  # 2 · retrieval
+python scripts/eval_multiturn.py                     # 3 · conversations
+python scripts/eval_mixed.py                         # 4 · mixed-intention messages
+python scripts/eval_conversation.py --include-mixed  # 5 · conversation quality
+python scripts/eval_toc.py --show                    # Theory-of-Change journeys
+python scripts/eval_cost.py                          # tokens and cost
+python scripts/check_services.py                     # what she gets on each route
+```
+
+---
+
+## What it scores
+
+| | Metric | Previous build | This build |
+|---|---|:--:|:--:|
+| **Safeguarded** | safeguarding recall | 1.000 | **1.000** · 12/12 |
+| | safeguarding precision | 0.800 | **1.000** · 12/12 |
+| | invented contact details | 0 / 132 | **0** |
+| **Accurate** | grounded answers with no citation | 0 / 39 | **0 shipped** † |
+| | mean citations per answer | 2.46 | **2.61** |
+| | routing accuracy | 0.766 F1 | **52/52** |
+| | retrieval Adequate@5 | — | **0.960** |
+| **Reliable** | **unusable outcomes** | 12/51 · 23.5% | **3/52 · 5.8%** ‡ |
+| | latency p50 / p95 | 14.2 s / 22.8 s | **5.2 s / 14.8 s** |
+| | errors | 0 | **0** |
+| | forbidden retrievals | — | **0/23** |
+| **Resonant** | tone and inclusion | 4.61 / 5 | *reviewer scored* |
+| | Kenyan register | 4.00 / 5 | *reviewer scored* |
+| | conversation | 4.06 / 5 | *reviewer scored* |
+| | register match, measured | — | **38/38** |
+| | natural continuation | — | **32/37 · 86%** |
+| | deferrals avoided | — | **38/38** |
+| **Cost** | LLM calls per turn | 3.53 | **0.69 – 1.03** |
+| | tokens per turn | 6,838 | **4,946** |
+| | cost per turn | $0.0189 | **$0.0109** |
+
+† One draft was blocked by the validator for having no citation, so nothing
+uncited reached a girl. ‡ 1 validator block, 2 no-evidence, 0 provider errors;
+correct out-of-scope declines excluded.
+
+**The resonance rows are the honest gap.** The previous build ran a designed
+human review — 132 responses, two models side by side and unlabelled, four
+reviewers, one sheet per dimension. Those scores are people's judgement and this
+build has no equivalent; its resonance rows are deterministic proxies, which
+measure whether a property holds, not whether a reply is good. Reproducing that
+review is the single most valuable next step.
+
+**Safety is not usefulness.** The previous configuration recorded zero unsafe
+actions alongside a 23.5% unusable rate. Excellent on safety, and a poor product,
+because a system that refuses everything is perfectly safe. That build's own
+review put it plainly: *"Service hallucination protection works. Service
+fulfilment does not."* — zero invented numbers across 132 responses, and it still
+would not hand over a helpline when asked for one. This build attaches verified
+contacts on every route that should carry them.
+
+Objective figures come from that project's recorded runs — `objective_v1.json`
+for the 66-response evaluation and the four-system comparison for routing and
+cost. Where an instrument differs, the row is directional rather than exact.
+
+---
+
+## Getting her to a service
+
+Eight verified services covering eight routes, each with a source, a checker and
+a date. **Contacts are read from the table, never generated** — no corpus chunk
+contains a phone number, so a number in generated text would be invented, and the
+validator treats one as fatal.
+
+| Her turn | What she gets |
+|---|---|
+| *"Where can I get family planning near me?"* | the cited answer, **plus Marie Stopes and One2One** |
+| *"Where can I go for an HIV test?"* | routed to the HIV/STI rows, off her words |
+| discloses coercion, then *"where can I go?"* | the help pathway, **0 model calls** |
+| self-harm risk | crisis lines **in front of her**, not behind a tap |
+| pressure without force | contacts **offered** behind the tap |
+
+**An access question never ends in a refusal.** The answer to *"where can I go"*
+lives in the table rather than in generated text, so the table can answer it
+alone whatever happens to the draft.
+
+---
+
 ## The three decisions that shaped it
 
 **Deterministic first, models where they earn it.** The previous build's own
@@ -253,6 +342,29 @@ drivers → intent → **service access** → behaviour change. Knowledge is one
 of eight, so a system that answers well and never gets her to a service has done
 the easy half. Eight verified services cover eight routes, each with a source, a
 checker and a date.
+
+---
+
+## What next
+
+The prototype works. The next proof does not come from another model node.
+
+**1 · Test with real girls.** Youth testing in Kenya on trust, clarity, warmth,
+and whether the conversation feels natural and useful. Every evaluation set here
+was authored alongside the system; the three most useful defects found during the
+build came from a person typing real sentences into the demo.
+
+**2 · Verify with health and safeguarding review.** SRH clinicians and
+safeguarding reviewers validating HIV, contraception and referral content before
+wider use. No reviewer on this build was a clinician, so nothing here speaks to
+clinical correctness.
+
+**3 · Measure real service access.** Work with service partners to confirm
+contacts and to find out whether stated intent becomes an actual visit. This
+build measures the conversation and the pathway to a service — not uptake.
+
+> The goal is not another model node. It is safer conversations, stronger
+> agency, and real access to care.
 
 ---
 
