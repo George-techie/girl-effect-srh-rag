@@ -129,40 +129,103 @@ python scripts/eval_cost.py                          # tokens and cost
 Girl Effect's Theory of Change runs **behavioural drivers → intent → service
 access → behaviour change**. Knowledge is one driver of eight, so a system can
 answer every question correctly and never move a girl toward a service. Two
-conversations are scored against it on every run.
+conversations are scored against it on every run, through the real pipeline.
 
 ```bash
 python scripts/eval_toc.py --show
 ```
 
-**A girl worried after unprotected sex, reaching HIV testing:**
+### A girl worried after unprotected sex, reaching HIV testing
 
-| She writes | Driver | Stage reached | |
-|---|---|---|:--:|
-| *"niaje aunti"* | rapport | rapport | |
-| *"my friend says you can tell if someone has HIV by looking at them"* | knowledge | knowledge | 2 cited |
-| *"we didnt use protection last month and i keep thinking about it"* | perceived risk | knowledge | |
-| *"i should get tested but i am scared what they will say about me"* | self-efficacy | confidence | |
-| *"tell me what actually happens when you go for an HIV test"* | **intent** | knowledge | 3 cited **+ contacts** |
-| *"where can i actually go for one?"* | **service access** | service access | **+ contacts** |
-| *"asante sana aunti, i will text them tomorrow"* | behaviour change | rapport | |
+**`rapport`** &nbsp;·&nbsp; *"niaje aunti"*
 
-> *"That fear is real, and it's probably the biggest thing standing between you
-> and getting tested, not the testing itself. A lot of girls worry more about
-> being judged than about the result. What are you imagining they'll say?"*
+> Niaje! 😊 Mimi ni Trusted Aunti, hapa kukusaidia ukiwa na maswali kuhusu family
+> planning, mwili wako, relationships, au chochote unachotaka kujua bila
+> kuhukumiwa.
 
-**A girl held back by a myth and by family norms, reaching family planning** —
-answered in the register she wrote in:
+**`knowledge`** &nbsp;·&nbsp; *"my friend says you can tell if someone has HIV just by looking at them. is that true?"*
 
-> **She:** *"watu wanasema family planning inaharibu mji wa mtoto. is that true?"*
+> That's not true, and it's a common myth worth clearing up. You can't tell if
+> someone has HIV just by looking at them. Many people with HIV don't have any
+> symptoms at all, especially if they're on treatment.
 >
-> **Aunti:** *"Hiyo si kweli, na ni one of those misconceptions zinazoenea sana.
-> Family planning haiharibu mji wa mtoto (uterus) au uwezo wa kupata mtoto
-> baadaye. Njia nyingi za contraception ni reversible, meaning fertility inarudi
-> haraka baada ya kuacha kutumia."*
+> The only real way to know is by getting tested. Testing is quick, usually free,
+> and your results stay confidential, so it's not something anyone finds out
+> unless you choose to tell them. — *2 sources cited*
+
+**`self-efficacy`** &nbsp;·&nbsp; *"i think i should get tested but i am scared of what they will say about me"*
+
+> That fear is real, and it's probably the biggest thing standing between you and
+> getting tested, not the testing itself.
+>
+> A lot of girls worry more about being judged than about the result. What are
+> you imagining they'll say?
+
+**`intent`** — the conversion turn &nbsp;·&nbsp; *"okay tell me what actually happens when you go for an HIV test"*
+
+> At the testing place, staff will first talk you through what's about to happen
+> and answer any questions before anything starts, in private.
+>
+> Then testing itself is simple. You give a small sample, usually a finger prick
+> of blood or sometimes a saliva swab. A rapid test gives results in about 20
+> minutes…
+>
+> Whatever the result, it stays between you and the provider. Nobody else finds
+> out unless you choose to tell them. If it's positive, you'll be linked to
+> treatment and support right away, and treatment works best started early.
+>
+> Does knowing the steps make the idea of going feel any less scary?
+>
+> **Marie Stopes Kenya** · 0800 720 005 · call or text · free · 7am–9pm
+> **One2One / LVCT Health** · 1190 · call or text · 8am–10pm
+
+*3 sources cited, and the contacts arrive because she is weighing up going.*
+
+**`service access`** &nbsp;·&nbsp; *"where can i actually go for one?"*
+
+> You can get tested at a family planning clinic, since HIV testing is often
+> offered right alongside other services there…
+>
+> If going somewhere in person feels like a lot right now, some places also offer
+> self-test kits you can do privately.
+>
+> **You already have the Marie Stopes and One2One contacts above. Both can point
+> you to a specific place near you to walk into.**
+
+**`behaviour change`** &nbsp;·&nbsp; *"asante sana aunti, i will text them tomorrow"*
+
+> Karibu sana. Text them whenever you're ready, hakuna rush.
+>
+> Uko na hii courage ya kujitokeza mbele ya fear. 💪
+
+### A girl held back by a myth and by family norms, reaching family planning
+
+The same arc where the barrier is social rather than informational, answered in
+the register she wrote in.
+
+**`attitude`** &nbsp;·&nbsp; *"watu wanasema family planning inaharibu mji wa mtoto. is that true?"*
+
+> Hiyo si kweli, na ni one of those misconceptions zinazoenea sana. Family
+> planning haiharibu mji wa mtoto (uterus) au uwezo wa kupata mtoto baadaye.
+>
+> Njia nyingi za contraception ni reversible, meaning fertility inarudi haraka
+> baada ya kuacha kutumia. Kwa wengi, inarudi within 3 to 6 months.
+
+**`social norms`** &nbsp;·&nbsp; *"my mum would kill me if she found out i was even asking about this"*
+
+> Naskia hiyo fear, siste. Kuuliza kitu ambacho unaogopa mama akijua ni heavy
+> kubeba, especially when it feels like even asking is dangerous.
+
+**`perceived control`** &nbsp;·&nbsp; *"can i even get family planning at my age without my parents agreeing?"*
+
+> Yes, you can. Parental or guardian consent isn't required for you to get family
+> planning counselling or services as an adolescent. This is part of Kenya's
+> guidelines… Age alone is also not a reason for you to be denied any method.
+>
+> **Marie Stopes Kenya** · 0800 720 005 · **One2One / LVCT Health** · 1190
 
 Across both journeys, 14 turns: **stage reached as intended 14/14 · citation
-where required 14/14 · refusals 0/14**, and each ends with a number she can text.
+where required 14/14 · contacts exactly where intended 14/14 · refusals 0/14**.
 
 **An access question never ends in a refusal.** The answer to *"where can I go"*
 lives in the verified table rather than in generated text, so the table can
