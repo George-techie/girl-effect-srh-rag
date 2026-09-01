@@ -15,9 +15,10 @@ python scripts/ingest.py       # build the index, once
 streamlit run app.py           # the demo
 ```
 
-**Full write-up:** [`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)
+**Presentation:** [`docs/Trusted_Aunti_Final_Interview_Presentation.pdf`](docs/Trusted_Aunti_Final_Interview_Presentation.pdf)
+· **Full write-up:** [`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)
 · **Diagrams:** [`docs/architecture.md`](docs/architecture.md)
-· **Every decision and what would reverse it:** [`docs/decisions.md`](docs/decisions.md)
+· **Decisions, each with what would reverse it:** [`docs/decisions.md`](docs/decisions.md)
 
 ---
 
@@ -396,7 +397,7 @@ src/
   safety/                deterministic checks, approved text
   services.py            the verified service table
   observability.py       one event per turn, invariants at runtime
-docs/                    architecture, decisions, build report
+docs/                    presentation, build report, architecture, decisions
 evaluation/              five sets, criteria fixed before each run
 ```
 
