@@ -64,31 +64,49 @@ Diagrams and the reasoning behind each choice:
 
 | | Metric | Previous build | This build |
 |---|---|:--:|:--:|
-| **Safeguarded** | safeguarding recall / precision | 1.000 / — | **12/12 · 12/12** |
-| **Accurate** | routing accuracy | 0.766 F1 | **52/52** |
+| **Safeguarded** | safeguarding recall | 1.000 | **1.000** · 12/12 |
+| | safeguarding precision | 0.800 | **1.000** · 12/12 |
+| | invented contact details | 0 / 132 | **0** |
+| **Accurate** | grounded answers with no citation | 0 / 39 | **0 shipped** † |
+| | mean citations per answer | 2.46 | **2.61** |
+| | routing accuracy | 0.766 F1 | **52/52** |
 | | retrieval Adequate@5 | — | **0.960** |
-| | grounded turns citing | — | **24/24** |
-| **Reliable** | **unusable outcomes** | **12/51 · 23.5%** | **3/52 · 5.8%** † |
+| **Reliable** | **unusable outcomes** | 12/51 · 23.5% | **3/52 · 5.8%** ‡ |
+| | latency p50 / p95 | 14.2 s / 22.8 s | **5.2 s / 14.8 s** |
+| | errors | 0 | **0** |
 | | forbidden retrievals | — | **0/23** |
-| **Resonant** | register match | — | **38/38** |
+| **Resonant** | tone and inclusion | 4.61 / 5 | *reviewer scored* |
+| | Kenyan register | 4.00 / 5 | *reviewer scored* |
+| | conversation | 4.06 / 5 | *reviewer scored* |
+| | register match, measured | — | **38/38** |
 | | natural continuation | — | **32/37 · 86%** |
+| | deferrals avoided | — | **38/38** |
 | **Cost** | LLM calls per turn | 3.53 | **0.69** |
 | | tokens per turn | 6,838 | **4,946** |
 | | cost per turn | $0.0189 | **$0.0109** |
-| | median latency | 7,030 ms | **3,536 ms** |
+
+† One draft was blocked by the validator for having no citation, so nothing
+uncited reached a girl. ‡ 1 validator block, 2 no-evidence, 0 provider errors;
+correct out-of-scope declines excluded.
+
+**The resonance rows are the honest gap.** The previous build ran a designed
+human review — 132 responses, two models side by side and unlabelled, four
+reviewers, one sheet per dimension. Those scores are people's judgement and this
+build has no equivalent; its resonance rows are deterministic proxies, which
+measure whether a property holds, not whether a reply is good. Reproducing that
+review is the single most valuable next step.
 
 **Safety is not usefulness.** The previous configuration recorded zero unsafe
-actions and twelve unhelpful ones — excellent on safety, and a poor product,
-because a system that refuses everything is perfectly safe. Measuring both is
-the point.
+actions alongside a 23.5% unusable rate. Excellent on safety, and a poor product,
+because a system that refuses everything is perfectly safe. That build's own
+review put it plainly: *"Service hallucination protection works. Service
+fulfilment does not."* — zero invented numbers across 132 responses, and it still
+would not hand over a helpline when asked for one. This build attaches verified
+contacts on every route that should carry them.
 
-† 1 validator block, 2 no-evidence, 0 provider errors. Correct out-of-scope
-declines are excluded, since declining a question outside the service boundary is
-intended behaviour.
-
-Previous figures come from that project's own recorded runs of 4 August 2026,
-51 cases, priced with the same table. The instruments differ where a metric was
-LLM-judged, so treat those rows as directional.
+Objective figures come from that project's recorded runs — `objective_v1.json`
+for the 66-response evaluation and the four-system comparison for routing and
+cost. Where an instrument differs, the row is directional rather than exact.
 
 ```bash
 python -m pytest -q                                  # 176 tests

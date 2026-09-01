@@ -73,7 +73,7 @@ something measurable failed without them.</p>
   <div><b>$0.0109</b><span>cost per turn</span></div>
   <div><b>52/52</b><span>routing accuracy</span></div>
   <div><b>1.000</b><span>safeguarding recall &amp; precision</span></div>
-  <div><b>24/24</b><span>grounded answers citing</span></div>
+  <div><b>5.8%</b><span>unusable, from 23.5%</span></div>
 </div>
 
 <h2>Performance against the previous build</h2>
@@ -100,7 +100,7 @@ evaluation runs of 4 August 2026, 51 cases each, not reconstructed.</p>
       <td class="n bad">8,599</td><td class="n bad">$0.0189</td><td class="n bad">12,410 ms</td></tr>
   <tr style="background:#FAF8F6"><td><strong>This build</strong></td><td class="n">52/52 †</td><td class="n">—</td>
       <td class="n good">3</td><td class="n good">0.69</td>
-      <td class="n good">4,946</td><td class="n good">$0.0109</td><td class="n good">3,536 ms</td></tr>
+      <td class="n good">4,946</td><td class="n good">$0.0109</td><td class="n good">5,200 ms</td></tr>
 </table>
 <p class="note">† Not the same measure. The previous action accuracy was scored by an LLM judge
 over 51 cases against a different scope and corpus; this build's 52/52 is
@@ -149,52 +149,65 @@ a different corpus. This build's equivalent is 52/52 on deterministic routing,
 measured differently and reported separately below.</p>
 
 <h3>Evaluation, by dimension</h3>
-<p>The previous build shipped <strong>System D</strong> — its full configuration
-plus a conversation layer. D itself was never scored, so the closest benchmarked
-configuration is <strong>System C</strong>. Blank cells are honest: that build
-did not measure the dimension.</p>
+<p>Against the previous build's own evaluation — 66 responses per model scored
+objectively, and a designed human review of 132 responses across four
+dimensions with four reviewers.</p>
 
 <table>
-  <tr><th></th><th>Metric</th><th class="n">System C</th><th class="n">This build</th><th>What it tells us</th></tr>
-  <tr><td rowspan="2"><strong>Safeguarded</strong></td><td>Safeguarding recall</td>
-      <td class="n">1.000</td><td class="n good">12/12</td><td>known disclosures detected</td></tr>
-  <tr><td>Safeguarding precision</td><td class="n">—</td><td class="n good">12/12</td>
-      <td>no unnecessary escalation</td></tr>
-  <tr><td rowspan="3"><strong>Accurate</strong></td><td>Retrieval Adequate@5</td>
-      <td class="n">—</td><td class="n good">0.960</td><td>the evidence can actually answer her</td></tr>
-  <tr><td>Grounded turns citing</td><td class="n">—</td><td class="n good">24/24</td>
-      <td>factual answers stayed grounded</td></tr>
-  <tr><td>Routing accuracy</td><td class="n">0.766 F1</td><td class="n good">52/52</td><td></td></tr>
-  <tr><td rowspan="3"><strong>Reliable</strong></td><td><strong>Unusable outcomes</strong></td>
-      <td class="n bad">12/51 · 23.5%</td><td class="n good">3/52 · 5.8%</td>
-      <td>turns where she gets nothing useful *</td></tr>
-  <tr><td>Multi-turn path accuracy</td><td class="n">—</td><td class="n">21/23</td>
-      <td>context survives a conversation</td></tr>
-  <tr><td>Forbidden retrievals</td><td class="n">—</td><td class="n good">0/23</td>
-      <td>context stopped pulling wrong evidence</td></tr>
-  <tr><td rowspan="4"><strong>Resonant</strong></td><td>Register match</td>
-      <td class="n">—</td><td class="n good">38/38</td><td>answered in the language she wrote in</td></tr>
-  <tr><td>Natural continuation</td><td class="n">—</td><td class="n">32/37 · 86%</td>
-      <td>the reply gives her somewhere to go</td></tr>
-  <tr><td>Standing offers avoided</td><td class="n">—</td><td class="n">36/37</td>
-      <td>fewer dead-ending replies</td></tr>
-  <tr><td>Deferrals avoided</td><td class="n">—</td><td class="n good">38/38</td>
-      <td>never asks permission to answer what she asked</td></tr>
+  <tr><th></th><th>Metric</th><th class="n">Previous</th><th class="n">This build</th></tr>
+  <tr><td rowspan="3"><strong>Safeguarded</strong></td><td>safeguarding recall</td>
+      <td class="n">1.000</td><td class="n good">1.000 · 12/12</td></tr>
+  <tr><td>safeguarding precision</td><td class="n">0.800</td><td class="n good">1.000 · 12/12</td></tr>
+  <tr><td>invented contact details</td><td class="n">0 / 132</td><td class="n good">0</td></tr>
+  <tr><td rowspan="4"><strong>Accurate</strong></td><td>grounded answers with no citation</td>
+      <td class="n">0 / 39</td><td class="n good">0 shipped †</td></tr>
+  <tr><td>mean citations per answer</td><td class="n">2.46</td><td class="n good">2.61</td></tr>
+  <tr><td>routing accuracy</td><td class="n">0.766 F1</td><td class="n good">52/52</td></tr>
+  <tr><td>retrieval Adequate@5</td><td class="n">—</td><td class="n good">0.960</td></tr>
+  <tr><td rowspan="4"><strong>Reliable</strong></td><td><strong>unusable outcomes</strong></td>
+      <td class="n bad">12/51 · 23.5%</td><td class="n good">3/52 · 5.8% ‡</td></tr>
+  <tr><td>latency p50 / p95</td><td class="n">14.2 s / 22.8 s</td><td class="n good">5.2 s / 14.8 s</td></tr>
+  <tr><td>errors</td><td class="n">0</td><td class="n good">0</td></tr>
+  <tr><td>forbidden retrievals</td><td class="n">—</td><td class="n good">0/23</td></tr>
+  <tr><td rowspan="6"><strong>Resonant</strong></td><td>tone and inclusion</td>
+      <td class="n">4.61 / 5</td><td class="n"><em>reviewer scored</em></td></tr>
+  <tr><td>Kenyan register</td><td class="n">4.00 / 5</td><td class="n"><em>reviewer scored</em></td></tr>
+  <tr><td>conversation</td><td class="n">4.06 / 5</td><td class="n"><em>reviewer scored</em></td></tr>
+  <tr><td>register match, measured</td><td class="n">—</td><td class="n good">38/38</td></tr>
+  <tr><td>natural continuation</td><td class="n">—</td><td class="n">32/37 · 86%</td></tr>
+  <tr><td>deferrals avoided</td><td class="n">—</td><td class="n good">38/38</td></tr>
   <tr><td rowspan="3"><strong>Cost</strong></td><td>LLM calls per turn</td>
-      <td class="n">3.53</td><td class="n good">0.69</td><td></td></tr>
-  <tr><td>Tokens per turn</td><td class="n">6,838</td><td class="n good">4,946</td><td></td></tr>
-  <tr><td>Median latency</td><td class="n">7,030 ms</td><td class="n good">3,536 ms</td><td></td></tr>
+      <td class="n">3.53</td><td class="n good">0.69</td></tr>
+  <tr><td>tokens per turn</td><td class="n">6,838</td><td class="n good">4,946</td></tr>
+  <tr><td>cost per turn</td><td class="n">$0.0189</td><td class="n good">$0.0109</td></tr>
 </table>
-<p class="note">* Not like-for-like. System C's unhelpful actions were LLM-judged; this build
-counts deterministically, and the three break down as <strong>1 validator block +
-2 no-evidence + 0 provider errors</strong>. The eight correct out-of-scope declines
-are excluded, because declining a question outside the service boundary is
-intended behaviour. Directional, not a precise percentage improvement.</p>
+<p class="note">† One draft was blocked by the validator for having no citation, so nothing
+uncited reached a girl. ‡ 1 validator block, 2 no-evidence, 0 provider errors;
+correct out-of-scope declines excluded. Where an instrument differs between the
+builds, the row is directional rather than exact.</p>
+
+<h3>The resonance rows are the honest gap</h3>
+<p>The previous build ran a designed human review: 132 responses, two models
+shown <strong>side by side and unlabelled</strong> so a preference could not be a
+preference for a brand, four reviewers, and one sheet per dimension because a
+reviewer asked to judge everything at once judges tone and calls it quality.
+Disagreement was kept rather than averaged away.</p>
+<p>Those scores are people's judgement, and this build has no equivalent. Its
+resonance rows are deterministic proxies: they measure whether a property holds,
+not whether a reply is good. <strong>Reproducing that review is the single most
+valuable next step</strong>, and it is what would turn 86% continuity from an
+engineering number into a product one.</p>
 
 <h3>Why the unusable rate is the number to look at</h3>
-<p>System C recorded <strong>zero unsafe actions and twelve unhelpful ones</strong>.
-It looks excellent on safety and is a poor product, because a system that refuses
-everything is perfectly safe.</p>
+<p>The previous configuration recorded <strong>zero unsafe actions alongside a
+23.5% unusable rate</strong>. Excellent on safety, and a poor product, because a
+system that refuses everything is perfectly safe. That build's own review put it
+plainly:</p>
+<div class="quote">"Service hallucination protection works. Service fulfilment
+does not." <em>— reviewer</em></div>
+<p>Zero invented numbers across 132 responses, and it still would not hand over a
+helpline when asked for one. This build attaches verified contacts on every route
+that should carry them.</p>
 <div class="quote"><strong>Safety is not usefulness</strong>, and measuring only
 one of them is how you ship the other.</div>
 <p>The previous build's own component analysis isolates the cost precisely,
