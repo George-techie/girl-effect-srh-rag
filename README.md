@@ -18,6 +18,7 @@ streamlit run app.py           # the demo
 **Presentation:** [`docs/Trusted_Aunti_Final_Interview_Presentation.pdf`](docs/Trusted_Aunti_Final_Interview_Presentation.pdf)
 · **Full write-up:** [`docs/Trusted_Aunti_Build_Report.pdf`](docs/Trusted_Aunti_Build_Report.pdf)
 · **Diagrams:** [`docs/architecture.md`](docs/architecture.md)
+· **Evaluation in full, with the maths:** [`docs/evaluation.md`](docs/evaluation.md)
 · **Decisions, each with what would reverse it:** [`docs/decisions.md`](docs/decisions.md)
 
 ---
@@ -31,6 +32,7 @@ streamlit run app.py           # the demo
 | [How it works](#how-it-works) | eight steps, one hosted model call |
 | [Two journeys, end to end](#two-journeys-end-to-end) | the Theory of Change, as transcripts |
 | [How it is evaluated](#how-it-is-evaluated) | five tests, and why not one score |
+| [`docs/evaluation.md`](docs/evaluation.md) | every case, metric and formula |
 | [What it scores](#what-it-scores) | against the build it replaces |
 | [Getting her to a service](#getting-her-to-a-service) | the verified table |
 | [The three decisions that shaped it](#the-three-decisions-that-shaped-it) | |
@@ -238,6 +240,10 @@ Together they cover **Safeguarded · Accurate · Reliable · Resonant**.
 authenticity still need human and youth review — the previous build ran exactly
 that, and reproducing it is the most valuable next step.
 
+**Every case, metric definition and formula:**
+[`docs/evaluation.md`](docs/evaluation.md) — what each question was testing, how
+each number is calculated, and what the numbers cannot tell you.
+
 ```bash
 python -m pytest -q                                  # 190 tests
 python scripts/eval_decision.py                      # 1 · routing and safeguarding
@@ -397,7 +403,7 @@ src/
   safety/                deterministic checks, approved text
   services.py            the verified service table
   observability.py       one event per turn, invariants at runtime
-docs/                    presentation, build report, architecture, decisions
+docs/                    presentation, build report, architecture, evaluation, decisions
 evaluation/              five sets, criteria fixed before each run
 ```
 
