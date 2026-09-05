@@ -89,31 +89,7 @@ layered deterministic system needs its behaviour counted rather than inspected.
 
 ## How it works
 
-**Safeguarding is a gate, not a route. Only generation uses a hosted LLM.**
-
-```mermaid
-flowchart LR
-  S1["<b>1 · VALIDATE</b><br/><i>input and scope checks</i>"]:::plum
-  S2["<b>2 · SAFEGUARD</b><br/><i>screen for harm, coercion<br/>or urgent risk</i>"]:::amber
-  S3["<b>3 · ROUTE</b><br/><i>choose the action: factual ·<br/>access · support · chat</i>"]:::coral
-  S4["<b>4 · RESOLVE</b><br/><i>link a short follow-up<br/>to recent context</i>"]:::plum
-  S5["<b>5 · PREPARE</b><br/><i>focus what retrieval<br/>should search for</i>"]:::plum
-  S6["<b>6 · RETRIEVE</b><br/><i>local BGE-M3 finds<br/>governed evidence</i>"]:::teal
-  S7["<b>7 · GENERATE</b><br/><i>one hosted LLM<br/>writes the response</i>"]:::deep
-  S8["<b>8 · CHECK</b><br/><i>enforce citations<br/>and safety rules</i>"]:::grey
-
-  S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
-
-  S2 -.->|"harm, coercion or urgent risk"| STOP["<b>STOP</b><br/>approved text + verified contacts<br/><i>no retrieval · no LLM · 0 ms</i>"]:::stop
-
-  classDef plum  fill:#FFFFFF,stroke:#5B2340,stroke-width:2px,color:#5B2340
-  classDef amber fill:#FDF3DC,stroke:#E0A32E,stroke-width:2px,color:#B5791A
-  classDef coral fill:#FFFFFF,stroke:#E8593F,stroke-width:2px,color:#C7412A
-  classDef teal  fill:#E4F2F1,stroke:#0E7A86,stroke-width:2px,color:#0E7A86
-  classDef deep  fill:#5B2340,stroke:#5B2340,stroke-width:2px,color:#FFFFFF
-  classDef grey  fill:#FFFFFF,stroke:#9A9088,stroke-width:2px,color:#5B2340
-  classDef stop  fill:#FBEAE4,stroke:#C04B2F,stroke-width:2px,color:#8C3520
-```
+![Refined architecture: eight stages, one hosted model call](docs/img/architecture.png)
 
 **Seven of the eight stages are deterministic**: ordered regex pattern families
 and word lists, with no scoring and no threshold. A message either matches a
