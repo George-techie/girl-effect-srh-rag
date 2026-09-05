@@ -30,6 +30,7 @@ streamlit run app.py           # the demo
 | [What it does](#what-it-does) | six real turns and what each produces |
 | [What changed, and why](#what-changed-and-why) | the refinement, as a product experiment |
 | [How it works](#how-it-works) | eight steps, one hosted model call |
+| [How is the decision actually made?](#first-in-plain-words-how-is-the-decision-actually-made) | not a bag of words, and what it is instead |
 | [`docs/routing.md`](docs/routing.md) | the mechanism at every stage, with the patterns |
 | [Two journeys, end to end](#two-journeys-end-to-end) | the Theory of Change, as transcripts |
 | [How it is evaluated](#how-it-is-evaluated) | five tests, and why not one score |
@@ -96,12 +97,51 @@ and word lists, with no scoring and no threshold. A message either matches a
 pattern or it does not, which is what makes a safeguarding decision auditable:
 you can point at the exact pattern that caught a disclosure.
 
+### First, in plain words: how is the decision actually made?
+
+**It is a list of phrase patterns, checked in a fixed order. The first one that
+matches wins.** There is no model in the decision, no embeddings, no scoring, no
+confidence, no threshold.
+
+**It is not a bag of words.** A bag of words counts how often certain words turn
+up and adds the counts into a score. Nothing here counts anything or adds
+anything up. Each pattern describes the *shape of a phrase*, and a message either
+contains that shape or it does not.
+
+That is the whole mechanism, and it looks like this in the real code:
+
+```python
+matched = _hits(_ACCESS, text)      # did any access pattern fire?
+if matched:
+    return Decision(ACCESS, "access", matched)
+# nothing fired, so try the next family
+```
+
+`_hits` gives back the patterns that fired. Empty list, and the next family is
+tried. That block is repeated once per family, and the order of the families is
+the decision.
+
+**Why patterns instead of a classifier.** Because you can point at the exact
+phrase that sent a message down a path. Asked *"why was this treated as a
+disclosure?"*, the answer is one line you can read, disagree with, and change. A
+classifier answers with a label and a number, and you can inspect neither.
+
+Each stage below answers four questions: **what happens**, **why it exists**,
+**how it is implemented**, and **what happens when it fails**.
+
 ### 1 · Validate
 
 Type and length checks, and runs of whitespace collapsed. **Nothing else is
 touched**, not case, punctuation, spelling, emoji or Sheng, because a front door
 that "cleans up" her language has already decided she writes wrongly. A register
 label is attached here too, which decides what language the reply comes back in.
+
+**How the register is decided.** This is the one place something is counted. The
+message is scanned for Kiswahili function words and Sheng markers from a fixed
+list, plus English verbs wearing Swahili morphology (`ananitext`, `wanakaa`).
+**Two markers is the bar.** Not a proportion of the message, because a proportion
+shrinks as the message gets longer, and one deliberate Swahili clause inside a
+long English message is a choice she made, not noise.
 
 *Fails silently if the register is missed:* the reply arrives in English and
 nothing errors. Caught by the register metric, currently 38/38.
@@ -116,9 +156,44 @@ This ordering is the single most important decision in the build, because
 retrieving at **0.668, higher than most in-scope questions**. A similarity score
 cannot tell you whether to answer, so the decision is made on her words first.
 
-Two mechanisms: the **Kenyan lexicon** (19 terms, 9 carrying a risk tag,
-`hunipiga` → *hits me* → `physical_violence`), then **five regex families in
-fixed order**, self-harm first. First match wins.
+**How the decision is made.** Two mechanisms, in this order.
+
+**a. A Kenyan word list.** 19 reviewed terms, 90 surface forms, **9 of them
+carrying a risk tag**. Each entry is a term plus its inflections, and if any form
+appears the turn goes straight to safeguarding. These are the nine:
+
+| She might write | It means | Tag |
+|---|---|---|
+| `hunipiga`, `ananipiga`, `amenipiga`, `hunichapa` | hits me, beats me | physical_violence |
+| `huniguza`, `ananiguza`, `kuniguza` | touches me inappropriately | sexual_abuse |
+| `kuondokea hii dunia`, `kutoka hii dunia` | to leave this world | self_harm_risk |
+| `sitaki kukuwa kwa hii dunia`, `sitaki kuishi` | I don't want to be here | self_harm_risk |
+| `kuspread foto`, `kusambaza picha` | to share my photos around | exploitation |
+| `sidai kuenda mtaa`, `naogopa kurudi nyumbani` | I'm afraid to go home | unsafe_environment |
+| `nisiambie msee`, `usiambie mtu` | don't tell anyone | secrecy_instruction |
+| `ananiforce`, `ananipressure`, `anapreshia` | is pressuring me | possible_coercion |
+| `husnoop`, `anacheki simu` | checks my phone | controlling_behaviour |
+
+The same list is also used to **rewrite the message into English**, so `hunipiga`
+becomes *hits me*, and **both versions are then scanned**. That is why a
+disclosure written in Sheng still reaches the English patterns without every
+pattern needing a Kiswahili twin bolted onto it.
+
+**b. Five pattern families, in this fixed order.** First family to fire wins:
+
+| Order | Family | Patterns | Severity | One of the real patterns |
+|--:|---|--:|---|---|
+| 1 | `_SELF_HARM` | 6 | urgent | `(don't\|do not) want to be (here\|alive)` |
+| 2 | `_HARM` | 6 | urgent | `(rape[ds]?\|forced? me\|made me have sex)` |
+| 3 | `_SABOTAGE` | 4 | urgent | `remove[ds]? the condom` |
+| 4 | `_REPRODUCTIVE_COERCION` | 12 | concern | `if (i\|you\|she\|he) (really )?love[ds]? (me\|him\|her)` |
+| 5 | `_THIRD_PARTY` | 1 | concern | `(my friend\|my sister) …(raped\|forced\|hits\|beats)` |
+
+**The order is the safety argument.** Self-harm is checked before ordinary harm
+so that it can never be read as the wrong kind of risk and answered with the
+wrong contacts. That is not hypothetical: self-harm used to live inside `_HARM`,
+and every self-harm disclosure written in English quietly got the ordinary
+safeguarding reply instead of the urgent one.
 
 *Two failure directions, not equally bad:* a miss answers a disclosure as an
 ordinary question. The failure the design fears most. A false alarm costs her a
@@ -136,8 +211,61 @@ to look up and nothing to cite, and answering it under a contract that requires 
 citation is how *"hello aunti"* became *"I had trouble putting that answer
 together."* Roughly a third of turns reach no model at all.
 
-Order: `out_of_scope → access → chat → aspirations → support → factual`.
-**`factual` is the fallback**, so anything unmatched still gets answered.
+**How the decision is made.** The same mechanism as safeguarding, with lower
+stakes. Families are tried in this order and the first to fire wins:
+
+`out_of_scope → access → chat → aspirations → support → factual`
+
+**What makes a message `access`, in full.** Twelve patterns. Any one of them
+matching is enough:
+
+| The shape it looks for | What it catches |
+|---|---|
+| `where (can\|do\|could\|should\|would) (i\|we\|a girl\|someone) …(get\|go\|find\|buy\|access)` | *"where can I actually go to get it"* |
+| `where (to\|do you) (get\|go\|find\|buy)` | *"where to get family planning"* |
+| `naweza pata …wapi` · `naenda wapi` · `nipate wapi` | the same question in Kiswahili |
+| `where …(clinic\|chemist\|pharmacy\|hospital\|get condoms)` | *"where is the nearest chemist"* |
+| `without (my) (parents\|mum\|mother\|dad\|father\|guardian)` | *"without my parents knowing"* |
+| `(parental\|parents') (consent\|permission\|agreeing\|knowing)` | *"do I need parental consent"* |
+| `can (a\|the) (nurse\|doctor\|clinic\|they) refuse` | *"can a nurse refuse me"* |
+| `do i need …(money\|id\|permission\|consent\|to be married)` | *"do I need an ID"* |
+| `is (it\|family planning\|contraception) free` · `how much does it cost` | what it costs |
+| `what will they ask me` · `what happens (at\|when i go to) the clinic` | the visit itself |
+| `without (my mum\|my mother\|anyone) (finding out\|knowing)` | being seen |
+| `(am i\|are we) (old enough\|allowed)` | *"am I old enough"* |
+
+Look at what those twelve have in common. **Access is not a topic, it is a
+question about getting through a door.** Cost, consent, age, privacy and location
+all count as access even though most of them never say the word "where", because
+each one is a thing that can stop her walking in. That is the product decision;
+the patterns are only how it is written down.
+
+The `(\s+\w+){0,3}?` in the first pattern allows up to three words in the middle,
+which is why *"where can I **actually** go to get it"* still matches. A fixed
+phrase missed exactly that sentence, in a real test.
+
+The other four families work the same way:
+
+| Family | Patterns | What the shapes look for |
+|---|--:|---|
+| `_OUT_OF_SCOPE` | 11 | `which (pill\|method) should i (take\|use)`, dosing, diagnosis |
+| `_CHAT` | 8 | greetings and thanks, **only on messages of 12 words or fewer** |
+| `_ASPIRATION` | 7 | `i want to (be\|become) an? \w+`, school and career plans |
+| `_SUPPORT` | 8 | `i('m\| am) …(scared\|worried\|ashamed\|nervous\|overwhelmed)` |
+| `factual` | none | **the fallback.** Anything that matched nothing at all |
+
+Two rules that exist only because of real misses:
+
+**Small talk has to actually be small.** The chat patterns are anchored to the
+start of a message, so without the 12-word cap a 48-word message that opened with
+*"thanks for the willingness to give me support"* was filed as a greeting and
+never reached the corpus. The one real question inside it went unanswered.
+
+**An explicit question beats the feeling around it.** If a message matches
+`_SUPPORT` and also matches `_ASKING` (`tell me (what|how)`, `what happens`,
+`walk me through`, `what should i expect`), it goes to `factual` instead. The
+grounded contract can acknowledge **and** answer; the conversational one can only
+acknowledge.
 
 *Recoverable by design:* a message wrongly sent to `factual` retrieves, fails to
 cite, and falls through to the conversational contract rather than refusing.
@@ -154,6 +282,27 @@ sterilization**, and *"where can I go?"* after a coercion disclosure retrieved
 **BTL**, which is permanent. Not degraded answers, answers to a different
 question, and in both cases the different question was about being sterilised.
 
+**How the decision is made.** Four tests, in order, and the order matters:
+
+```python
+if len(text.split()) > 9:   return False   # long enough to stand on its own
+if _CONTENT.search(text):   return False   # names a method, body part or service
+if _BACKREF.search(text):   return True    # opens with "and", "what about", "is it"
+return bool(_DANGLING.search(text)) or text.endswith("?")
+```
+
+`_CONTENT` is a word list: *implant, injection, depo, IUD, pill, condom,
+contraception, pregnant, period, HIV, STI, test, clinic, nurse, chemist,
+boyfriend, school, parents*. `_BACKREF` is the set of openings that point
+backwards. `_DANGLING` is a pronoun (*it, that, this, they, one*) with nothing in
+the message for it to refer to.
+
+**The content test runs before the backreference test**, and that ordering is
+load-bearing. *"what about the injection"* opens with a backreference **and**
+names its own subject. Resolving it against an earlier implant question put both
+methods into one query and the implant won: she asked about one method and would
+have been answered about another.
+
 *Conditional:* only fires on messages under 10 words that name no subject of
 their own.
 
@@ -166,6 +315,21 @@ The corpus says *"informed consent for adolescents and youth"*. She says
 *"without my parents agreeing"*. Same passage, **0.565 from her words against
 0.711 from the document's own**. A 10-entry mapping table closes that gap, each
 entry labelled `evidenced` or `extrapolated` in the source.
+
+**How the decision is made.** A lookup table, ten rows. Each row is a pattern and
+the corpus phrasing to append when it fires, plus a label saying whether that
+mapping was read out of the corpus or inferred:
+
+```python
+(r"\bwithout (my )?(parents?|mum|mother|dad|father|guardian)\b",
+ "informed consent for adolescents and youth parental consent",
+ "evidenced")
+```
+
+Clause splitting is just as blunt: on messages of 16 words or more, split on
+sentence boundaries. **No attempt is made to work out which clause is the health
+question.** That is deliberate, and it is decided later by similarity score in
+stage 6, not by a word list here.
 
 *Safe to be wrong about:* her words stay in the query and the corpus's are
 appended, so a mapping that does not apply contributes an unused phrase rather
@@ -193,6 +357,15 @@ verified service table answers *"where can I go"* on its own.
 The one hosted model call. Two contracts, chosen by **which path produced the
 turn**, never inferred from whether citations happen to be present, since an
 uncited grounded answer would otherwise validate itself.
+
+**How the decision is made.** A direct lookup on the path from stage 3, and
+nothing else. `factual` and `access` get the grounded contract, where every claim
+carries an `[S1]` marker. `chat`, `aspirations` and `support` get the
+conversational contract. Safeguarding never arrives here at all.
+
+The one thing that is **never** used to choose is the draft itself. If the
+contract were inferred from whether citations happen to appear, an answer that
+forgot to cite would simply reclassify itself as conversational and pass.
 
 A grounded answer is safe because every claim carries a citation. A
 conversational reply is safe for the opposite reason: **it makes no claim at
