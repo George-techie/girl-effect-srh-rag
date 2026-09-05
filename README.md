@@ -30,6 +30,7 @@ streamlit run app.py           # the demo
 | [What it does](#what-it-does) | six real turns and what each produces |
 | [What changed, and why](#what-changed-and-why) | the refinement, as a product experiment |
 | [How it works](#how-it-works) | eight steps, one hosted model call |
+| [`docs/routing.md`](docs/routing.md) | the mechanism at every stage, with the patterns |
 | [Two journeys, end to end](#two-journeys-end-to-end) | the Theory of Change, as transcripts |
 | [How it is evaluated](#how-it-is-evaluated) | five tests, and why not one score |
 | [`docs/evaluation.md`](docs/evaluation.md) | every case, metric and formula |
@@ -107,9 +108,30 @@ happen to be present.
 number, so a number in generated text would be invented — and the validator
 treats one as fatal.
 
-Diagrams and the reasoning behind each choice:
-**[`docs/architecture.md`](docs/architecture.md)** ·
-**[`docs/decisions.md`](docs/decisions.md)**
+### What actually makes each decision
+
+Seven of the eight stages are deterministic. Not "a model with low temperature"
+— **ordered regex pattern families and word lists**, no scoring and no threshold.
+
+| Stage | Mechanism |
+|---|---|
+| **1 Validate** | type and length. Whitespace collapsed, nothing else touched |
+| **2 Safeguard** | Kenyan lexicon risk tags, then 5 regex families in fixed order. First match wins |
+| **3 Route** | 5 more families in order; `factual` is the fallback |
+| **4 Resolve** | is the message short, with no subject of its own? |
+| **5 Prepare** | a 10-entry vocabulary table, plus clause splitting |
+| **6 Retrieve** | cosine similarity, with a 0.55 evidence floor |
+| **7 Generate** | the one hosted model call |
+| **8 Check** | regex over the draft: 5 fatal conditions, 6 recorded |
+
+A safeguarding decision can be traced to **the exact pattern that caught it**,
+which is the property a classifier cannot give you.
+
+**The patterns themselves, stage by stage, with the lexicon entries and the
+thresholds:** [`docs/routing.md`](docs/routing.md)
+
+Diagrams: [`docs/architecture.md`](docs/architecture.md) ·
+Every decision and what would reverse it: [`docs/decisions.md`](docs/decisions.md)
 
 ---
 
@@ -403,7 +425,7 @@ src/
   safety/                deterministic checks, approved text
   services.py            the verified service table
   observability.py       one event per turn, invariants at runtime
-docs/                    presentation, build report, architecture, evaluation, decisions
+docs/                    presentation, build report, architecture, routing, evaluation, decisions
 evaluation/              five sets, criteria fixed before each run
 ```
 
